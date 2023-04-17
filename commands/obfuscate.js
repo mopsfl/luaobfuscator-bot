@@ -41,9 +41,13 @@ module.exports = {
             }
 
             fetch.fetchUrl(url, async(error, meta, body) => {
-                if (error) return sendErrorMessage(error, message)
+                if (error) {
+                    sendErrorMessage(error, message)
+                    console.error(error)
+                    return
+                }
                 const script = body.toString()
-                const res = await obfuscate(script, message)
+                obfuscate(script, message)
             })
         } else {
             let usage_args = arg.props.arguments.length > 0 ? "`" + `${arg.props.arguments}` + "`" : ""

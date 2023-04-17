@@ -13,7 +13,6 @@ module.exports = {
      */
     obfuscate: async function(script, message) {
         if (!script || !message) return
-
         const config = {
             "MinifiyAll": true,
             "MiniftAll": true,
@@ -57,11 +56,11 @@ module.exports = {
                     headers: { "sessionId": newscript_res.data.sessionId, "apikey": "test" },
                     data: config
                 }).then(async(obfuscate_res) => {
-                    obfuscating_embed.data.description = `${getEmoji("check")} Session created!\n${getEmoji("loading")} Obfuscating script...`
+                    obfuscating_embed.data.description = `${getEmoji("check")} Session created! [[open]](https://luaobfuscator.com/?session=${newscript_res.data.sessionId})\n${getEmoji("loading")} Obfuscating script...`
                     await msg.edit({ embeds: [obfuscating_embed] })
                     if (obfuscate_res.data.code) {
                         let sessionid_str = "`" + `${newscript_res.data.sessionId}` + "`"
-                        obfuscating_embed.data.description = `${getEmoji("check")} Session created!\n${getEmoji("check")} Script obfuscated!`
+                        obfuscating_embed.data.description = `${getEmoji("check")} Session created! [[open]](https://luaobfuscator.com/?session=${newscript_res.data.sessionId})\n${getEmoji("check")} Script obfuscated!`
                         obfuscating_embed.addFields({
                             name: "Session ID",
                             value: sessionid_str
@@ -79,7 +78,7 @@ module.exports = {
                             //components: [componentRow]
                         })
                         await message.delete()
-                        console.log(Buffer.from(obfuscate_res.data.code))
+                        return obfuscate_res.data.code
                     } else {
                         let sessionid_str = "`" + `${newscript_res.data.sessionId}` + "`"
                         let error_str = "```" + `${obfuscate_res.data.message || "unknown error"}` + "```"
