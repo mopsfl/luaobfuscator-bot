@@ -87,7 +87,7 @@ module.exports = {
      * @param { Error | string } error
      * @param { Message } message
      */
-    sendErrorMessage: function(error, message) {
+    sendErrorMessage: function(error, message, type) {
         if (!message || !error) return
         let error_message = "```" + `${error.message || error[0]}` + "```"
         let error_name = "```" + `${error.name || error[2]}` + "```"
@@ -99,6 +99,7 @@ module.exports = {
             ],
             timestamp: true,
         })
-        return message.reply({ embeds: [error_embed] })
+        if (!type) return message.reply({ embeds: [error_embed] })
+        if (type == "edit") return message.edit({ embeds: [error_embed] })
     }
 }

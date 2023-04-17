@@ -126,6 +126,14 @@ client.on("messageCreate", async(message) => {
     }
 })
 
+client.on("interactionCreate", async(interaction) => {
+    if (!interaction.isButton()) return
+
+    try {} catch (e) {
+        console.error(e)
+    }
+})
+
 try {
     client.login(process.env.TOKEN).then(() => {
         console.info("Logging in...")
