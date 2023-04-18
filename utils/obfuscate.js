@@ -3,8 +3,6 @@ const { createEmbed } = require("../utils/embed")
 const { Colors, AttachmentBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js")
 const { getEmoji } = require("../utils/misc")
 const { sendErrorMessage } = require("../utils/command")
-const fs = require("fs")
-
 
 module.exports = {
     /**
@@ -16,13 +14,16 @@ module.exports = {
         const config = {
             "MinifiyAll": true,
             "MiniftAll": true,
-            "Virtualize": true,
+            "Virtualize": false,
             "CustomPlugins": {
-                "EncryptAllStrings": [Math.floor(Math.random() * 200)],
-                "SwizzleLookups": [Math.floor(Math.random() * 200)],
-                "EncryptFuncDeclaration": [Math.floor(Math.random() * 200)],
-                "ControlFlowFlattenV1AllBlocks": [Math.floor(Math.random() * 200)],
-                "JunkifyAllIfStatements": [Math.floor(Math.random() * 200)]
+                "EncryptStrings": [100],
+                "SwizzleLookups": [100],
+                "MutateAllLiterals": [66],
+                "ControlFlowFlattenV1AllBlocks": [50, 15, 15],
+                "ControlFlowFlattenV1AllBlocks": [100],
+                "JunkifyAllIfStatements": [50, 15, 10],
+                "EncryptFuncDeclaration": [100],
+                "DummyFunctionArgs": [6, 9],
             }
         }
 
