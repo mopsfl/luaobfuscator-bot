@@ -24,7 +24,7 @@ module.exports = {
 
         if (!message) return
         if (message.content.includes("```")) {
-            const script = arg.rawargs.replace(/[`\s]/g, "")
+            const script = arg.rawargs.replace(/(```lua|```)/g, "")
             const res = await obfuscate(script, message)
         } else if ([...message.attachments].length > 0) {
             const attachment = message.attachments.first()
