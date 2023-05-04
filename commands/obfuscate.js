@@ -1,9 +1,10 @@
 const { createEmbed } = require("../utils/embed")
 const { sendErrorMessage } = require("../utils/command")
-const { Colors } = require("discord.js")
+const { Colors, codeBlock, blockQuote } = require("discord.js")
 const { getEmoji } = require("../utils/misc")
 const config = require("../.config")
 const fetch = require("fetch")
+const { parseCodeblock, hasCodeblock, hasWebhook } = require("../utils/obfuscate-util")
 
 module.exports = {
     enabled: true,
@@ -22,18 +23,18 @@ module.exports = {
             message = arg.message || arg
 
         if (!message) return
-        const iscodeblock = /^([`])[`]*\1$|^[`]$/mg.test(arg.rawargs)
-        const haswebhook = /https:\/\/.+\/api\/webhooks\/[0-9]+\/.*\w/.test(arg.rawargs)
+        const iscodeblock = hasCodeblock(arg.rawargs)
+        const haswebhook = hasWebhook(arg.rawargs)
         if (message.content.includes("```") && iscodeblock) {
-            const script = arg.rawargs.replace(/(^`\S*)/mg, "")
+            const script = parseCodeblock(arg.rawargs)
+            console.log(script)
         } else if ([...message.attachments].length > 0) {
             const attachment = message.attachments.first()
             const url = attachment ? attachment.url : null
-
             if (!url) {
                 let error_embed = createEmbed({
                     title: `${getEmoji("error")} Error`,
-                    description: "```Unable to get url from attachment.```",
+                    description: `${codeBlock("Unable to get url from attachment.")}`,
                     color: Colors.Red,
                     timestamp: true
                 })
@@ -54,7 +55,7 @@ module.exports = {
             let usage_cmd = "`" + `${config.prefix}${arg.cmd}` + "`"
             let error_embed = createEmbed({
                 title: `${getEmoji("error")} Syntax Error`,
-                description: "```Please provide a valid Lua script as a codeblock or a file.```",
+                description: `${codeBlock("Please provide a valid Lua script as a codeblock or a file.")}`,
                 color: Colors.Red,
                 timestamp: true,
                 fields: [
