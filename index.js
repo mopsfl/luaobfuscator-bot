@@ -70,7 +70,7 @@ client.on("messageCreate", async (message) => {
             if (message.guild == null && !command?.props?.allow_dm || !command.props?.enabled) return
             if (config.ignored_guilds.includes(message.guild.id)) {
                 let error_embed = createEmbed({
-                    description: `${getEmoji("delete")} Commands are currently disabled in this guild.`,
+                    description: `${getEmoji("failed")} Commands are disabled for this guild.`,
                     color: Colors.Red,
                 })
                 message.reply({ embeds: [error_embed] })
