@@ -4,7 +4,6 @@ const { Colors } = require("discord.js")
 const { getEmoji } = require("../utils/misc")
 const config = require("../.config")
 const fetch = require("fetch")
-const { obfuscate } = require("../utils/obfuscate")
 
 module.exports = {
     enabled: true,
@@ -16,16 +15,17 @@ module.exports = {
     arguments: "<codeblock | file>",
 
     allow_dm: true,
-    ignore_arguments: false, //wont throw any syntax error even if the arguments are wrong
+    ignore_arguments: true, //wont throw any syntax error even if the arguments are wrong
 
-    callback: async function(arg) {
+    callback: async function (arg) {
         const client = global.client,
             message = arg.message || arg
 
         if (!message) return
-        if (message.content.includes("```")) {
-            const script = arg.rawargs.replace(/(```lua|```)/g, "")
-            const res = await obfuscate(script, message)
+        const iscodeblock = /^([`])[`]*\1$|^[`]$/mg.test(arg.rawargs)
+        const haswebhook = /https:\/\/.+\/api\/webhooks\/[0-9]+\/.*\w/.test(arg.rawargs)
+        if (message.content.includes("```") && iscodeblock) {
+            const script = arg.rawargs.replace(/(^`\S*)/mg, "")
         } else if ([...message.attachments].length > 0) {
             const attachment = message.attachments.first()
             const url = attachment ? attachment.url : null
@@ -40,14 +40,14 @@ module.exports = {
                 return message.reply({ embeds: [error_embed] })
             }
 
-            fetch.fetchUrl(url, async(error, meta, body) => {
+            fetch.fetchUrl(url, async (error, meta, body) => {
                 if (error) {
                     sendErrorMessage(error, message)
                     console.error(error)
                     return
                 }
                 const script = body.toString()
-                obfuscate(script, message)
+                //obfuscate script
             })
         } else {
             let usage_args = arg.props.arguments.length > 0 ? "`" + `${arg.props.arguments}` + "`" : ""

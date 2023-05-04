@@ -1,15 +1,10 @@
 const {
     Client,
     GatewayIntentBits,
-    PermissionsBitField,
     ActivityType,
     Partials,
     Colors,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    EmbedBuilder,
-    Collection
+    Collection, codeBlock
 } = require("discord.js"),
     config = require("./.config.js"),
     fs = require("fs")
@@ -40,12 +35,11 @@ fs.readdir("./commands", (err, files) => {
     })
 })
 
-const commandList = require("./utils/commandList"),
-    commandFunctions = require("./utils/command"),
+const commandFunctions = require("./utils/command"),
     { createEmbed } = require("./utils/embed"),
     { getEmoji } = require("./utils/misc.js")
 
-client.on("ready", async() => {
+client.on("ready", async () => {
     const servers = client.guilds.cache.size
 
     setInterval(() => {
@@ -61,7 +55,7 @@ client.on("ready", async() => {
     console.log(`Successfully logged in as ${client.user.tag}!\nListening to ${servers} servers.`)
 })
 
-client.on("messageCreate", async(message) => {
+client.on("messageCreate", async (message) => {
     if (message.author.bot) return
     if (!message.content) return
     try {
@@ -73,7 +67,7 @@ client.on("messageCreate", async(message) => {
                 props: commandFunctions.getProps(message),
                 message: message,
             }
-            if (message.guild == null && !command.props.allow_dm || !command.props.enabled) return
+            if (message.guild == null && !command?.props?.allow_dm || !command.props?.enabled) return
             if (config.ignored_guilds.includes(message.guild.id)) {
                 let error_embed = createEmbed({
                     description: `${getEmoji("delete")} Commands are currently disabled in this guild.`,
@@ -107,7 +101,7 @@ client.on("messageCreate", async(message) => {
                     title: `${getEmoji("failed")} Syntax Error`,
                     color: Colors.Red,
                     fields: [
-                        { name: "Usage:", value: `${usage_cmd} ${usage_args}` }
+                        { name: "Syntax:", value: `${usage_cmd} ${usage_args}` }
                     ],
                     timestamp: true
                 })
@@ -122,14 +116,6 @@ client.on("messageCreate", async(message) => {
             if (helpCommand) helpCommand.callback(message)
         }
     } catch (e) {
-        console.error(e)
-    }
-})
-
-client.on("interactionCreate", async(interaction) => {
-    if (!interaction.isButton()) return
-
-    try {} catch (e) {
         console.error(e)
     }
 })

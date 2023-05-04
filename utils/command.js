@@ -9,7 +9,7 @@ module.exports = {
      * @description Gets the command that's being used in the message
      * @param { Message } message
      */
-    getCommand: function(message) {
+    getCommand: function (message) {
         if (!message) return
         return this.getArgs(message).shift().toLowerCase()
     },
@@ -17,7 +17,7 @@ module.exports = {
      * @description Gets the args that are being used in the message
      * @param { Message } message
      */
-    getArgs: function(message) {
+    getArgs: function (message) {
         if (!message || !message.content) return
         return message.content.slice(prefix.length).split(' ')
     },
@@ -26,7 +26,7 @@ module.exports = {
      * @param { Message } message
      * @param { String } command
      */
-    getRawArgs: function(message) {
+    getRawArgs: function (message) {
         if (!message) return
         return message.content.slice(prefix.length).slice(this.getCommand(message).length + 1)
     },
@@ -34,9 +34,11 @@ module.exports = {
      * @description Checks if the message is a command (starts with the bot prefix)
      * @param { Message } message
      */
-    isCommand: function(message) {
+    isCommand: function (message) {
         if (!message) return
-        if (global.client.commands.find(c => c.command == this.getCommand(message))) {
+
+        const command = this.getCommand(message)
+        if (global.client.commands.find(c => c.command == command)) {
             return message.content.startsWith(prefix) && this.getCommand(message) != ""
         }
     },
@@ -44,7 +46,7 @@ module.exports = {
      * @description Gets the properties of a command from the command collection
      * @param { Message } message
      */
-    getProps: function(message) {
+    getProps: function (message) {
         if (!message) return
         return global.client.commands.find(c => c.command == this.getCommand(message))
     },
@@ -52,7 +54,7 @@ module.exports = {
      * @description Checks if the message mentioned the bot
      * @param { String } message
      */
-    isBotMention: function(message) {
+    isBotMention: function (message) {
         if (!message) return
         return message.mentions.users.find(id => id == global.client.user.id)
     },
@@ -60,13 +62,13 @@ module.exports = {
      * @description Parses all the mentions from a message
      * @param { Message } message
      */
-    parseMentions: function(message) {
+    parseMentions: function (message) {
         if (!message) return
         const mentions = message.mentions.users
         if (!mentions) return
         let users = []
 
-        mentions.forEach(async(id) => {
+        mentions.forEach(async (id) => {
             await global.client.users.fetch(id).then(user => {
                 users[id] = user
             }).catch(console.error)
@@ -78,7 +80,7 @@ module.exports = {
      * @param { User } user 
      * @param { PermissionsBitField | [ PermissionsBitField ] } permission_bit 
      */
-    hasPermission: function(user, permission_bit) {
+    hasPermission: function (user, permission_bit) {
         if (!user || !permission_bit) return
         return user.permissions.has(permission_bit) || user.permissions.has(PermissionsBitField.Flags.Administrator)
     },
@@ -87,12 +89,12 @@ module.exports = {
      * @param { Error | string } error
      * @param { Message } message
      */
-    sendErrorMessage: function(error, message, type) {
+    sendErrorMessage: function (error, message, type) {
         if (!message || !error) return
         let error_message = "```" + `${error.message || error[0]}` + "```"
         let error_name = "```" + `${error.name || error[2]}` + "```"
         let error_embed = createEmbed({
-            title: `${getEmoji("error")} ${error.message ? "Internal Error" : error[1] } - ${error_name}`,
+            title: `${getEmoji("error")} ${error.message ? "Internal Error" : error[1]} - ${error_name}`,
             color: Colors.Red,
             fields: [
                 { name: "Error:", value: `${error_message}` },
