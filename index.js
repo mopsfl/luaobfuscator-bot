@@ -103,16 +103,14 @@ client.on("messageCreate", async (message) => {
                 let embed = createEmbed({
                     title: `${getEmoji("failed")} Syntax Error`,
                     color: Colors.Red,
-                    fields: [
-                        {
-                            name: "Syntax:",
-                            value: `${usage_cmd} ${usage_args}`,
-                            footer: {
-                                text: "LuaObfuscator Bot • made by mopsfl#4588",
-                                iconURL: config.ICON_URL
-                            }
+                    fields: [{
+                        name: "Syntax:",
+                        value: `${usage_cmd} ${usage_args}`,
+                        footer: {
+                            text: "LuaObfuscator Bot • made by mopsfl#4588",
+                            iconURL: config.ICON_URL
                         }
-                    ],
+                    }],
                     timestamp: true
                 })
                 message.reply({ embeds: [embed] })
@@ -133,7 +131,6 @@ client.on("messageCreate", async (message) => {
 
 try {
     client.login(process.env.TOKEN).then(() => {
-        console.info("Logging in...")
         global.client = client
     }).catch(console.error)
 } catch (e) {
