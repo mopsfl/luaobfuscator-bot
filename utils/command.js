@@ -8,10 +8,11 @@ module.exports = {
     /**
      * @description Gets the command that's being used in the message
      * @param { Message } message
+     * @returns { String }
      */
     getCommand: function (message) {
         if (!message) return
-        return this.getArgs(message).shift().toLowerCase()
+        return this.getArgs(message).shift().toLowerCase().replace(/`+[^`]*`+/gm, "").trim()
     },
     /**
      * @description Gets the args that are being used in the message
@@ -37,7 +38,7 @@ module.exports = {
     isCommand: function (message) {
         if (!message) return
 
-        const command = this.getCommand(message)
+        const command = this.getCommand(message).replace(/`+[^`]*`+/gm, "").trim()
         if (global.client.commands.find(c => c.command == command || c.aliases?.includes(command))) {
             return message.content.startsWith(prefix) && this.getCommand(message) != ""
         }

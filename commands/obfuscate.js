@@ -3,7 +3,6 @@ const { sendErrorMessage } = require("../utils/command")
 const { Colors, codeBlock, blockQuote, inlineCode, hyperlink, Attachment } = require("discord.js")
 const { getEmoji } = require("../utils/misc")
 const config = require("../.config")
-const fetch = require("fetch")
 const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, manualObfuscateScript, obfuscateScript, createFileAttachment } = require("../utils/obfuscate-util")
 
 module.exports = {
@@ -147,7 +146,13 @@ module.exports = {
         let response = await message.reply({ embeds: [process_embed] })
 
         const session = await createSession(script)
-        if (!session.sessionId) return sendErrorMessage([session.error || "Unable to create session", "Error", session.error_name || "Unknown Error"], message)
+        if (!session.sessionId) {
+            process_embed.data.fields[0].value = `${getEmoji("error")} Failed creating session!`
+            await response.edit({
+                embeds: [process_embed]
+            })
+            return sendErrorMessage([session.error || "Unable to create session", "Error", session.error_name || "Unknown Error"], message)
+        }
 
         console.log(`New session created by ${message.author.tag}: ${session.sessionId}`)
         process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Obfuscating script...`
@@ -156,7 +161,13 @@ module.exports = {
         })
 
         const obfuscate_script = await obfuscateScript(script)
-        if (obfuscate_script.message && !obfuscate_script.code) return sendErrorMessage([obfuscate_script.message, "Error", "obfuscation"], message)
+        if (obfuscate_script.message && !obfuscate_script.code) {
+            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("error")} Failed obfuscating!`
+            await response.edit({
+                embeds: [process_embed]
+            })
+            return sendErrorMessage([obfuscate_script.message, "Error", "obfuscation"], message)
+        }
         process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
             embeds: [process_embed]

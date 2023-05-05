@@ -70,6 +70,7 @@ client.on("messageCreate", async (message) => {
                 props: commandFunctions.getProps(message),
                 message: message,
             }
+            console.log(command.cmd)
             if (message.guild == null && !command?.props?.allow_dm || !command.props?.enabled) return
             if (config.ignored_guilds.includes(message.guild?.id)) {
                 let error_embed = createEmbed({
