@@ -31,6 +31,9 @@ fs.readdir("./commands", (err, files) => {
         try {
             const props = require(`./commands/${f}`)
             client.commands.set(props.command, props)
+            props.aliases?.forEach(alias => {
+                if (typeof alias == "string") client.commands.set(alias, props)
+            })
         } catch (e) { console.error(e) }
     })
 })
@@ -68,7 +71,7 @@ client.on("messageCreate", async (message) => {
                 message: message,
             }
             if (message.guild == null && !command?.props?.allow_dm || !command.props?.enabled) return
-            if (config.ignored_guilds.includes(message.guild.id)) {
+            if (config.ignored_guilds.includes(message.guild?.id)) {
                 let error_embed = createEmbed({
                     description: `${getEmoji("failed")} Commands are disabled for this guild.`,
                     color: Colors.Red,
@@ -87,7 +90,7 @@ client.on("messageCreate", async (message) => {
                         title: `${getEmoji("failed")} Missing Permissions`,
                         color: Colors.Red,
                         description: "You are not allowed to use this command.",
-                        timestamp: true
+                        timestamp: true,
                     })
                     message.reply({ embeds: [embed] })
                     return
@@ -101,15 +104,23 @@ client.on("messageCreate", async (message) => {
                     title: `${getEmoji("failed")} Syntax Error`,
                     color: Colors.Red,
                     fields: [
-                        { name: "Syntax:", value: `${usage_cmd} ${usage_args}` }
+                        {
+                            name: "Syntax:",
+                            value: `${usage_cmd} ${usage_args}`,
+                            footer: {
+                                text: "LuaObfuscator Bot • made by mopsfl#4588",
+                                iconURL: config.ICON_URL
+                            }
+                        }
                     ],
                     timestamp: true
                 })
                 message.reply({ embeds: [embed] })
                 return
             }
+            const begin_time = Date.now()
             command.props.callback(command).then(() => {
-                console.log(`'${command.cmd}' command requested by ${message.author.tag}`)
+                console.log(`'${command.cmd}' command, requested by ${message.author.tag}, finished in ${(Date.now() - begin_time)}ms`)
             })
         } else if (commandFunctions.isBotMention(message)) {
             const helpCommand = client.commands.find(cmd => cmd.command == "help")
