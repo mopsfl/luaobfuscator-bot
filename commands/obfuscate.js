@@ -160,12 +160,12 @@ module.exports = {
         })*/
 
         const obfuscate_script = await obfuscateScript(script)
-        if (obfuscate_script.message && !obfuscate_script.code) {
+        if (obfuscate_script.message && !obfuscate_script.code || !obfuscate_script.sessionId) {
             process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             await response.edit({
                 embeds: [process_embed]
             })
-            return sendErrorMessage([obfuscate_script.message, "Error", "obfuscation"], message)
+            return sendErrorMessage([obfuscate_script.message || "Obfuscation failed!", "Error", "obfuscation"], message)
         }
         process_embed.data.fields[0].value = `${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
