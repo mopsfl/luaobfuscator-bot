@@ -4,6 +4,7 @@ const { Colors, codeBlock, blockQuote, inlineCode, hyperlink, Attachment } = req
 const { getEmoji } = require("../utils/misc")
 const config = require("../.config")
 const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, manualObfuscateScript, obfuscateScript, createFileAttachment } = require("../utils/obfuscate-util")
+const { ReadStream } = require("fs")
 
 module.exports = {
     enabled: true,
@@ -40,13 +41,11 @@ module.exports = {
                 return message.reply({ embeds: [error_embed] })
             }
 
-            fetch.fetchUrl(url, async (error, meta, body) => {
-                if (error) {
-                    sendErrorMessage(error, message)
-                    console.error(error)
-                    return
-                }
-                script = body.toString()
+            fetch(url).then(async res => {
+                const reader = res.body.getReader()
+                await reader.read().then(({ done, value }) => {
+                    script = Buffer.from(value).toString()
+                })
                 if (typeof script == "string") haswebhook = hasWebhook(script)
             })
         } else {

@@ -37,9 +37,7 @@ module.exports = {
      */
     isCommand: function (message) {
         if (!message) return
-        console.log(this.getCommand(message))
         const command = this.getCommand(message).replace(/```[^`]*```/gm, "").trim()
-        console.log(command)
         if (global.client.commands.find(c => c.command == command || c.aliases?.includes(command))) {
             return message.content.startsWith(prefix) && this.getCommand(message) != ""
         }
