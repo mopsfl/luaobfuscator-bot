@@ -70,7 +70,7 @@ module.exports = {
 
         let process_embed = createEmbed({
             fields: [
-                { name: `Obfuscation Process`, value: `${getEmoji("loading")} Creating session...` }
+                { name: `Obfuscation Process`, value: `${getEmoji("loading")} Obfuscating script...` }
             ],
             timestamp: true,
             color: Colors.Yellow,
@@ -145,7 +145,7 @@ module.exports = {
 
         let response = await message.reply({ embeds: [process_embed] })
 
-        const session = await createSession(script)
+        /*const session = await createSession(script)
         if (!session.sessionId) {
             process_embed.data.fields[0].value = `${getEmoji("error")} Failed creating session!`
             await response.edit({
@@ -158,26 +158,29 @@ module.exports = {
         process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Obfuscating script...`
         await response.edit({
             embeds: [process_embed]
-        })
+        })*/
 
         const obfuscate_script = await obfuscateScript(script)
         if (obfuscate_script.message && !obfuscate_script.code) {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("error")} Failed obfuscating!`
+            process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             await response.edit({
                 embeds: [process_embed]
             })
             return sendErrorMessage([obfuscate_script.message, "Error", "obfuscation"], message)
         }
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
             embeds: [process_embed]
         })
         console.log(`Script by ${message.author.tag} successfully obfuscated: ${obfuscate_script.sessionId}`)
 
         const file_attachment = createFileAttachment(Buffer.from(obfuscate_script.code))
-        if (typeof file_attachment != "object") return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
+        if (typeof file_attachment != "object") {
+            process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("error")} Failed creating attachment file!`
+            return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
+        }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("check")} Attachment file created!`
+        process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("check")} Attachment file created!`
         await response.edit({
             embeds: [process_embed]
         })
