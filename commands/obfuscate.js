@@ -130,7 +130,7 @@ module.exports = {
                                         value: embed_webhook_string
                                     },
                                 ],
-                                color: Colors.Red,
+                                color: Colors.Yellow,
                                 timestamp: true,
                                 footer: {
                                     text: "LuaObfuscator Bot • made by mopsfl#4588",
@@ -181,6 +181,7 @@ module.exports = {
         }
 
         process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("check")} Attachment file created!`
+        process_embed.data.color = Colors.Green
         await response.edit({
             embeds: [process_embed]
         })

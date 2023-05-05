@@ -12,7 +12,7 @@ module.exports = {
      */
     getCommand: function (message) {
         if (!message) return
-        return this.getArgs(message).shift().toLowerCase().replace(/`+[^`]*`+/gm, "").trim()
+        return this.getArgs(message).shift().toLowerCase()
     },
     /**
      * @description Gets the args that are being used in the message
@@ -20,7 +20,7 @@ module.exports = {
      */
     getArgs: function (message) {
         if (!message || !message.content) return
-        return message.content.slice(prefix.length).split(' ')
+        return message.content.replace(/`+[^`]*`+/gm, "").trim().slice(prefix.length).split(' ')
     },
     /**
      * @description Gets the raw args that are being used in the message as a string
@@ -37,8 +37,9 @@ module.exports = {
      */
     isCommand: function (message) {
         if (!message) return
-
-        const command = this.getCommand(message).replace(/`+[^`]*`+/gm, "").trim()
+        console.log(this.getCommand(message))
+        const command = this.getCommand(message).replace(/```[^`]*```/gm, "").trim()
+        console.log(command)
         if (global.client.commands.find(c => c.command == command || c.aliases?.includes(command))) {
             return message.content.startsWith(prefix) && this.getCommand(message) != ""
         }
