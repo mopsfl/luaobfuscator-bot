@@ -24,10 +24,6 @@ module.exports = {
             message = arg.message || arg
 
         if (!message) return
-        if (obfuscating_users.has(message.author.id)) {
-            return sendErrorMessage(["You are already obfuscating a script. Please wait!", "Error", "Rate Limit"], message)
-        }
-        obfuscating_users.set(message.author.id, true)
 
         let script = null, haswebhook
         const iscodeblock = hasCodeblock(arg.rawargs)
@@ -71,6 +67,10 @@ module.exports = {
                 }
             })
             return message.reply({ embeds: [error_embed] })
+        }
+
+        if (obfuscating_users.has(message.author.id)) {
+            return sendErrorMessage(["You are already obfuscating a script. Please wait!", "Error", "Rate Limit"], message)
         }
 
         let process_embed = createEmbed({
@@ -150,6 +150,7 @@ module.exports = {
 
         let response = await message.reply({ embeds: [process_embed] })
 
+        obfuscating_users.set(message.author.id, true)
         const obfuscate_script = await obfuscateScript(script, message)
         if (obfuscate_script.message && !obfuscate_script.code || !obfuscate_script.sessionId) {
             process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
