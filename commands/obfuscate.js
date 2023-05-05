@@ -43,12 +43,12 @@ module.exports = {
                 return message.reply({ embeds: [error_embed] })
             }
 
-            fetch(url).then(async res => {
+            await fetch(url).then(async res => {
                 const reader = res.body.getReader()
                 await reader.read().then(({ done, value }) => {
                     script = Buffer.from(value).toString()
+                    if (typeof script == "string") haswebhook = hasWebhook(script)
                 })
-                if (typeof script == "string") haswebhook = hasWebhook(script)
             })
         } else {
             let usage_args = arg.props.arguments.length > 0 ? "`" + `${arg.props.arguments}` + "`" : ""
@@ -86,9 +86,10 @@ module.exports = {
         })
 
         if (haswebhook) {
-            const webhooks = parseWebhooks(arg.rawargs)
+            const webhooks = parseWebhooks(script)
+            if (!webhooks) return
             let embed_webhook_string = ""
-            for (let i = 0; i < webhooks.length; i++) {
+            for (let i = 0; i < webhooks?.length; i++) {
                 if (!embed_webhook_string.includes(webhooks[i].trim())) {
                     embed_webhook_string = embed_webhook_string + codeBlock("lua", webhooks[i].trim())
                 }
@@ -128,7 +129,7 @@ module.exports = {
                                 fields: [
                                     {
                                         name: "Note:",
-                                        value: `${"We've detected that your script has discord webhooks implemented.\nUsing them for malicious purposes (e.g. Scams, IP Loggers, ...) can result in a punishment."}`
+                                        value: `${"We've detected that your script has discord webhooks implemented.\nUsing them for malicious purposes (e.g. scams, IP loggers, etc.) can result in a punishment."}`
                                     },
                                     {
                                         name: `Webhooks found: (${webhooks.length})`,
