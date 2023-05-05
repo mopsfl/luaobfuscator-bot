@@ -2,6 +2,7 @@ const { createEmbed } = require("../utils/embed.js")
 const { Colors } = require("discord.js")
 const commandList = require("../utils/commandList")
 const { getEmoji } = require("../utils/misc")
+const { ICON_URL } = require("../.config")
 
 module.exports = {
     enabled: true,
@@ -28,7 +29,11 @@ module.exports = {
             title: `${getEmoji("info")} Command List`,
             color: Colors.Green,
             fields: list,
-            timestamp: true
+            timestamp: true,
+            footer: {
+                text: "LuaObfuscator Bot • made by mopsfl#4588",
+                iconURL: ICON_URL
+            }
         })
         return await message.reply({ embeds: [embed] })
     }

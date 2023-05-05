@@ -1,4 +1,4 @@
-const { prefix } = require("../.config.js")
+const { prefix, ICON_URL } = require("../.config.js")
 const { createEmbed } = require("../utils/embed")
 const { getEmoji } = require("../utils/misc")
 
@@ -38,7 +38,7 @@ module.exports = {
         if (!message) return
 
         const command = this.getCommand(message)
-        if (global.client.commands.find(c => c.command == command)) {
+        if (global.client.commands.find(c => c.command == command || c.aliases?.includes(command))) {
             return message.content.startsWith(prefix) && this.getCommand(message) != ""
         }
     },
@@ -48,7 +48,7 @@ module.exports = {
      */
     getProps: function (message) {
         if (!message) return
-        return global.client.commands.find(c => c.command == this.getCommand(message))
+        return global.client.commands.find(c => c.command == this.getCommand(message) || c.aliases?.includes(this.getCommand(message)))
     },
     /**
      * @description Checks if the message mentioned the bot
@@ -100,6 +100,10 @@ module.exports = {
                 { name: "Error:", value: `${error_message}` },
             ],
             timestamp: true,
+            footer: {
+                text: "LuaObfuscator Bot • made by mopsfl#4588",
+                iconURL: ICON_URL
+            }
         })
         if (!type) return message.reply({ embeds: [error_embed] })
         if (type == "edit") return message.edit({ embeds: [error_embed] })
