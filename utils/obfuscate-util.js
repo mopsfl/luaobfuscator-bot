@@ -2,7 +2,7 @@ const fetch = require("node-fetch")
 const { API_URL } = require("../.config")
 const { sendErrorMessage } = require("../utils/command")
 const { createEmbed } = require("../utils/embed")
-const { AttachmentBuilder } = require("discord.js")
+const { AttachmentBuilder, Message } = require("discord.js")
 
 module.exports = {
     /**
@@ -38,19 +38,27 @@ module.exports = {
      * Obfuscates the given session and config
      * @param { String } session 
      * @param { { String: Object | boolean | String } } config 
+     * @param { Message } message discord message for error handling  
      */
-    manualObfuscateScript: async function (session, config = {}) {
+    manualObfuscateScript: async function (session, config = {}, message) {
         if (!session || typeof session != "string") return { error: "Unable to obfuscatescript. (invalid session)", error_name: "manualObfuscateScript" }
-        const response = await fetch(`${API_URL}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.API_KEY } })
+        const response = await fetch(`${API_URL}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.API_KEY } }).catch(error => {
+            if (message) sendErrorMessage(error, message)
+            throw error
+        })
         return response.json()
     },
     /**
      * Obfuscates a script
      * @param { String } script 
+     * @param { Message } message discord message for error handling  
      */
-    obfuscateScript: async function (script) {
+    obfuscateScript: async function (script, message) {
         if (!script || typeof script != "string") return { error: "Unable to obfuscatescript. (invalid script)", error_name: "obfuscateScript" }
-        const response = await fetch(`${API_URL}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.API_KEY } })
+        const response = await fetch(`${API_URL}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.API_KEY } }).catch(error => {
+            if (message) sendErrorMessage(error, message)
+            throw error
+        })
         return response.json()
     },
     /**
