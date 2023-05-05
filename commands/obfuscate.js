@@ -1,10 +1,11 @@
 const { createEmbed } = require("../utils/embed")
 const { sendErrorMessage } = require("../utils/command")
-const { Colors, codeBlock, blockQuote, inlineCode, hyperlink, Attachment } = require("discord.js")
+const { Colors, codeBlock, blockQuote, inlineCode, hyperlink, Attachment, Collection } = require("discord.js")
 const { getEmoji } = require("../utils/misc")
 const config = require("../.config")
 const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, manualObfuscateScript, obfuscateScript, createFileAttachment } = require("../utils/obfuscate-util")
-const { ReadStream } = require("fs")
+
+const obfuscating_users = new Collection()
 
 module.exports = {
     enabled: true,
@@ -23,6 +24,11 @@ module.exports = {
             message = arg.message || arg
 
         if (!message) return
+        if (obfuscating_users.has(message.author.id)) {
+            return sendErrorMessage(["You are already obfuscating a script. Please wait!", "Error", "Rate Limit"], message)
+        }
+        obfuscating_users.set(message.author.id, true)
+
         let script = null, haswebhook
         const iscodeblock = hasCodeblock(arg.rawargs)
         if (message.content.includes("```") && iscodeblock) {
@@ -144,22 +150,7 @@ module.exports = {
 
         let response = await message.reply({ embeds: [process_embed] })
 
-        /*const session = await createSession(script)
-        if (!session.sessionId) {
-            process_embed.data.fields[0].value = `${getEmoji("error")} Failed creating session!`
-            await response.edit({
-                embeds: [process_embed]
-            })
-            return sendErrorMessage([session.error || "Unable to create session", "Error", session.error_name || "Unknown Error"], message)
-        }
-
-        console.log(`New session created by ${message.author.tag}: ${session.sessionId}`)
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Obfuscating script...`
-        await response.edit({
-            embeds: [process_embed]
-        })*/
-
-        const obfuscate_script = await obfuscateScript(script)
+        const obfuscate_script = await obfuscateScript(script, message)
         if (obfuscate_script.message && !obfuscate_script.code || !obfuscate_script.sessionId) {
             process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             await response.edit({
@@ -187,5 +178,6 @@ module.exports = {
         await message.reply({
             files: [file_attachment],
         })
+        obfuscating_users.delete(message.author.id)
     }
 }
