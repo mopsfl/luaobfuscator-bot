@@ -150,7 +150,6 @@ module.exports = {
         }
 
         let response = await message.reply({ embeds: [process_embed] })
-
         obfuscating_users.set(message.author.id, true)
         const obfuscate_script = await obfuscateScript(script, message)
         if (obfuscate_script.message && !obfuscate_script.code || !obfuscate_script.sessionId) {
@@ -158,6 +157,7 @@ module.exports = {
             await response.edit({
                 embeds: [process_embed]
             })
+            obfuscating_users.delete(message.author.id)
             return sendErrorMessage([obfuscate_script.message || "Obfuscation failed!", "Error", "obfuscation"], message)
         }
         process_embed.data.fields[0].value = `${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
@@ -169,6 +169,7 @@ module.exports = {
         const file_attachment = createFileAttachment(Buffer.from(obfuscate_script.code))
         if (typeof file_attachment != "object") {
             process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("error")} Failed creating attachment file!`
+            obfuscating_users.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
         }
 
