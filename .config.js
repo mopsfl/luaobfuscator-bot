@@ -25,6 +25,7 @@ module.exports = {
         "• BOT": [
             "help",
             "ping",
+            "info"
         ],
     },
     ignored_guilds: [
