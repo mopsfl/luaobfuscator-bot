@@ -5,7 +5,7 @@ const { getEmoji } = require("../utils/misc")
 const config = require("../.config")
 const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, manualObfuscateScript, obfuscateScript, createFileAttachment } = require("../utils/obfuscate-util")
 
-const obfuscating_users = new Collection()
+const ratelimits = new Collection()
 
 module.exports = {
     enabled: true,
@@ -69,7 +69,7 @@ module.exports = {
             return message.reply({ embeds: [error_embed] })
         }
 
-        if (obfuscating_users.has(message.author.id)) {
+        if (ratelimits.has(message.author.id)) {
             return sendErrorMessage(["You are already obfuscating a script. Please wait!", "Error", "Rate Limit"], message)
         }
 
@@ -150,14 +150,14 @@ module.exports = {
         }
 
         let response = await message.reply({ embeds: [process_embed] })
-        obfuscating_users.set(message.author.id, true)
+        ratelimits.set(message.author.id, true)
         const obfuscate_script = await obfuscateScript(script, message)
         if (obfuscate_script.message && !obfuscate_script.code || !obfuscate_script.sessionId) {
             process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             await response.edit({
                 embeds: [process_embed]
             })
-            obfuscating_users.delete(message.author.id)
+            ratelimits.delete(message.author.id)
             return sendErrorMessage([obfuscate_script.message || "Obfuscation failed!", "Error", "obfuscation"], message)
         }
         process_embed.data.fields[0].value = `${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
@@ -169,7 +169,7 @@ module.exports = {
         const file_attachment = createFileAttachment(Buffer.from(obfuscate_script.code))
         if (typeof file_attachment != "object") {
             process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("error")} Failed creating attachment file!`
-            obfuscating_users.delete(message.author.id)
+            ratelimits.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
         }
 
@@ -181,6 +181,8 @@ module.exports = {
         await message.reply({
             files: [file_attachment],
         })
-        obfuscating_users.delete(message.author.id)
+        ratelimits.delete(message.author.id)
     }
 }
+
+global.ratelimits = ratelimits
