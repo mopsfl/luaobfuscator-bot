@@ -9,6 +9,7 @@ module.exports = {
         discord_webhooks: "warn" // block, warn, null
     },
 
+    SUPPORT_URL: "https://discord.com/invite/nYK7FuV4w4",
     SESSION_URL: "https://luaobfuscator.com/?session=",
     API_URL: "https://luaobfuscator.com/api/obfuscator/",
     ICON_URL: "https://luaobfuscator.com/img/logo.png",
