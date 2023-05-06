@@ -7,7 +7,9 @@ const {
     Collection, codeBlock
 } = require("discord.js"),
     config = require("./.config.js"),
-    fs = require("fs")
+    fs = require("fs"),
+    express = require("express"),
+    app = express()
 
 require("dotenv").config()
 
@@ -40,7 +42,7 @@ fs.readdir("./commands", (err, files) => {
 
 const commandFunctions = require("./utils/command"),
     { createEmbed } = require("./utils/embed"),
-    { getEmoji } = require("./utils/misc.js")
+    { getEmoji, formatUptime } = require("./utils/misc.js")
 
 client.on("ready", async () => {
     const servers = client.guilds.cache.size
@@ -130,9 +132,21 @@ client.on("messageCreate", async (message) => {
 })
 
 try {
-    client.login(process.env.TOKEN).then(() => {
+    client.login(process.env.TEST_TOKEN).then(() => {
         global.client = client
     }).catch(console.error)
 } catch (e) {
     console.error(e)
 }
+
+app.get("/", (req, res) => {
+    res.status(200).json({ code: 200, message: "OK" })
+})
+
+app.get("/client/uptime", (req, res) => {
+    res.status(200).json({ ms: client.uptime, time: formatUptime(client.uptime) })
+})
+
+app.listen(process.env.PORT, () => {
+    console.log(`Server listening on port ${process.env.PORT}`)
+})
