@@ -60,7 +60,7 @@ module.exports = {
                 timestamp: true,
                 fields: [
                     { name: "Syntax:", value: `${usage_cmd} ${usage_args}` },
-                    { name: "Reminder:", value: `If you need help, go to <#1083105006506487919> or ask in <#1069422456579829822>` }
+                    { name: "Reminder:", value: `If you need help, ${message.guild.id == 1069422455933902949 ? `go to <#1083105006506487919> or ask in <#1069422456579829822>.` : `${client.guilds.fetch(1069422455933902949).then(guild => guild.members.filter(m => m == message.author.id )) ? `go to <#1083105006506487919> or ask in <#1069422456579829822>.` : `join our ${hyperlink("Discord", "https://discord.gg/fygAGDMm5q")} and go to <#1083105006506487919> or ask in <#1069422456579829822> once you join.`}} }
                 ], footer: {
                     text: "LuaObfuscator Bot • made by mopsfl#4588",
                     iconURL: config.ICON_URL
@@ -103,7 +103,7 @@ module.exports = {
                                 fields: [
                                     {
                                         name: "Problems:",
-                                        value: `${codeBlock("diff", "- Please remove all discord webhooks from your script.")}`
+                                        value: `${codeBlock("diff", "- Please remove ${webhooks.length > 1 ? "all of the Discord webhooks" : "the Discord webhook"} from your script.")}`
                                     },
                                     {
                                         name: `Webhooks found: (${webhooks.length})`,
@@ -125,11 +125,11 @@ module.exports = {
                     message.author.send({
                         embeds: [createEmbed(
                             {
-                                title: `${getEmoji("warn")} Webhook detected`,
+                                title: `${getEmoji("warn")} ${webhooks.length > 1 ? "Webhooks" : "Webhook"} detected`,
                                 fields: [
                                     {
                                         name: "Note:",
-                                        value: `${"We've detected that your script has discord webhooks implemented.\nUsing them for malicious purposes (e.g. scams, IP loggers, etc.) can result in a punishment."}`
+                                        value: `We've detected that your script has ${webhooks.length > 1 ? "Discord webhooks" : "a Discord webhook"} implemented.\nUsing them for malicious purposes (e.g. scams, IP loggers, etc.) can result in consequences.`
                                     },
                                     {
                                         name: `Webhooks found: (${webhooks.length})`,
@@ -153,35 +153,35 @@ module.exports = {
         ratelimits.set(message.author.id, true)
         const obfuscate_script = await obfuscateScript(script, message)
         if (obfuscate_script.message && !obfuscate_script.code || !obfuscate_script.sessionId) {
-            process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
-            await response.edit({
+            ratelimits.delete(message.author.id)
+            process_embed.data.fields[0].value = `${getEmoji("error")} Obfuscation failed!${obfuscate_script.message ? `\n**Error Details:**\n${getEmoji("space")} ${obfuscate_script.message}` : ""}`
+            process_embed.data.color = Colors.Red
+            return await response.edit({
                 embeds: [process_embed]
             })
-            ratelimits.delete(message.author.id)
-            return sendErrorMessage([obfuscate_script.message || "Obfuscation failed!", "Error", "obfuscation"], message)
         }
         process_embed.data.fields[0].value = `${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
             embeds: [process_embed]
         })
-        console.log(`Script by ${message.author.tag} successfully obfuscated: ${obfuscate_script.sessionId}`)
+        console.log(`Script by ${message.author.username} successfully obfuscated: ${obfuscate_script.sessionId}`)
 
         const file_attachment = createFileAttachment(Buffer.from(obfuscate_script.code))
         if (typeof file_attachment != "object") {
-            process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("error")} Failed creating attachment file!`
             ratelimits.delete(message.author.id)
-            return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
+            process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("error")} Failed to create attachment file!${file_attachment.name ? `\n${getEmoji("space")} ${file_attachment.name}${file_attachment.error ? `\n${getEmoji("space")} ${file_attachment.error}` : ""} : `${file_attachment.error ? `\n${getEmoji("space")} ${file_attachment.error}` : ""}`}`
+            return await response.edit({
+                 embeds: [process_embed]
+            })
         }
 
+        ratelimits.delete(message.author.id)
         process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("check")} Attachment file created!`
         process_embed.data.color = Colors.Green
-        await response.edit({
-            embeds: [process_embed]
+        return await response.edit({
+            embeds: [process_embed],
+            files: [file_attachment]
         })
-        await message.reply({
-            files: [file_attachment],
-        })
-        ratelimits.delete(message.author.id)
     }
 }
 
