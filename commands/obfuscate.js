@@ -153,12 +153,12 @@ module.exports = {
         ratelimits.set(message.author.id, true)
         const obfuscate_script = await obfuscateScript(script, message)
         if (obfuscate_script.message && !obfuscate_script.code || !obfuscate_script.sessionId) {
-            ratelimits.delete(message.author.id)
             process_embed.data.fields[0].value = `${getEmoji("error")} Obfuscation failed!${obfuscate_script.message ? `\n**Error Details:**\n${getEmoji("space")} ${obfuscate_script.message}` : ""}`
             process_embed.data.color = Colors.Red
-            return await response.edit({
+            await response.edit({
                 embeds: [process_embed]
             })
+            return ratelimits.delete(message.author.id)
         }
         process_embed.data.fields[0].value = `${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
@@ -168,20 +168,20 @@ module.exports = {
 
         const file_attachment = createFileAttachment(Buffer.from(obfuscate_script.code))
         if (typeof file_attachment != "object") {
-            ratelimits.delete(message.author.id)
             process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("error")} Failed to create attachment file!${file_attachment.name ? `\n${getEmoji("space")} ${file_attachment.name}${file_attachment.error ? `\n${getEmoji("space")} ${file_attachment.error}` : ""} : `${file_attachment.error ? `\n${getEmoji("space")} ${file_attachment.error}` : ""}`}`
-            return await response.edit({
+            await response.edit({
                  embeds: [process_embed]
             })
+            return ratelimits.delete(message.author.id)
         }
 
-        ratelimits.delete(message.author.id)
         process_embed.data.fields[0].value = `\n${getEmoji("check")} Script obfuscated! ${hyperlink("[open]", config.SESSION_URL + obfuscate_script.sessionId)}\n${getEmoji("check")} Attachment file created!`
         process_embed.data.color = Colors.Green
-        return await response.edit({
+        await response.edit({
             embeds: [process_embed],
             files: [file_attachment]
         })
+        return ratelimits.delete(message.author.id)
     }
 }
 
