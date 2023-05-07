@@ -1,3 +1,3 @@
 # luaobfuscator-bot
 
-New & improved discord bot for LuaObfuscator for [@ferib](https://github.com/ferib)
+New & improved Discord bot for <a href="https://luaobfuscator.com/">LuaObfuscator</a> for [@ferib](https://github.com/ferib)
