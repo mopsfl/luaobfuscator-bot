@@ -6,22 +6,22 @@ const { AttachmentBuilder, Message } = require("discord.js")
 
 module.exports = {
     /**
-     * @description Checks if a string contains a discord webhook
+     * @description Checks if a string contains a Discord webhook
      * @param { String } string 
      */
-    hasWebhook: function (string) { return /https:\/\/.+\/api\/webhooks\/[0-9]+\/.*\w/.test(string) },
+    hasWebhook: function (string) { return /.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/.test(string) },
     /**
-     * @description Checks if a string contains a discord codeblock
+     * @description Checks if a string contains a Discord codeblock
      * @param { String } string 
      */
     hasCodeblock: function (string) { return /^([`])[`]*\1$|^[`]/mg.test(string) },
     /**
-     * Parses all discord webhooks in a string
+     * Parses all Discord webhooks in a string
      * @param { String } string 
      */
-    parseWebhooks: function (string) { return string.match(/.*https:\/\/.+\/api\/webhooks\/[0-9]+\/.*/gm) },
+    parseWebhooks: function (string) { return string.match(/.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/gm) },
     /**
-     * @description Parses a discord codeblock. (Removes all codeblock related characters)
+     * @description Parses a Discord codeblock. (Removes all codeblock related characters)
      * @param { String } string 
      */
     parseCodeblock: function (string) { return string.replace(/(^`\S*)|`+.*/mg, "").trim() },
@@ -41,7 +41,7 @@ module.exports = {
      * @param { Message } message discord message for error handling  
      */
     manualObfuscateScript: async function (session, config = {}, message) {
-        if (!session || typeof session != "string") return { error: "Unable to obfuscatescript. (invalid session)", error_name: "manualObfuscateScript" }
+        if (!session || typeof session != "string") return { error: "Unable to obfuscate script. (invalid session)", error_name: "manualObfuscateScript" }
         const response = await fetch(`${API_URL}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.API_KEY } }).catch(error => {
             if (message) sendErrorMessage(error, message)
             throw error
@@ -51,10 +51,10 @@ module.exports = {
     /**
      * Obfuscates a script
      * @param { String } script 
-     * @param { Message } message discord message for error handling  
+     * @param { Message } message Discord message for error handling  
      */
     obfuscateScript: async function (script, message) {
-        if (!script || typeof script != "string") return { error: "Unable to obfuscatescript. (invalid script)", error_name: "obfuscateScript" }
+        if (!script || typeof script != "string") return { error: "Unable to obfuscate script. (invalid script)", error_name: "obfuscateScript" }
         const response = await fetch(`${API_URL}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.API_KEY } }).catch(error => {
             if (message) sendErrorMessage(error, message)
             throw error
@@ -62,7 +62,7 @@ module.exports = {
         return response.json()
     },
     /**
-     * Creates a discord file attachment with the given buffer content
+     * Creates a Discord file attachment with the given buffer content
      * @param { Buffer } content 
      */
     createFileAttachment: function (content) {
