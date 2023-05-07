@@ -22,8 +22,6 @@ module.exports = {
         if (!message) return
 
         const list = commandList.create()
-        list[0].inline = true
-        list[1].inline = true
 
         let embed = createEmbed({
             title: `${getEmoji("info")} Command List`,
