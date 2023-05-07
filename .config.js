@@ -19,8 +19,10 @@ module.exports = {
         `${prefix}obfuscate <code | file>`,
     ],
     command_list: { // Commands list for the help command
-        "• OBFUSCATION": [
-            "obfuscate"
+        "• LUA OBFUSCATOR": [
+            "obfuscate",
+            "minify",
+            "beautify",
         ],
         "• BOT": [
             "help",
