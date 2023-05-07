@@ -12,7 +12,7 @@ module.exports = {
 
     category: "OBFUSCATION",
     command: "minify",
-    aliases: ["mf"],
+    aliases: ["mf", "min"],
 
     arguments: "<codeblock | file>",
 
