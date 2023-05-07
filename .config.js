@@ -22,7 +22,10 @@ module.exports = {
         "• LUA OBFUSCATOR": [
             "obfuscate",
             "minify",
+            "minifit",
             "beautify",
+            "demovm",
+            "encryptstrings"
         ],
         "• BOT": [
             "help",
