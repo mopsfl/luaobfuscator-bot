@@ -10,7 +10,7 @@ const ratelimits = new Collection()
 module.exports = {
     enabled: true,
 
-    category: "OBFUSCATION",
+    category: "LUA OBFUSCATOR",
     command: "demovm",
     aliases: ["vm"],
 
@@ -89,6 +89,7 @@ module.exports = {
         ratelimits.set(message.author.id, true)
         if (session.message && !session.sessionId) {
             process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
+            process_embed.data.color = Colors.Red
             await response.edit({
                 embeds: [process_embed]
             })
@@ -108,6 +109,7 @@ module.exports = {
 
         if (obfuscated_script.message && !obfuscated_script.code) {
             process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
+            process_embed.data.color = Colors.Red
             await response.edit({
                 embeds: [process_embed]
             })
@@ -124,6 +126,7 @@ module.exports = {
         const file_attachment = createFileAttachment(Buffer.from(obfuscated_script.code))
         if (typeof file_attachment != "object") {
             process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("error")} Failed creating attachment file!`
+            process_embed.data.color = Colors.Red
             ratelimits.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
         }

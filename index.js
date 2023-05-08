@@ -4,7 +4,7 @@ const {
     ActivityType,
     Partials,
     Colors,
-    Collection, codeBlock
+    Collection
 } = require("discord.js"),
     config = require("./.config.js"),
     fs = require("fs"),
