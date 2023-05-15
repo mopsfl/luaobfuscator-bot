@@ -17,5 +17,21 @@ module.exports = {
      * Formats milliseconds to readable time
      * @param { Number } ms Milliseconds
      */
-    formatUptime: function (ms = 0) { return moment.duration(ms).format(" D [days], H [hrs], m [mins], s [secs]") }
+    formatUptime: function (ms = 0) { return moment.duration(ms).format(" D [days], H [hrs], m [mins], s [secs]") },
+    /**
+     * 
+     * @param { ReadableStream } readableStream 
+     * @returns { [ Uint8Array, ...Uint8Array ] } chunks
+     */
+    readAllChunks: async function (readableStream) {
+        const reader = readableStream.getReader();
+        const chunks = [];
+        let done, value;
+        while (!done) {
+            ({ value, done } = await reader.read())
+            if (done) return chunks
+            chunks.push(value)
+        }
+        return chunks
+    }
 }

@@ -1,7 +1,7 @@
 const { createEmbed } = require("../utils/embed")
 const { sendErrorMessage } = require("../utils/command")
 const { Colors, codeBlock, blockQuote, inlineCode, hyperlink, Attachment, Collection } = require("discord.js")
-const { getEmoji } = require("../utils/misc")
+const { getEmoji, readAllChunks } = require("../utils/misc")
 const config = require("../.config")
 const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, manualObfuscateScript, obfuscateScript, createFileAttachment } = require("../utils/obfuscate-util")
 
@@ -25,7 +25,7 @@ module.exports = {
 
         if (!message) return
 
-        let script = null
+        let script = "", _chunks = 0
         const iscodeblock = hasCodeblock(arg.rawargs)
         if (message.content.includes("```") && iscodeblock) {
             script = parseCodeblock(arg.rawargs)
@@ -43,9 +43,11 @@ module.exports = {
             }
 
             await fetch(url).then(async res => {
-                const reader = res.body.getReader()
-                await reader.read().then(({ done, value }) => {
-                    script = Buffer.from(value).toString()
+                const chunks = await readAllChunks(res.body)
+                _chunks = chunks.length
+
+                chunks.forEach(chunk => {
+                    script = script + Buffer.from(chunk).toString() || ""
                 })
             })
         } else {
@@ -67,13 +69,14 @@ module.exports = {
             return message.reply({ embeds: [error_embed] })
         }
 
+
         if (ratelimits.has(message.author.id)) {
             return sendErrorMessage(["You are already beautifying a script. Please wait!", "Error", "Rate Limit"], message)
         }
 
         let process_embed = createEmbed({
             fields: [
-                { name: `Process`, value: `${getEmoji("loading")} Creating session...` }
+                { name: `Process`, value: `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("loading")} Creating session...` }
             ],
             timestamp: true,
             color: Colors.Yellow,
@@ -97,17 +100,17 @@ module.exports = {
             return sendErrorMessage([beautified_script.message || "Beautifying failed!", "Error", "beautifying"], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Beautifying script...`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Beautifying script...`
         await response.edit({
             embeds: [process_embed]
         })
-
+        //message.channel.send(`${config.SESSION_URL}${session.sessionId}`)
         const beautified_script = await manualObfuscateScript(session.sessionId, {
-            "MinifiyAll": false
+            "Minifiy": false
         }, message)
 
         if (beautified_script.message && !beautified_script.code) {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("error")} Failed beautifying!`
+            process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("error")} Failed beautifying!`
             process_embed.data.color = Colors.Red
             await response.edit({
                 embeds: [process_embed]
@@ -117,20 +120,20 @@ module.exports = {
         }
 
         console.log(`Script by ${message.author.tag} successfully beautified: ${session.sessionId}`)
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("loading")} Creating attachment file...`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
             embeds: [process_embed]
         })
 
         const file_attachment = createFileAttachment(Buffer.from(beautified_script.code))
         if (typeof file_attachment != "object") {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("error")} Failed creating attachment file!`
+            process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("error")} Failed creating attachment file!`
             process_embed.data.color = Colors.Red
             ratelimits.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("check")} Attachment file created!`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("check")} Attachment file created!`
         process_embed.data.color = Colors.Green
         await response.edit({
             embeds: [process_embed]

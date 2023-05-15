@@ -1,7 +1,7 @@
 const { createEmbed } = require("../utils/embed")
 const { sendErrorMessage } = require("../utils/command")
 const { Colors, codeBlock, blockQuote, inlineCode, hyperlink, Attachment, Collection } = require("discord.js")
-const { getEmoji } = require("../utils/misc")
+const { getEmoji, readAllChunks } = require("../utils/misc")
 const config = require("../.config")
 const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, manualObfuscateScript, obfuscateScript, createFileAttachment } = require("../utils/obfuscate-util")
 
@@ -25,7 +25,7 @@ module.exports = {
 
         if (!message) return
 
-        let script = null
+        let script = "", _chunks = 0
         const iscodeblock = hasCodeblock(arg.rawargs)
         if (message.content.includes("```") && iscodeblock) {
             script = parseCodeblock(arg.rawargs)
@@ -43,9 +43,11 @@ module.exports = {
             }
 
             await fetch(url).then(async res => {
-                const reader = res.body.getReader()
-                await reader.read().then(({ done, value }) => {
-                    script = Buffer.from(value).toString()
+                const chunks = await readAllChunks(res.body)
+                _chunks = chunks.length
+
+                chunks.forEach(chunk => {
+                    script = script + Buffer.from(chunk).toString() || ""
                 })
             })
         } else {
@@ -73,7 +75,7 @@ module.exports = {
 
         let process_embed = createEmbed({
             fields: [
-                { name: `Process`, value: `${getEmoji("loading")} Creating session...` }
+                { name: `Process`, value: `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("loading")} Creating session...` }
             ],
             timestamp: true,
             color: Colors.Yellow,
@@ -97,7 +99,7 @@ module.exports = {
             return sendErrorMessage([minified_script.message || "Minifying failed!", "Error", "minifying"], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Minified script...`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Minified script...`
         await response.edit({
             embeds: [process_embed]
         })
@@ -117,20 +119,20 @@ module.exports = {
         }
 
         console.log(`Script by ${message.author.tag} successfully minified: ${session.sessionId}`)
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("loading")} Creating attachment file...`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
             embeds: [process_embed]
         })
 
         const file_attachment = createFileAttachment(Buffer.from(minified_script.code))
         if (typeof file_attachment != "object") {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("error")} Failed creating attachment file!`
+            process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("error")} Failed creating attachment file!`
             process_embed.data.color = Colors.Red
             ratelimits.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("check")} Attachment file created!`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("check")} Attachment file created!`
         process_embed.data.color = Colors.Green
         await response.edit({
             embeds: [process_embed]

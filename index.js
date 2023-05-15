@@ -132,7 +132,7 @@ client.on("messageCreate", async (message) => {
 })
 
 try {
-    client.login(process.env.TOKEN).then(() => {
+    client.login(process.env.DEV_TOKEN).then(() => {
         global.client = client
     }).catch(console.error)
 } catch (e) {
