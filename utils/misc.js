@@ -55,4 +55,4 @@ module.exports = {
      * @param { String } endpoint 
      */
     fetchJSON: async function (endpoint) { return await fetch(endpoint).then(res => res.json()).catch(err => console.error(err)) }
-}
+} 
