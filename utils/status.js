@@ -63,8 +63,8 @@ module.exports = {
                     value: `
                     > **Total Files Uploaded**: ${inlineCode(formatNumber(server_stats?.total_file) || "N/A")}
                     > **Total Obfuscations**: ${inlineCode(formatNumber(server_stats?.total_obfuscations) || "N/A")}
-                    > **Obfuscation/last ${formatUptime(config.status_update_interval)}**: ${inlineCode(formatNumber(global.last_total_obfuscations != 0 ? server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
-                    > **Files uploaded/last ${formatUptime(config.status_update_interval)}**: ${inlineCode(formatNumber(global.last_total_file != 0 ? server_stats?.total_file - global.last_total_file : 0) || "N/A")}
+                    > **Obfuscations/last 1 min**: ${inlineCode(formatNumber(global.last_total_obfuscations != 0 ? server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
+                    > **Files uploaded/last 1 min**: ${inlineCode(formatNumber(global.last_total_file != 0 ? server_stats?.total_file - global.last_total_file : 0) || "N/A")}
                     `
                 }, {
                     name: `${getEmoji("upload")} **Request Queue:**`,
