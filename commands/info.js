@@ -1,5 +1,5 @@
 const { createEmbed } = require("../utils/embed.js")
-const { Colors, hyperlink, inlineCode, quote } = require("discord.js")
+const { Colors, hyperlink, inlineCode, quote, blockQuote } = require("discord.js")
 const { formatUptime } = require("../utils/misc.js")
 const { ICON_URL, SUPPORT_URL } = require("../.config.js")
 
@@ -20,12 +20,15 @@ module.exports = {
 
         if (!message) return
 
+        const server_status = await fetch("http://localhost:6969/").then(res => res.json())
+
         let embed = createEmbed({
             title: `LuaObfuscator Bot`,
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
                 { name: "• Uptime", value: inlineCode(formatUptime(client?.uptime)), inline: true },
-                { name: "• Support Server", value: `${SUPPORT_URL}`, inline: true },
+                { name: "• Support Server", value: `${SUPPORT_URL}`, inline: false },
+                { name: "• Server Status", value: inlineCode(`${server_status.message} (${server_status.code})`), inline: false },
             ],
             color: Colors.Green,
             footer: {

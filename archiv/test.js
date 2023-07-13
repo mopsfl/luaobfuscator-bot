@@ -1,18 +1,18 @@
 const { createEmbed } = require("../utils/embed")
 const { sendErrorMessage } = require("../utils/command")
 const { Colors, codeBlock, blockQuote, inlineCode, hyperlink, Attachment, Collection } = require("discord.js")
-const { getEmoji, readAllChunks } = require("../utils/misc")
+const { getEmoji } = require("../utils/misc")
 const config = require("../.config")
 const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, manualObfuscateScript, obfuscateScript, createFileAttachment } = require("../utils/obfuscate-util")
 
 const ratelimits = new Collection()
 
 module.exports = {
-    enabled: true,
+    enabled: false,
 
-    category: "LUA OBFUSCATOR",
-    command: "beautify",
-    aliases: ["bf"],
+    category: "DEV",
+    command: "test",
+    aliases: [],
 
     arguments: "<codeblock | file>",
 
@@ -25,7 +25,7 @@ module.exports = {
 
         if (!message) return
 
-        let script = "", _chunks = 0
+        let script = null
         const iscodeblock = hasCodeblock(arg.rawargs)
         if (message.content.includes("```") && iscodeblock) {
             script = parseCodeblock(arg.rawargs)
@@ -43,11 +43,9 @@ module.exports = {
             }
 
             await fetch(url).then(async res => {
-                const chunks = await readAllChunks(res.body)
-                _chunks = chunks.length
-
-                chunks.forEach(chunk => {
-                    script = script + Buffer.from(chunk).toString() || ""
+                const reader = res.body.getReader()
+                await reader.read().then(({ done, value }) => {
+                    script = Buffer.from(value).toString()
                 })
             })
         } else {
@@ -69,14 +67,13 @@ module.exports = {
             return message.reply({ embeds: [error_embed] })
         }
 
-
         if (ratelimits.has(message.author.id)) {
-            return sendErrorMessage(["You are already beautifying a script. Please wait!", "Error", "Rate Limit"], message)
+            return sendErrorMessage(["You are already obfuscating a script. Please wait!", "Error", "Rate Limit"], message)
         }
 
         let process_embed = createEmbed({
             fields: [
-                { name: `Process`, value: `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("loading")} Creating session...` }
+                { name: `Obfuscation Process`, value: `${getEmoji("loading")} Creating session...` }
             ],
             timestamp: true,
             color: Colors.Yellow,
@@ -91,49 +88,48 @@ module.exports = {
 
         ratelimits.set(message.author.id, true)
         if (session.message && !session.sessionId) {
-            process_embed.data.fields[0].value = `${getEmoji("error")} Failed beautifying!`
-            process_embed.data.color = Colors.Red
+            process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             await response.edit({
                 embeds: [process_embed]
             })
             ratelimits.delete(message.author.id)
-            return sendErrorMessage([beautified_script.message || "Beautifying failed!", "Error", "beautifying"], message)
+            return sendErrorMessage([obfuscated_script.message || "Obfuscation failed!", "Error", "obfuscate"], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Beautifying script...`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Obfuscating script...`
         await response.edit({
             embeds: [process_embed]
         })
-        //message.channel.send(`${config.SESSION_URL}${session.sessionId}`)
-        const beautified_script = await manualObfuscateScript(session.sessionId, {
-            "Minifiy": false
+
+        const obfuscated_script = await manualObfuscateScript(session.sessionId, {
+            "CustomPlugins": {
+                "SwizzleLookups": [100],
+            }
         }, message)
 
-        if (beautified_script.message && !beautified_script.code) {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("error")} Failed beautifying!`
-            process_embed.data.color = Colors.Red
+        if (obfuscated_script.message && !obfuscated_script.code) {
+            process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             await response.edit({
                 embeds: [process_embed]
             })
             ratelimits.delete(message.author.id)
-            return sendErrorMessage([beautified_script.message || "Beautifying failed!", "Error", "beautifying"], message)
+            return sendErrorMessage([obfuscated_script.message || "Obfuscation failed!", "Error", "minifying"], message)
         }
 
-        console.log(`Script by ${message.author.tag} successfully beautified: ${session.sessionId}`)
-        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("loading")} Creating attachment file...`
+        console.log(`Script by ${message.author.tag} successfully obfuscated (vm): ${session.sessionId}`)
+        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
             embeds: [process_embed]
         })
 
-        const file_attachment = createFileAttachment(Buffer.from(beautified_script.code))
+        const file_attachment = createFileAttachment(Buffer.from(obfuscated_script.code))
         if (typeof file_attachment != "object") {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("error")} Failed creating attachment file!`
-            process_embed.data.color = Colors.Red
+            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("error")} Failed creating attachment file!`
             ratelimits.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + beautified_script.sessionId)}\n${getEmoji("check")} Script beautified!\n${getEmoji("check")} Attachment file created!`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("check")} Attachment file created!`
         process_embed.data.color = Colors.Green
         await response.edit({
             embeds: [process_embed]

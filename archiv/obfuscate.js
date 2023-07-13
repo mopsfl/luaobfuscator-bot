@@ -8,7 +8,7 @@ const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, 
 const ratelimits = new Collection()
 
 module.exports = {
-    enabled: true,
+    enabled: false,
 
     category: "LUA OBFUSCATOR",
     command: "obfuscate",

@@ -8,11 +8,11 @@ const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, 
 const ratelimits = new Collection()
 
 module.exports = {
-    enabled: true,
+    enabled: false,
 
     category: "LUA OBFUSCATOR",
-    command: "encryptstrings",
-    aliases: ["estr", "ecstr", "encstr", "es"],
+    command: "demovm",
+    aliases: ["vm"],
 
     arguments: "<codeblock | file>",
 
@@ -105,10 +105,8 @@ module.exports = {
         })
 
         const obfuscated_script = await manualObfuscateScript(session.sessionId, {
-            "MinifiyAll": true,
-            "CustomPlugins": {
-                "EncryptStrings": [100]
-            }
+            "Virtualize": true,
+            "MinifiyAll": true
         }, message)
 
         if (obfuscated_script.message && !obfuscated_script.code) {
@@ -129,7 +127,7 @@ module.exports = {
 
         const file_attachment = createFileAttachment(Buffer.from(obfuscated_script.code))
         if (typeof file_attachment != "object") {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("error")} Failed creating attachment file!`
+            process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("error")} Failed creating attachment file!`
             process_embed.data.color = Colors.Red
             ratelimits.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)

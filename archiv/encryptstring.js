@@ -8,11 +8,11 @@ const { parseCodeblock, hasCodeblock, hasWebhook, createSession, parseWebhooks, 
 const ratelimits = new Collection()
 
 module.exports = {
-    enabled: true,
+    enabled: false,
 
     category: "LUA OBFUSCATOR",
-    command: "minify",
-    aliases: ["mf", "min"],
+    command: "encryptstrings",
+    aliases: ["estr", "ecstr", "encstr", "es"],
 
     arguments: "<codeblock | file>",
 
@@ -70,12 +70,12 @@ module.exports = {
         }
 
         if (ratelimits.has(message.author.id)) {
-            return sendErrorMessage(["You are already minifying a script. Please wait!", "Error", "Rate Limit"], message)
+            return sendErrorMessage(["You are already obfuscating a script. Please wait!", "Error", "Rate Limit"], message)
         }
 
         let process_embed = createEmbed({
             fields: [
-                { name: `Process`, value: `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("loading")} Creating session...` }
+                { name: `Obfuscation Process`, value: `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("loading")} Creating session...` }
             ],
             timestamp: true,
             color: Colors.Yellow,
@@ -90,49 +90,52 @@ module.exports = {
 
         ratelimits.set(message.author.id, true)
         if (session.message && !session.sessionId) {
-            process_embed.data.fields[0].value = `${getEmoji("error")} Failed minifying!`
+            process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             process_embed.data.color = Colors.Red
             await response.edit({
                 embeds: [process_embed]
             })
             ratelimits.delete(message.author.id)
-            return sendErrorMessage([minified_script.message || "Minifying failed!", "Error", "minifying"], message)
+            return sendErrorMessage([obfuscated_script.message || "Obfuscation failed!", "Error", "obfuscate"], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Minified script...`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + session.sessionId)}\n${getEmoji("loading")} Obfuscating script...`
         await response.edit({
             embeds: [process_embed]
         })
 
-        const minified_script = await manualObfuscateScript(session.sessionId, {
-            "MinifiyAll": true
+        const obfuscated_script = await manualObfuscateScript(session.sessionId, {
+            "MinifiyAll": true,
+            "CustomPlugins": {
+                "EncryptStrings": [100]
+            }
         }, message)
 
-        if (minified_script.message && !minified_script.code) {
-            process_embed.data.fields[0].value = `${getEmoji("error")} Failed minifying!`
+        if (obfuscated_script.message && !obfuscated_script.code) {
+            process_embed.data.fields[0].value = `${getEmoji("error")} Failed obfuscating!`
             process_embed.data.color = Colors.Red
             await response.edit({
                 embeds: [process_embed]
             })
             ratelimits.delete(message.author.id)
-            return sendErrorMessage([minified_script.message || "Minifying failed!", "Error", "minifying"], message)
+            return sendErrorMessage([obfuscated_script.message || "Obfuscation failed!", "Error", "minifying"], message)
         }
 
-        console.log(`Script by ${message.author.tag} successfully minified: ${session.sessionId}`)
-        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("loading")} Creating attachment file...`
+        console.log(`Script by ${message.author.tag} successfully obfuscated (vm): ${session.sessionId}`)
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("loading")} Creating attachment file...`
         await response.edit({
             embeds: [process_embed]
         })
 
-        const file_attachment = createFileAttachment(Buffer.from(minified_script.code))
+        const file_attachment = createFileAttachment(Buffer.from(obfuscated_script.code))
         if (typeof file_attachment != "object") {
-            process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("error")} Failed creating attachment file!`
+            process_embed.data.fields[0].value = `${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("error")} Failed creating attachment file!`
             process_embed.data.color = Colors.Red
             ratelimits.delete(message.author.id)
             return sendErrorMessage([file_attachment.error || "Unable to create file attachment.", "Error", file_attachment.error_name], message)
         }
 
-        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + minified_script.sessionId)}\n${getEmoji("check")} Script minified!\n${getEmoji("check")} Attachment file created!`
+        process_embed.data.fields[0].value = `${getEmoji("check")} Buffer completed! (${inlineCode(_chunks)} chunks)\n${getEmoji("check")} Session created! ${hyperlink("[open]", config.SESSION_URL + obfuscated_script.sessionId)}\n${getEmoji("check")} Script obfuscated!\n${getEmoji("check")} Attachment file created!`
         process_embed.data.color = Colors.Green
         await response.edit({
             embeds: [process_embed]
