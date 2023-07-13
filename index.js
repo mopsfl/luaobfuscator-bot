@@ -121,10 +121,16 @@ client.on("ready", async () => {
                                 `
                             },
                             {
-                                name: `${getEmoji("server")} **Server:**`,
+                                name: `${getEmoji("server")} **Lua Obfuscator - Server:**`,
                                 value: `
                             > **Ping**: ${inlineCode(pings.server || "error")}
                             > **Memory Usage**: ${inlineCode(formatBytes(server_stats?.memory_usage || "error") || "error")}
+                                `
+                            },
+                            {
+                                name: `${getEmoji("server")} **Bot Hosting - Server:**`,
+                                value: `
+                            > **Memory Usage**: ${inlineCode(formatBytes(process.memoryUsage().heapUsed || "error") || "error")}
                                 `
                             }
                         ],
