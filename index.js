@@ -141,6 +141,7 @@ client.on("ready", async () => {
                 ]
             })
             last_statusupdate = new Date().getTime()
+            console.log(`status display update. (${last_statusupdate})`)
         }).catch(err => console.error(err))
     }, config.status_update_interval);
 })
