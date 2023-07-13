@@ -35,10 +35,10 @@ module.exports = {
      * @param { Client } client 
      */
     countMembers: async function (client) {
-        if (!client) return "error"
+        if (!client) return "N/A"
         const guild = client.guilds.cache.get(config.SERVER_ID)
-        if (!guild) return "error_0x1"
-        return guild.memberCount || "error_0x2"
+        if (!guild) return "N/A"
+        return guild.memberCount || "N/A"
     },
     /**
      * @description Converts bytes to megabytes
@@ -54,5 +54,27 @@ module.exports = {
      * @description Fetches json from an endpoint
      * @param { String } endpoint 
      */
-    fetchJSON: async function (endpoint) { return await fetch(endpoint).then(res => res.json()).catch(err => console.error(err)) }
-} 
+    fetchJSON: async function (endpoint) { return await fetch(endpoint).then(res => res.json()).catch(err => console.error(err)) },
+    /**
+     * @description Formats a number to: 1K / 1M ...
+     * @param { Number } num 
+     * @param { Number } digits 
+     * @returns 
+     */
+    formatNumber: function (num, digits = 0) {
+        const lookup = [
+            { value: 1, symbol: "" },
+            { value: 1e3, symbol: "k" },
+            { value: 1e6, symbol: "M" },
+            { value: 1e9, symbol: "G" },
+            { value: 1e12, symbol: "T" },
+            { value: 1e15, symbol: "P" },
+            { value: 1e18, symbol: "E" }
+        ];
+        const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+        var item = lookup.slice().reverse().find(function (item) {
+            return num >= item.value;
+        });
+        return item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0" || "N/A";
+    }
+}

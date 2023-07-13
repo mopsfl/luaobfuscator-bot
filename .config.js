@@ -3,7 +3,7 @@ const prefix = "!" // Main prefix for commands
 module.exports = {
     prefix: prefix,
     activity_update_interval: 10000, // Update interval for the bot activity. 1000(ms) = 1 second
-    status_update_interval: 30000, // Update interval for the status displays. 1000(ms) = 1 second
+    status_update_interval: 10000, // Update interval for the status displays. 1000(ms) = 1 second
     dm_commands: true, // If dm commands should be allowed 
 
     script_scan_options: {
@@ -29,14 +29,9 @@ module.exports = {
         `${prefix}obfuscate <code | file>`,
     ],
     command_list: { // Commands list for the help command
-        /*"• LUA OBFUSCATOR": [
-            "obfuscate",
-            "minify",
-            "minifit",
-            "beautify",
-            "demovm",
-            "encryptstrings"
-        ],*/
+        "• LUA OBFUSCATOR": [
+            "status"
+        ],
         "• BOT": [
             "help",
             "ping",

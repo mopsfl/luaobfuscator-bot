@@ -10,7 +10,7 @@ module.exports = {
      * @param { String } string 
      */
     hasWebhook: function (string) { return /.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/.test(string) },
-    /**
+    /** 
      * @description Checks if a string contains a Discord codeblock
      * @param { String } string 
      */
