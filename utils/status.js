@@ -103,7 +103,7 @@ module.exports = {
             const value = Object.keys(config.STATUS_ENDPOINTS)[index]
 
             try {
-                await _fetch(endpoint, { timeout: 10000, method: value != "API_URL" ? "GET" : "POST" }).then(res => {
+                await _fetch(endpoint, { timeout: config.FETCH_TIMEOUT, method: value != "API_URL" ? "GET" : "POST" }).then(res => {
                     responses[value].ping = new Date().getTime() - start_tick
                     responses[value].status = res.status
                     responses[value].statusText = res.statusText
@@ -112,6 +112,7 @@ module.exports = {
             } catch (error) {
                 const isAbortError = error.name === "AbortError"
                 if (isAbortError) {
+                    responses[value].ping = config.FETCH_TIMEOUT
                     responses[value].status = 408
                     responses[value].statusText = "Request timed out"
                     finished_requests++

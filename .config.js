@@ -17,6 +17,8 @@ module.exports = {
     ICON_URL: "https://luaobfuscator.com/img/logo.png",
     SERVER_STATS_URL: process.env.STATS_ENDPOINT,
 
+    FETCH_TIMEOUT: 10000,
+
     STATUS_ENDPOINTS: JSON.parse(process.env.STATUS_ENDPOINTS) || {},
 
     SERVER_ID: "1112349916744917054",
