@@ -63,7 +63,7 @@ module.exports = {
                     value: `
                     > **Total Files Uploaded**: ${inlineCode(formatNumber(responses.server?.server_stats?.total_file) || "N/A")}
                     > **Total Obfuscations**: ${inlineCode(formatNumber(responses.server?.server_stats?.total_obfuscations) || "N/A")}
-                    > **Obfuscations/last 1 min**: ${"~" + inlineCode(formatNumber(global.last_total_obfuscations != 0 ? responses.server?.server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
+                    > **Obfuscations/last 1 min**: ${inlineCode("~" + formatNumber(global.last_total_obfuscations != 0 ? responses.server?.server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
                     > **Files uploaded/last 1 min**: ${inlineCode("~" + formatNumber(global.last_total_file != 0 ? responses.server?.server_stats?.total_file - global.last_total_file : 0) || "N/A")}
                     `
                 }, {
@@ -103,7 +103,7 @@ module.exports = {
             const value = Object.keys(config.STATUS_ENDPOINTS)[index]
 
             try {
-                await _fetch(endpoint, { timeout: 5000, method: value != "API_URL" ? "GET" : "POST" }).then(res => {
+                await _fetch(endpoint, { timeout: 10000, method: value != "API_URL" ? "GET" : "POST" }).then(res => {
                     responses[value].ping = new Date().getTime() - start_tick
                     responses[value].status = res.status
                     responses[value].statusText = res.statusText
