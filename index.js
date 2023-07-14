@@ -13,8 +13,7 @@ const {
     config = require("./.config.js"),
     fs = require("fs"),
     express = require("express"),
-    app = express(),
-    ping = require("domain-ping")
+    app = express()
 
 require("dotenv").config()
 
@@ -85,6 +84,8 @@ client.on("ready", async () => {
     global.createStatusEmbed = createStatusEmbed
     global.last_outtage = null
     global.uptime_after_outage = null
+
+    await updateStatusMessage()
 
     //status display
     const action_updateStats = () => new Promise((resolve, reject) => {
@@ -188,14 +189,15 @@ try {
     console.error(e)
 }
 
-app.get("/", (req, res) => {
-    res.status(200).json({ code: 200, message: "OK" })
+app.get("/", (req, res) => res.status(200).json({ code: 200, message: "OK" }))
+
+app.use("/api", (req, res, next) => {
+    const authorized = req.headers["api-key"] == process.env.SERVER_API_KEY
+    if (!authorized && req.method == "GET") return res.status(401).json({ code: 401, message: "Unauthorized" })
+    next();
 })
 
-app.get("/client/uptime", (req, res) => {
-    res.status(200).json({ ms: client.uptime, time: formatUptime(client.uptime) })
-})
-
-app.listen(process.env.PORT, () => {
-    console.log(`Server listening on port ${process.env.PORT}`)
-})
+app.get("/api/display-stats", (req, res) => res.json(global.last_status || {}))
+app.get("/api/client/uptime", (req, res) => res.status(200).json({ ms: client.uptime || "N/A", time: formatUptime(client.uptime) || "N/A" }))
+app.get("/*", (req, res) => res.status(404).json({ code: 404, message: "Not Found" }))
+app.listen(process.env.PORT, () => console.log(`Server listening on port ${process.env.PORT}`))

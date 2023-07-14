@@ -63,8 +63,8 @@ module.exports = {
                     value: `
                     > **Total Files Uploaded**: ${inlineCode(formatNumber(responses.server?.server_stats?.total_file) || "N/A")}
                     > **Total Obfuscations**: ${inlineCode(formatNumber(responses.server?.server_stats?.total_obfuscations) || "N/A")}
-                    > **Obfuscations/last 1 min**: ${inlineCode(formatNumber(global.last_total_obfuscations != 0 ? responses.server?.server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
-                    > **Files uploaded/last 1 min**: ${inlineCode(formatNumber(global.last_total_file != 0 ? responses.server?.server_stats?.total_file - global.last_total_file : 0) || "N/A")}
+                    > **Obfuscations/last 1 min**: ${"~" + inlineCode(formatNumber(global.last_total_obfuscations != 0 ? responses.server?.server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
+                    > **Files uploaded/last 1 min**: ${inlineCode("~" + formatNumber(global.last_total_file != 0 ? responses.server?.server_stats?.total_file - global.last_total_file : 0) || "N/A")}
                     `
                 }, {
                     name: `${getEmoji("upload")} **Request Queue:**`,
@@ -73,11 +73,15 @@ module.exports = {
                     > **Requests In Queue:** ${inlineCode(responses.server?.server_stats?.queue_waiting.toString() || "N/A")}
                     `
                 },
-            ]
+            ],
+
+            footer: {
+                text: "Lua Obfuscator - Service Status • by mopsfl"
+            }
         })]
     },
 
-    async updateStatusMessage(update_start_tick) {
+    async updateStatusMessage(update_start_tick = new Date().getTime()) {
         if (!global.status_channel) return console.error("global.status_channel is not defined")
         if (!global.createStatusEmbed) return console.error("global.createStatusEmbed is not defined.")
 
@@ -130,6 +134,7 @@ module.exports = {
 
                 global.last_total_obfuscations = server_stats?.total_obfuscations || "N/A"
                 global.last_total_file = server_stats?.total_file || "N/A"
+                global.last_status = responses
             }
         })
     }

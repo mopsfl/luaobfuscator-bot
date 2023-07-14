@@ -5,7 +5,7 @@ const prefix = "!" // Main prefix for commands
 module.exports = {
     prefix: prefix,
     activity_update_interval: 10000, // Update interval for the bot activity. 1000(ms) = 1 second
-    status_update_interval: 5000, // Update interval for the status displays. 1000(ms) = 1 second
+    status_update_interval: 60000, // Update interval for the status displays. 1000(ms) = 1 second
     dm_commands: true, // If dm commands should be allowed 
 
     script_scan_options: {

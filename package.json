@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "discord.js": "^14.9.0",
-    "domain-ping": "^0.2.1",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "fs": "^0.0.2",
