@@ -1,9 +1,11 @@
+require("dotenv").config()
+
 const prefix = "!" // Main prefix for commands
 
 module.exports = {
     prefix: prefix,
     activity_update_interval: 10000, // Update interval for the bot activity. 1000(ms) = 1 second
-    status_update_interval: 10000, // Update interval for the status displays. 1000(ms) = 1 second
+    status_update_interval: 5000, // Update interval for the status displays. 1000(ms) = 1 second
     dm_commands: true, // If dm commands should be allowed 
 
     script_scan_options: {
@@ -12,13 +14,13 @@ module.exports = {
 
     SUPPORT_URL: "https://discord.com/invite/Y556HXUByG",
     SESSION_URL: "https://luaobfuscator.com/?session=",
-    WEBSITE_URL: "https://luaobfuscator.com",
-    FORUM_URL: "https://luaobfuscator.com/forum",
-    API_URL: "https://luaobfuscator.com/api/obfuscator/newscript",
-    SERVER_STATS_URL: "https://luaobfuscator.com/forum/stats",
     ICON_URL: "https://luaobfuscator.com/img/logo.png",
+    SERVER_STATS_URL: process.env.STATS_ENDPOINT,
+
+    STATUS_ENDPOINTS: JSON.parse(process.env.STATUS_ENDPOINTS) || {},
 
     SERVER_ID: "1112349916744917054",
+    STATUS_EMBED_ID: "1128997522917040169",
 
     SERVER_STATS: {
         MAX_RAM: 3.85e+9

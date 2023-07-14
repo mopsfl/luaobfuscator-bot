@@ -1,16 +1,16 @@
 const { inlineCode, Colors } = require("discord.js")
-const { formatBytes, getEmoji, formatUptime, countMembers, fetchJSON, formatNumber } = require("./misc")
+const { formatBytes, getEmoji, formatUptime, countMembers, fetchJSON, formatNumber, _fetch } = require("./misc")
 const { createEmbed } = require("./embed")
 const config = require("../.config")
 
 module.exports = {
-    createStatusEmbed: async function (homepage_res, forum_res, api_res, server_stats, server_uptime, pings, show_next_update = false, all_online) {
+    createStatusEmbed: async function (responses, server_uptime, show_next_update = false, all_online) {
         if (!global.client) return console.error("global.client is not defined")
         return [createEmbed({
             title: "Lua Obfuscator - Service Status",
             description: `All statuses of Lua Obfuscator services displayed.${show_next_update == true ? `
             \n${getEmoji("update")} **Last Updated:** <t:${Math.round(new Date().getTime() / 1000)}:R>` : ""}
-            ${getEmoji("offline")} **Last Outage:** ${global.uptime_after_outage ? `<t:${Math.round(global.last_outtage / 1000)}:R> ${inlineCode(`(~${formatUptime(global.uptime_after_outage - global.last_outtage)})`)}` : `${inlineCode("N/A")}`}`,
+            ${getEmoji("offline")} **Last Outage:** ${global.last_outtage ? `<t:${Math.round(global.last_outtage / 1000)}:R>` : `${inlineCode("N/A")}`}`,
             color: all_online ? Colors.Green : Colors.Red,
             thumbnail: config.ICON_URL,
             timestamp: true,
@@ -18,9 +18,9 @@ module.exports = {
                 {
                     name: `${getEmoji("website")} **Website:**`,
                     value: `
-                    > **Homepage**: ${homepage_res.status == 200 ? "Online" : "Offline"} ${homepage_res.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${homepage_res.statusText} - ${homepage_res.status} | ${pings.homepage}ms)`)}
-                > **Forum**: ${forum_res.status == 200 ? "Online" : "Offline"} ${forum_res.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${forum_res.statusText} - ${forum_res.status} | ${pings.forum}ms)`)}
-                > **API**: ${api_res.status == 200 ? "Online" : "Offline"} ${api_res.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${api_res.statusText} ${api_res.status} | ${pings.api}ms)`)}
+                    > **Homepage**: ${responses.WEBSITE_URL.status == 200 ? "Online" : "Offline"} ${responses.WEBSITE_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.WEBSITE_URL.statusText} - ${responses.WEBSITE_URL.status} | ${!isNaN(responses.WEBSITE_URL.ping) ? responses.WEBSITE_URL.ping + "ms" : "N/A"})`)}
+                    > **Forum**: ${responses.FORUM_URL.status == 200 ? "Online" : "Offline"} ${responses.FORUM_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.FORUM_URL.statusText} - ${responses.FORUM_URL.status} | ${!isNaN(responses.FORUM_URL.ping) ? responses.FORUM_URL.ping + "ms" : "N/A"})`)}
+                    > **API**: ${responses.API_URL.status == 200 ? "Online" : "Offline"} ${responses.API_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.API_URL.statusText} ${responses.API_URL.status} | ${!isNaN(responses.API_URL.ping) ? responses.API_URL.ping + "ms" : "N/A"})`)}
                 ` },
                 {
                     name: `${getEmoji("discord")} **Discord:**`,
@@ -33,9 +33,9 @@ module.exports = {
                 {
                     name: `${getEmoji("server_luaobf")} **Lua Obfuscator - Server:**`,
                     value: `
-                    > **Ping**: ${inlineCode(pings.server || "N/A")}
+                    > **Ping**: ${inlineCode(responses.server?.ping || "N/A")}
                     > **Uptime**: ${inlineCode(formatUptime(server_uptime) || "N/A")}
-                    > **Memory Usage**: ${inlineCode(formatBytes(server_stats?.memory_usage || "N/A") || "N/A")}
+                    > **Memory Usage**: ${inlineCode(formatBytes(responses.server?.server_stats?.memory_usage || "N/A") || "N/A")}
                     `
                 },
                 {
@@ -61,54 +61,76 @@ module.exports = {
                 {
                     name: `${getEmoji("logo")} **Obfusactor Statistics:**`,
                     value: `
-                    > **Total Files Uploaded**: ${inlineCode(formatNumber(server_stats?.total_file) || "N/A")}
-                    > **Total Obfuscations**: ${inlineCode(formatNumber(server_stats?.total_obfuscations) || "N/A")}
-                    > **Obfuscations/last 1 min**: ${inlineCode(formatNumber(global.last_total_obfuscations != 0 ? server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
-                    > **Files uploaded/last 1 min**: ${inlineCode(formatNumber(global.last_total_file != 0 ? server_stats?.total_file - global.last_total_file : 0) || "N/A")}
+                    > **Total Files Uploaded**: ${inlineCode(formatNumber(responses.server?.server_stats?.total_file) || "N/A")}
+                    > **Total Obfuscations**: ${inlineCode(formatNumber(responses.server?.server_stats?.total_obfuscations) || "N/A")}
+                    > **Obfuscations/last 1 min**: ${inlineCode(formatNumber(global.last_total_obfuscations != 0 ? responses.server?.server_stats?.total_obfuscations - global.last_total_obfuscations : 0) || "N/A")}
+                    > **Files uploaded/last 1 min**: ${inlineCode(formatNumber(global.last_total_file != 0 ? responses.server?.server_stats?.total_file - global.last_total_file : 0) || "N/A")}
                     `
                 }, {
                     name: `${getEmoji("upload")} **Request Queue:**`,
                     value: `
-                    > **Current Requests:** ${inlineCode(server_stats?.queue_active) || inlineCode("N/A")}
-                    > **Requests In Queue:** ${inlineCode(server_stats?.queue_waiting) || inlineCode("N/A")}
+                    > **Current Requests:** ${inlineCode(responses.server?.server_stats?.queue_active.toString() || "N/A")}
+                    > **Requests In Queue:** ${inlineCode(responses.server?.server_stats?.queue_waiting.toString() || "N/A")}
                     `
                 },
             ]
         })]
     },
 
-    async updateStatusMessage(start_tick) {
+    async updateStatusMessage(update_start_tick) {
         if (!global.status_channel) return console.error("global.status_channel is not defined")
         if (!global.createStatusEmbed) return console.error("global.createStatusEmbed is not defined.")
 
-        const pings = {
-            api: 0,
-            homepage: 0,
-            forum: 0,
-            server: 0
+        const responses = {
+            WEBSITE_URL: { ping: "N/A", status: "N/A", statusText: "N/A" },
+            FORUM_URL: { ping: "N/A", status: "N/A", statusText: "N/A" },
+            API_URL: { ping: "N/A", status: "N/A", statusText: "N/A" },
+            server: { ping: "N/A", server_stats: {} }
         }
 
-        const server_stats = await fetchJSON(config.SERVER_STATS_URL); pings.server = Math.round(new Date().getTime() - start_tick)
-        const homepage_res = await fetch(config.WEBSITE_URL).catch(err => console.error(err)); pings.homepage = Math.round(new Date().getTime() - start_tick)
-        const forum_res = await fetch(config.FORUM_URL).catch(err => console.error(err)); pings.forum = Math.round(new Date().getTime() - start_tick)
-        const api_res = await fetch(config.API_URL, { method: "POST" }).catch(err => console.error(err)); pings.api = Math.round(new Date().getTime() - start_tick)
+        const server_stats_tick = new Date().getTime(); const server_stats = await fetchJSON(config.SERVER_STATS_URL); responses.server.ping = Math.round(new Date().getTime() - server_stats_tick)
         const server_uptime = new Date().getTime() - new Date(server_stats?.start_time).getTime() || "N/A"
+        responses.server.server_stats = server_stats
 
-        let all_online = new Array(homepage_res, forum_res, api_res).find(_res => _res.status != 200) ? false : true
-        if (!all_online) {
-            global.last_outtage = new Date().getTime()
-        } else {
-            if (global.last_outtage && !global.uptime_after_outage) global.uptime_after_outage = new Date().getTime()
-        }
+        let finished_requests = 0
+        Object.values(config.STATUS_ENDPOINTS).forEach(async endpoint => {
+            const index = Object.values(config.STATUS_ENDPOINTS).indexOf(endpoint)
+            const start_tick = new Date().getTime()
+            const value = Object.keys(config.STATUS_ENDPOINTS)[index]
 
-        await global.status_channel.messages.fetch("1128997522917040169").then(async (msg) => {
-            msg.edit({
-                embeds: await global.createStatusEmbed(homepage_res, forum_res, api_res, server_stats, server_uptime, pings, true, all_online)
-            })
-            global.last_statusupdate = new Date().getTime()
-        }).catch(err => console.error(err))
+            try {
+                await _fetch(endpoint, { timeout: 5000, method: value != "API_URL" ? "GET" : "POST" }).then(res => {
+                    responses[value].ping = new Date().getTime() - start_tick
+                    responses[value].status = res.status
+                    responses[value].statusText = res.statusText
+                    finished_requests++
+                })
+            } catch (error) {
+                const isAbortError = error.name === "AbortError"
+                if (isAbortError) {
+                    responses[value].status = 408
+                    responses[value].statusText = "Request timed out"
+                    finished_requests++
+                }
+            }
 
-        global.last_total_obfuscations = server_stats?.total_obfuscations || "N/A"
-        global.last_total_file = server_stats?.total_file || "N/A"
+            if (finished_requests >= Object.keys(config.STATUS_ENDPOINTS).length) {
+                let all_online = Object.values(responses).find(_res => _res?.status != 200 && !_res.server_stats) ? false : true
+                if (!all_online) {
+                    global.last_outtage = new Date().getTime()
+                }
+
+                await global.status_channel.messages.fetch(config.STATUS_EMBED_ID).then(async (msg) => {
+                    msg.edit({
+                        embeds: await global.createStatusEmbed(responses, server_uptime, true, all_online)
+                    })
+                    global.last_statusupdate = new Date().getTime()
+                    console.log(`status display updated (took ${Math.round(new Date().getTime() - update_start_tick)}ms)`)
+                }).catch(err => console.error(err))
+
+                global.last_total_obfuscations = server_stats?.total_obfuscations || "N/A"
+                global.last_total_file = server_stats?.total_file || "N/A"
+            }
+        })
     }
 }

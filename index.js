@@ -13,7 +13,8 @@ const {
     config = require("./.config.js"),
     fs = require("fs"),
     express = require("express"),
-    app = express()
+    app = express(),
+    ping = require("domain-ping")
 
 require("dotenv").config()
 
@@ -55,7 +56,6 @@ const { createStatusEmbed, updateStatusMessage } = require("./utils/status.js")
 
 client.on("ready", async () => {
     const servers = client.guilds.cache.size
-
     /*client.channels.cache.get("1128995128745402468").send({
         embeds: [createEmbed({
             title: "Lua Obfuscator - Service Status",
@@ -92,7 +92,6 @@ client.on("ready", async () => {
             const start_tick = new Date().getTime()
             console.log(`updating status display... (last update: ${Math.round((new Date().getTime() - global.last_statusupdate) / 1000)} seconds ago)`)
             await updateStatusMessage(start_tick)
-            console.log(`status display updated (took ${Math.round(new Date().getTime() - start_tick)}ms)`)
             resolve();
         }, config.status_update_interval)
     })

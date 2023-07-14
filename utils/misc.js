@@ -62,6 +62,7 @@ module.exports = {
      * @returns 
      */
     formatNumber: function (num, digits = 0) {
+        if (typeof (num) != "number") return "N/A"
         const lookup = [
             { value: 1, symbol: "" },
             { value: 1e3, symbol: "k" },
@@ -76,5 +77,25 @@ module.exports = {
             return num >= item.value;
         });
         return item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0" || "N/A";
+    },
+    /**
+     * Fetches a resource and aborts when the request timed out
+     * @param { String } resource 
+     * @param { Object } options 
+     * @returns 
+     */
+    _fetch: async function (resource, options = {}) {
+        const { timeout = 8000 } = options;
+
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+
+        return response;
     }
 }
