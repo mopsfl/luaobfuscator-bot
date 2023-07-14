@@ -18,9 +18,9 @@ module.exports = {
                 {
                     name: `${getEmoji("website")} **Website:**`,
                     value: `
-                    > **Homepage**: ${responses.WEBSITE_URL.status == 200 ? "Online" : "Offline"} ${responses.WEBSITE_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.WEBSITE_URL.statusText} - ${responses.WEBSITE_URL.status} | ${!isNaN(responses.WEBSITE_URL.ping) ? responses.WEBSITE_URL.ping + "ms" : "N/A"})`)}
-                    > **Forum**: ${responses.FORUM_URL.status == 200 ? "Online" : "Offline"} ${responses.FORUM_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.FORUM_URL.statusText} - ${responses.FORUM_URL.status} | ${!isNaN(responses.FORUM_URL.ping) ? responses.FORUM_URL.ping + "ms" : "N/A"})`)}
-                    > **API**: ${responses.API_URL.status == 200 ? "Online" : "Offline"} ${responses.API_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.API_URL.statusText} ${responses.API_URL.status} | ${!isNaN(responses.API_URL.ping) ? responses.API_URL.ping + "ms" : "N/A"})`)}
+                    > **Homepage**: ${responses.WEBSITE_URL.status == 200 ? "Online" : "Offline"} ${responses.WEBSITE_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.WEBSITE_URL.statusText} - ${responses.WEBSITE_URL.status})`)}
+                    > **Forum**: ${responses.FORUM_URL.status == 200 ? "Online" : "Offline"} ${responses.FORUM_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.FORUM_URL.statusText} - ${responses.FORUM_URL.status})`)}
+                    > **API**: ${responses.API_URL.status == 200 ? "Online" : "Offline"} ${responses.API_URL.status == 200 ? getEmoji("online") : getEmoji("offline")} ${inlineCode(`(${responses.API_URL.statusText} - ${responses.API_URL.status})`)}
                 ` },
                 {
                     name: `${getEmoji("discord")} **Discord:**`,
@@ -140,3 +140,5 @@ module.exports = {
         })
     }
 }
+
+//| ${!isNaN(responses.WEBSITE_URL.ping) ? responses.WEBSITE_URL.ping + "ms" : "N/A"})

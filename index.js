@@ -90,9 +90,8 @@ client.on("ready", async () => {
     //status display
     const action_updateStats = () => new Promise((resolve, reject) => {
         return setTimeout(async () => {
-            const start_tick = new Date().getTime()
             console.log(`updating status display... (last update: ${Math.round((new Date().getTime() - global.last_statusupdate) / 1000)} seconds ago)`)
-            await updateStatusMessage(start_tick)
+            await updateStatusMessage()
             resolve();
         }, config.status_update_interval)
     })
