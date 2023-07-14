@@ -1,5 +1,6 @@
 const moment = require("moment")
 const config = require("../.config")
+const urlStatusCode = require("url-status-code")
 
 require("moment-duration-format")
 
@@ -97,5 +98,13 @@ module.exports = {
         clearTimeout(id);
 
         return response;
+    },
+
+    /**
+     * @description Returns the status code if a url endpoint
+     * @param { string } url 
+     */
+    getStatus: async function (url, options = {}) {
+        return await urlStatusCode(url)
     }
 }

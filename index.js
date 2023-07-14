@@ -19,6 +19,7 @@ require("dotenv").config()
 
 const server_start_tick = new Date().getTime()
 global.server_start_tick = server_start_tick
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
