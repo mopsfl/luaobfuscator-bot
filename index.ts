@@ -4,12 +4,13 @@ import { Client, IntentsBitField } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
-import fs from "fs"
+import fs, { stat } from "fs"
 import Config from "./config"
 import Command from "./modules/Command"
 import Debug from "./modules/Debug"
 import Embed from "./modules/Embed"
 import StatusDisplay from "./modules/StatusDisplay"
+import FormatUptime from "./modules/FormatUptime"
 
 const app = express()
 dotenv.config()
@@ -28,8 +29,13 @@ const client = new Client({
 })
 
 client.on("ready", async () => {
-    const servers = client.guilds.cache.size
-
+    await statusDisplay.init()
+    setInterval(async () => {
+        await statusDisplay.status_message.edit({
+            // @ts-ignore - dont know how to fix this type error
+            embeds: await statusDisplay.CreateStatusEmbed({}, 0, false)
+        })
+    }, 1000);
 })
 
 client.on("messageCreate", async (message) => {
@@ -48,10 +54,9 @@ app.listen(process.env.PORT, async () => {
     client.on("debug", async (m) => await Debug(m))
     client.on("error", async (m) => await Debug(m))
 
-    console.log(`> express server listening on port ${process.env.PORT}`)
+    console.log(`> express server listening on port ${process.env.PORT}\n> logging in...`)
     await client.login(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]).then(async () => {
-        console.log(`> logged in as ${client.user.username}.`)
-        await statusDisplay.init()
+        console.log(`> logged in as ${client.user.username}`)
     })
     console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
 
@@ -60,9 +65,6 @@ app.listen(process.env.PORT, async () => {
 app.get("/api/discord/client/debug", async (req, res) => res.json(await cache.store.mget("debug")))
 
 export {
-    client,
-    config,
-    cache,
-    Debug,
-    env
+    Embed, Debug,
+    client, config, env, cache
 }

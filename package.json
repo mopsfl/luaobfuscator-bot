@@ -5,7 +5,8 @@
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "moment": "^2.29.4"
   },
   "scripts": {
     "build": "rimraf dist && npx tsc && esbuild dist/index.js --bundle --platform=node --outdir=./dist --allow-overwrite --minify",
