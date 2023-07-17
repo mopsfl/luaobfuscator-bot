@@ -1,5 +1,6 @@
 import { PermissionsBitField, Colors, Message } from "discord.js"
 import * as self from "../index"
+import { UUID, randomUUID } from "crypto"
 
 export default class Command {
     constructor(
@@ -49,6 +50,9 @@ export default class Command {
     hasPermission(user, permission_bit) {
         if (!user || !permission_bit) return
         return user.permissions.has(permission_bit) || user.permissions.has(PermissionsBitField.Flags.Administrator)
+    }
+    createCommandId() {
+        return randomUUID()
     }
     sendErrorMessage(error: Error, message: Message, type: string) {
         if (!message || !error) return

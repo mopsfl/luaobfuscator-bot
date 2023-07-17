@@ -1,6 +1,6 @@
 import { EmbedAuthorData, EmbedBuilder, EmbedField, EmbedFooterData } from "discord.js"
 
-export default function (args: { title?: string, description?: string, color?: any, timestamp: boolean, author?: EmbedAuthorData, thumbnail?: string, image?: string, footer?: EmbedFooterData, fields?: Array<any> }) {
+export default function (args: { title?: string, description?: string, color?: any, timestamp?: boolean, author?: EmbedAuthorData, thumbnail?: string, image?: string, footer?: EmbedFooterData, fields?: Array<any> }) {
     const embed = new EmbedBuilder()
 
     if (args.color) embed.setColor(args.color)
