@@ -20,8 +20,9 @@ export default class StatusDisplay {
         public last_total_file: number = 0,
         public last_responses: string | PingResponses = "N/A",
 
-        public last_outage: Outage = { time: "N/A", status: "N/A", affected_services: [], state: false },
-        public last_outage_cache: Outage = { time: "N/A", status: "N/A", affected_services: [], state: false }
+        public default_outage: Outage = { time: "N/A", status: "N/A", affected_services: [], state: false },
+        public last_outage: Outage = default_outage,
+        public last_outage_cache: Outage = default_outage
     ) { }
 
     async init() {

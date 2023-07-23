@@ -41,6 +41,8 @@ export default function (message: Message) {
                         await self.file_cache.clear()
                         await self.file_cache.set("last_outage", { time: "N/A", affected_services: [] })
                         await self.file_cache.set("outage_log", { outages: [] })
+                        self.statusDisplay.last_outage = self.statusDisplay.default_outage
+                        self.statusDisplay.last_outage_cache = self.statusDisplay.default_outage
                         msg.edit({
                             embeds: [self.Embed({
                                 color: Colors.Green,
