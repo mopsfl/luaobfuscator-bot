@@ -39,9 +39,9 @@ export default function (message: Message) {
                             }
                         })]
                     })
-                })
+                }).catch(async err => await self.Debug(err, true))
                 await self.Debug(`> command requested. id: ${commandId}`)
-            } catch (err) { console.error(err) }
+            } catch (err) { self.Debug(err, true) }
         }
     }
 }

@@ -20,7 +20,8 @@ export default class StatusDisplay {
         public last_total_file: number = 0,
         public last_responses: string | PingResponses = "N/A",
 
-        public last_outage: LastOutage = { time: "N/A", status: "N/A", statusText: "N/A" }
+        public last_outage: Outage = { time: "N/A", status: "N/A", affected_services: [], state: false },
+        public last_outage_cache: Outage = { time: "N/A", status: "N/A", affected_services: [], state: false }
     ) { }
 
     async init() {
@@ -34,14 +35,14 @@ export default class StatusDisplay {
         }).catch(async err => await self.Debug(err))
     }
 
-    async CreateStatusEmbed(ping_responses: PingResponses, server_uptime: number, show_next_update: boolean = false, outtage?: boolean) {
+    async CreateStatusEmbed(ping_responses: PingResponses, server_uptime: number, show_next_update: boolean = false) {
         if (!this.initialized && !self.client) return self.Debug({ message: "Unable to create status embed.", error: "App not successfully initialized." }, true)
         return [self.Embed({
             title: "Lua Obfuscator - Service Status",
             description: `All statuses of Lua Obfuscator services displayed.${show_next_update == true ? `
             \n${GetEmoji("update")} **Last Updated:** <t:${(new Date().getTime() / 1000).toFixed()}:R>` : ""}
-            ${GetEmoji("offline")} **Last Outage:** ${global.last_outtage ? `<t:${Math.round(global.last_outtage / 1000)}:R>` : `${inlineCode("N/A")}`}`,
-            color: outtage ? Colors.Green : Colors.Red,
+            ${GetEmoji("offline")} **Last Outage:** ${this.last_outage.state ? `<t:${Math.round(parseInt(this.last_outage.time.toString()) / 1000)}:R>` : this.last_outage_cache.state ? `<t:${Math.round(parseInt(this.last_outage_cache.time.toString()) / 1000)}:R>` : `${inlineCode("N/A")}`}`,
+            color: this.last_outage.state ? Colors.Red : Colors.Green,
             thumbnail: self.config.icon_url,
             timestamp: true,
             fields: [
@@ -111,16 +112,11 @@ export default class StatusDisplay {
     }
 
     async UpdateDisplayStatus() {
-        const responses: {
-            homepage: PingResponse,
-            forum: PingResponse,
-            api: PingResponse,
-            server: ServerStatsResponse,
-        } = {
+        const responses: PingResponses = {
             homepage: { ping: "N/A", status: "N/A", statusText: "N/A" },
             forum: { ping: "N/A", status: "N/A", statusText: "N/A" },
             api: { ping: "N/A", status: "N/A", statusText: "N/A" },
-            server: { ping: "N/A", server_stats: {} }
+            server: { ping: "N/A", status: "N/A", server_stats: {} }
         }
         let finished_requests = 0
 
@@ -151,8 +147,23 @@ export default class StatusDisplay {
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
-                if (!all_online) this.last_outage = {
-                    time: new Date().getTime()
+                if (!all_online) {
+                    const affected_services = Object.values(responses).filter(v => v.status != "N/A" || v.status != 200)
+                    this.last_outage = {
+                        state: true,
+                        time: new Date().getTime(),
+                        affected_services: affected_services
+                    }
+                    const outage_log: OutageLog = await self.file_cache.getSync("outage_log")
+                    outage_log.outages.push(this.last_outage)
+
+                    self.file_cache.setSync("last_outage", this.last_outage)
+                    self.file_cache.setSync("outage_log", outage_log)
+                } else {
+                    const last_outage: Outage = await self.file_cache.getSync("last_outage")
+                    if (last_outage && last_outage.time) {
+                        this.last_outage_cache = last_outage
+                    }
                 }
 
                 await this.status_message.edit({
@@ -202,8 +213,13 @@ export interface ServerStats {
     total_obfuscations?: number
 }
 
-export interface LastOutage {
+export interface Outage {
+    state?: boolean,
+    time?: string | number,
     status?: string,
-    statusText?: string,
-    time?: number | string,
+    affected_services: Array<any>
+}
+
+export interface OutageLog {
+    outages: Outage[]
 }
