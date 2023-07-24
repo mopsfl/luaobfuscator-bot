@@ -1,5 +1,5 @@
 import * as self from "../index"
-import { Channel, Message, MessageType, TextChannel, Embed, inlineCode, Colors } from "discord.js";
+import { Message, TextChannel, inlineCode, Colors, ButtonBuilder } from "discord.js";
 import Config from "../config"
 import GetEmoji from "./GetEmoji"
 import FormatUptime from "./FormatUptime";
@@ -162,6 +162,7 @@ export default class StatusDisplay {
                     self.file_cache.setSync("outage_log", outage_log)
                 } else {
                     const last_outage: Outage = await self.file_cache.getSync("last_outage")
+                    this.last_outage.state = false
                     if (last_outage && last_outage.time) {
                         this.last_outage_cache = last_outage
                     }

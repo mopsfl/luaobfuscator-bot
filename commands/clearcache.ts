@@ -1,5 +1,5 @@
 import * as self from "../index"
-import { Colors, Message, PermissionsBitField, codeBlock, inlineCode } from "discord.js"
+import { Colors, Message, PermissionsBitField, codeBlock, inlineCode, ButtonBuilder } from "discord.js"
 import GetEmoji from "../modules/GetEmoji"
 import fs from "fs"
 
@@ -43,6 +43,7 @@ export default function (message: Message) {
                         await self.file_cache.set("outage_log", { outages: [] })
                         self.statusDisplay.last_outage = self.statusDisplay.default_outage
                         self.statusDisplay.last_outage_cache = self.statusDisplay.default_outage
+                        fs.mkdirSync(process.cwd() + "/.cache/charts")
                         msg.edit({
                             embeds: [self.Embed({
                                 color: Colors.Green,
