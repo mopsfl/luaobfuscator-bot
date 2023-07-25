@@ -27,18 +27,7 @@ export interface ChartOptions {
     type: String,
     data: {
         labels: Array<String>,
-        datasets: [
-            {
-                label: string,
-                data: Array<number>,
-                fill?: boolean,
-                backgroundColor?: string,
-            }, {
-                label: string,
-                data: Array<number>,
-                fill?: boolean,
-                backgroundColor?: string,
-            }]
+        datasets: Array<ChartDataset>
     },
     options?: {
         title: {
@@ -46,4 +35,11 @@ export interface ChartOptions {
             text: string
         },
     }
+}
+
+export interface ChartDataset {
+    label: string,
+    data: Array<number>,
+    fill?: boolean,
+    backgroundColor?: string,
 }

@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false
 
-import { Client, Colors, IntentsBitField, bold } from "discord.js"
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, Colors, EmbedBuilder, IntentsBitField, bold } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -14,7 +14,7 @@ import Embed from "./modules/Embed"
 import Session from "./modules/Session"
 import StatusDisplay from "./modules/StatusDisplay"
 import GetEmoji from "./modules/GetEmoji"
-import ChartImage from "./modules/ChartImage"
+import ChartImage, { ChartDataset, ChartOptions } from "./modules/ChartImage"
 import { Cache, FileSystemCache } from "file-system-cache"
 
 // temp until i created the command handler
@@ -144,6 +144,35 @@ client.on("messageCreate", async (message) => {
                 await clearcache_command.callback()
             }
             console.log(`> command '${_command}' requested by ${message.author.username}. (took ${new Date().getTime() - start_tick}ms)`)
+        } else if (_command == "test") {
+            const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": [1, 2, 1, 5, 4, 8, 1], "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }, { "label": "Daily File Uploads", "data": [1, 1, 1, 8, 2, 5, 15], "fill": true, "backgroundColor": "rgba(255, 99, 132, 0.8)" }]
+            const test: Array<ChartDataset> = [{ "label": "test", "data": [1, 2, 3, 4, 5, 6, 7], "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]
+            const chart_obfuscation_stats = chartImage.Create({
+                type: "line",
+                data: {
+                    labels: chartImage.GetLocalizedDateStrings(),
+                    datasets: datasets_obfuscation_stats
+                }
+            }).height("600").width("1000").bkg("rgb(255,255,255)").icretina("1").toURL()
+            const chart = chartImage.Create({
+                type: "line",
+                data: {
+                    labels: chartImage.GetLocalizedDateStrings(),
+                    datasets: test
+                }
+            }).height("600").width("1000").bkg("rgb(255,255,255)").icretina("1").toURL()
+            message.reply({
+                embeds: [
+                    Embed({
+                        title: "Lua Obfuscator - Statistics",
+                        color: Colors.Green,
+                        thumbnail: config.icon_url,
+                        description: `Live statistics of Lua Obfuscator.`,
+                        timestamp: true
+                    }).setImage(chart_obfuscation_stats).setURL(chart_obfuscation_stats),
+                    new EmbedBuilder().setImage(chart).setURL(chart),
+                ],
+            })
         }
     } catch (error) {
         console.error(error)
@@ -227,7 +256,6 @@ app.get("/api/chart", async (req, res) => {
         return res.status(500).json({ code: 500, message: "Internal Server Error", error: error })
     }
 })
-
 
 export {
     Embed, Debug,
