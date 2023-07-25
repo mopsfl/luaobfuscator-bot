@@ -76,7 +76,8 @@ client.on("messageCreate", async (message) => {
         const cache_command = cachecommand(message)
         const clearcache_command = clrcachecommand(message)
 
-        const _command = command.getCommand(message).replace(/```[^`]*```/gm, "").trim()
+        const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim()
+        const args: Array<number | string> = command.getArgs(message).splice(1)
 
         if (_command == updatestatus_command.command || updatestatus_command.aliases.includes(_command)) {
             const start_tick = new Date().getTime()
@@ -145,20 +146,12 @@ client.on("messageCreate", async (message) => {
             }
             console.log(`> command '${_command}' requested by ${message.author.username}. (took ${new Date().getTime() - start_tick}ms)`)
         } else if (_command == "test") {
-            const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": [1, 2, 1, 5, 4, 8, 1], "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }, { "label": "Daily File Uploads", "data": [1, 1, 1, 8, 2, 5, 15], "fill": true, "backgroundColor": "rgba(255, 99, 132, 0.8)" }]
-            const test: Array<ChartDataset> = [{ "label": "test", "data": [1, 2, 3, 4, 5, 6, 7], "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]
+            const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": args.splice(1), "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]
             const chart_obfuscation_stats = chartImage.Create({
-                type: "line",
+                type: args[0].toString(),
                 data: {
                     labels: chartImage.GetLocalizedDateStrings(),
                     datasets: datasets_obfuscation_stats
-                }
-            }).height("600").width("1000").bkg("rgb(255,255,255)").icretina("1").toURL()
-            const chart = chartImage.Create({
-                type: "line",
-                data: {
-                    labels: chartImage.GetLocalizedDateStrings(),
-                    datasets: test
                 }
             }).height("600").width("1000").bkg("rgb(255,255,255)").icretina("1").toURL()
             message.reply({
@@ -170,7 +163,6 @@ client.on("messageCreate", async (message) => {
                         description: `Live statistics of Lua Obfuscator.`,
                         timestamp: true
                     }).setImage(chart_obfuscation_stats).setURL(chart_obfuscation_stats),
-                    new EmbedBuilder().setImage(chart).setURL(chart),
                 ],
             })
         }

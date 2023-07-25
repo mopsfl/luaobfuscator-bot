@@ -8,12 +8,12 @@ export default class Command {
     ) { }
 
     getCommand(message: Message) {
-        return this.getArgs(message).shift().toLowerCase()
+        return this.getArgs(message)?.shift()?.toLowerCase()
     }
 
     getArgs(message: Message) {
         if (!message || !message.content) return
-        return message.content.replace(/`+[^`]*`+/gm, "").trim().slice(this.prefix.length).split(' ')
+        return message.content.replace(/`+[^`]*`+/gm, "")?.trim()?.slice(this.prefix.length)?.split(' ')
     }
     getRawArgs(message: Message) {
         if (!message) return

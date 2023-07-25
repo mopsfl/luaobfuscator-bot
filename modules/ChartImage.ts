@@ -24,7 +24,7 @@ export default class ChartImage {
 }
 
 export interface ChartOptions {
-    type: String,
+    type: string,
     data: {
         labels: Array<String>,
         datasets: Array<ChartDataset>
@@ -39,7 +39,7 @@ export interface ChartOptions {
 
 export interface ChartDataset {
     label: string,
-    data: Array<number>,
+    data: Array<number | string>,
     fill?: boolean,
     backgroundColor?: string,
 }
