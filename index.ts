@@ -82,6 +82,13 @@ client.on("messageCreate", async (message) => {
             _args: Array<number | string> = command.getArgs(message).splice(1)
         command.commands.forEach(async c => {
             if (typeof (c.name) == "object" && !c.name.includes(_command) || typeof (c.name) == "string" && c.name != _command) return
+            let allowed = true
+            for (let i = 0; i < c.permissions?.length; i++) {
+                const permission_bit = c.permissions[i];
+                if (command.hasPermission(message.member, permission_bit)) {
+                    allowed = true
+                } else allowed = false
+            }
             const cmd: cmdStructure = {
                 prefix: config.prefix,
                 name: c.name,
@@ -90,69 +97,14 @@ client.on("messageCreate", async (message) => {
                 callback: c.callback,
                 message: message,
                 timestamp: new Date().getTime(),
+                allowed: allowed,
                 success: false
             }
 
-            let allowed = false
-            for (let i = 0; i < c.permissions?.length; i++) {
-                const permission_bit = c.permissions[i];
-                if (command.hasPermission(message.member, permission_bit)) allowed = true
-            }
-
+            console.log(allowed);
             await command.handleCommand(cmd)
         })
-        /* command handler soon (this is just temp)
-        const updatestatus_command = updatestatus(message)
-        const cache_command = cachecommand(message)
-        const clearcache_command = clrcachecommand(message)
-
-
-        if (_command == updatestatus_command.command || updatestatus_command.aliases.includes(_command)) {
-            const start_tick = new Date().getTime()
-            if (updatestatus_command.required_permissions) {
-                let allowed = false
-                for (let i = 0; i < updatestatus_command.required_permissions.length; i++) {
-                    const permission_bit = updatestatus_command.required_permissions[i];
-                    if (command.hasPermission(message.member, permission_bit)) allowed = true
-                }
-                if (!allowed) {
-                    let embed = Embed({
-                        title: `${GetEmoji("no")} Missing Permissions`,
-                        color: Colors.Red,
-                        description: "You are not allowed to use this command.",
-                        timestamp: true,
-                    })
-                    message.reply({ embeds: [embed] })
-                    return
-                }
-                await updatestatus_command.callback()
-            }
-            console.log(`> command '${_command}' requested by ${message.author.username}. (took ${new Date().getTime() - start_tick}ms)`)
-        } else if (["obf", "obfuscate"].includes(_command)) {
-            const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS", "skibidi_toilet", "Angry", "pepe_cringe", "pepewow", "aquacry"]
-            await message.reply(`no, use website: ${bold("https://luaobfuscator.com")} ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
-        } else if (_command == cache_command.command || cache_command.aliases.includes(_command)) {
-            const start_tick = new Date().getTime()
-            if (cache_command.required_permissions) {
-                let allowed = false
-                for (let i = 0; i < cache_command.required_permissions.length; i++) {
-                    const permission_bit = cache_command.required_permissions[i];
-                    if (command.hasPermission(message.member, permission_bit)) allowed = true
-                }
-                if (!allowed) {
-                    let embed = Embed({
-                        title: `${GetEmoji("no")} Missing Permissions`,
-                        color: Colors.Red,
-                        description: "You are not allowed to use this command.",
-                        timestamp: true,
-                    })
-                    message.reply({ embeds: [embed] })
-                    return
-                }
-                await cache_command.callback()
-            }
-            console.log(`> command '${_command}' requested by ${message.author.username}. (took ${new Date().getTime() - start_tick}ms)`)
-        } else if (_command == clearcache_command.command || clearcache_command.aliases.includes(_command)) {
+        /*if (_command == clearcache_command.command || clearcache_command.aliases.includes(_command)) {
             const start_tick = new Date().getTime()
             if (clearcache_command.required_permissions) {
                 let allowed = false

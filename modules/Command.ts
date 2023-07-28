@@ -31,6 +31,7 @@ export default class Command {
     async handleCommand(cmd: cmdStructure) {
         if (typeof (cmd.callback) != "function") return new Error("callback is not a <Function>")
         if (!(cmd.message instanceof Message)) return new Error("message is not a <Message>")
+        if (!cmd.allowed) return cmd.message.reply("Missing permissions")
         try {
             const success = await cmd.callback(cmd)
             console.log(`> command '${cmd.name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
@@ -60,5 +61,6 @@ export interface cmdStructure {
     callback: Function,
     message: Message,
     timestamp: number,
+    allowed: boolean,
     success: boolean,
 }
