@@ -1,27 +1,21 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false
 
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, Colors, EmbedBuilder, IntentsBitField, bold } from "discord.js"
+import { Client, Collection, Constructable, IntentsBitField } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
 import fs from "fs"
 import cors from "cors"
+import path from "path"
 import Config from "./config"
-import Command from "./modules/Command"
+import Command, { cmdStructure, command } from "./modules/Command"
 import Debug from "./modules/Debug"
 import Embed from "./modules/Embed"
 import Session from "./modules/Session"
 import StatusDisplay from "./modules/StatusDisplay"
-import GetEmoji from "./modules/GetEmoji"
-import ChartImage, { ChartDataset, ChartOptions } from "./modules/ChartImage"
+import ChartImage from "./modules/ChartImage"
 import { Cache, FileSystemCache } from "file-system-cache"
-
-// temp until i created the command handler
-import updatestatus from "./commands/updatestatus"
-import cachecommand from "./commands/cache"
-import clrcachecommand from "./commands/clearcache"
-import path from "path"
 
 const app = express()
 dotenv.config()
@@ -45,6 +39,7 @@ const client = new Client({
 })
 
 client.on("ready", async () => {
+    const process_path = process.cwd()
     await statusDisplay.init()
     await statusDisplay.UpdateDisplayStatus()
     const action_updateStats = () => new Promise((resolve, reject) => {
@@ -54,6 +49,19 @@ client.on("ready", async () => {
             //@ts-ignore
             resolve();
         }, config.status_update_interval)
+    })
+
+    //command register
+    const commands: any = new Collection()
+    command.commands = commands
+    fs.readdir(`${process_path}/commands`, (err, files) => {
+        if (err) return Debug(err, true)
+        files.forEach(file => {
+            file = file.replace(".ts", ".js")
+            const cmd_node = require(`${process_path}/dist/commands/${file}`)
+            const cmd: command = new cmd_node()
+            commands.set(cmd.name, cmd)
+        })
     })
 
     const actionRecursion = async () => {
@@ -66,18 +74,38 @@ client.on("ready", async () => {
 })
 
 client.on("messageCreate", async (message) => {
-    if (message.author.bot) return
-    if (!message.content) return
-    if (message.channelId == statusDisplay.status_message.channelId) await message.delete()
     try {
-        if (!message.content.startsWith(config.prefix)) return
-        // command handler soon (this is just temp)
+        if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
+        if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
+
+        const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
+            _args: Array<number | string> = command.getArgs(message).splice(1)
+        command.commands.forEach(async c => {
+            if (typeof (c.name) == "object" && !c.name.includes(_command) || typeof (c.name) == "string" && c.name != _command) return
+            const cmd: cmdStructure = {
+                prefix: config.prefix,
+                name: c.name,
+                arguments: _args,
+                id: command.createCommandId(),
+                callback: c.callback,
+                message: message,
+                timestamp: new Date().getTime(),
+                success: false
+            }
+
+            let allowed = false
+            for (let i = 0; i < c.permissions?.length; i++) {
+                const permission_bit = c.permissions[i];
+                if (command.hasPermission(message.member, permission_bit)) allowed = true
+            }
+
+            await command.handleCommand(cmd)
+        })
+        /* command handler soon (this is just temp)
         const updatestatus_command = updatestatus(message)
         const cache_command = cachecommand(message)
         const clearcache_command = clrcachecommand(message)
 
-        const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim()
-        const args: Array<number | string> = command.getArgs(message).splice(1)
 
         if (_command == updatestatus_command.command || updatestatus_command.aliases.includes(_command)) {
             const start_tick = new Date().getTime()
@@ -153,7 +181,7 @@ client.on("messageCreate", async (message) => {
                     labels: chartImage.GetLocalizedDateStrings(),
                     datasets: datasets_obfuscation_stats
                 }
-            }).height("600").width("1000").bkg("rgb(255,255,255)").icretina("1").toURL()
+            }).height("600").width("1000").bkg("rgb(255,255,255)").toURL()
             message.reply({
                 embeds: [
                     Embed({
@@ -165,7 +193,7 @@ client.on("messageCreate", async (message) => {
                     }).setImage(chart_obfuscation_stats).setURL(chart_obfuscation_stats),
                 ],
             })
-        }
+        }*/
     } catch (error) {
         console.error(error)
     }
@@ -175,6 +203,7 @@ app.listen(process.env.PORT, async () => {
     cache = await caching("memory")
     await cache.set("debug", [])
     await cache.set("stats_session_ids", [])
+    await cache.set("command_log", [])
     file_cache = new Cache({
         basePath: "./.cache",
         ttl: Infinity,
@@ -209,6 +238,7 @@ app.use((req, res, next) => {
 })
 
 app.get("/api/discord/client/debug", async (req, res) => res.json(await cache.get("debug")))
+app.get("/api/discord/client/command-logs", async (req, res) => res.json(await cache.get("command_log")))
 app.get("/api/luaobfuscator/stats/last-outage", async (req, res) => {
     const session_ids: Array<any> = await cache.get("stats_session_ids")
     if (session_ids && session_ids.includes(req.query.session)) return res.json(await file_cache.getSync("last_outage"))
