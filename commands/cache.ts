@@ -5,6 +5,7 @@ import GetEmoji from "../modules/GetEmoji";
 
 class Command {
     name = ["cache"]
+    category = self.commandCategories.Misc
     description = "Create a temporary link to access the cache."
     permissions = [PermissionFlagsBits.Administrator]
 
@@ -33,7 +34,8 @@ class Command {
                         title: "Temporary Cache Link",
                         fields: [{
                             name: `${GetEmoji("warn")} Note:`,
-                            value: `This temporary link is only available for ${inlineCode("1")} minute.`
+                            value: `This temporary link is only available for ${inlineCode("1")} minute.`,
+                            inline: false,
                         }],
                         footer: {
                             text: cmd.id

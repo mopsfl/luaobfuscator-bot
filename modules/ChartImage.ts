@@ -3,10 +3,10 @@ import ChartJSImage from "chart.js-image"
 export default class ChartImage {
     constructor() { }
 
-    GetLocalizedDateStrings() {
+    GetLocalizedDateStrings(length: number = 7) {
         const dateStrings = [];
         const today = new Date();
-        for (let i = 0; i < 7; i++) {
+        for (let i = 0; i < length; i++) {
             const currentDate = new Date(today);
             currentDate.setDate(currentDate.getDate() - i);
             let localizedDateString = currentDate.toLocaleDateString(undefined, { month: "2-digit", day: "numeric" });

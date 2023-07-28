@@ -4,6 +4,7 @@ import { cmdStructure } from "../modules/Command";
 
 class Command {
     name = ["ping"]
+    category = self.commandCategories.Bot
     description = "Returns the bot's current ping in milliseconds, measuring its responsiveness to the Discord server."
 
     callback = async (cmd: cmdStructure) => {

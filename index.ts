@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false
 
-import { Activity, ActivityType, Client, Collection, Constructable, IntentsBitField } from "discord.js"
+import { ActivityType, Client, Collection, IntentsBitField } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -15,6 +15,7 @@ import Embed from "./modules/Embed"
 import Session from "./modules/Session"
 import StatusDisplay from "./modules/StatusDisplay"
 import ChartImage from "./modules/ChartImage"
+import CommandCategories from "./modules/CommandCategories"
 import { Cache, FileSystemCache } from "file-system-cache"
 
 const app = express()
@@ -25,6 +26,7 @@ const command = new Command()
 const session = new Session()
 const statusDisplay = new StatusDisplay()
 const chartImage = new ChartImage()
+const commandCategories = new CommandCategories()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
@@ -113,48 +115,6 @@ client.on("messageCreate", async (message) => {
             console.log(allowed);
             await command.handleCommand(cmd)
         })
-        /*if (_command == clearcache_command.command || clearcache_command.aliases.includes(_command)) {
-            const start_tick = new Date().getTime()
-            if (clearcache_command.required_permissions) {
-                let allowed = false
-                for (let i = 0; i < clearcache_command.required_permissions.length; i++) {
-                    const permission_bit = clearcache_command.required_permissions[i];
-                    if (command.hasPermission(message.member, permission_bit)) allowed = true
-                }
-                if (!allowed) {
-                    let embed = Embed({
-                        title: `${GetEmoji("no")} Missing Permissions`,
-                        color: Colors.Red,
-                        description: "You are not allowed to use this command.",
-                        timestamp: true,
-                    })
-                    message.reply({ embeds: [embed] })
-                    return
-                }
-                await clearcache_command.callback()
-            }
-            console.log(`> command '${_command}' requested by ${message.author.username}. (took ${new Date().getTime() - start_tick}ms)`)
-        } else if (_command == "test") {
-            const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": args.splice(1), "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]
-            const chart_obfuscation_stats = chartImage.Create({
-                type: args[0].toString(),
-                data: {
-                    labels: chartImage.GetLocalizedDateStrings(),
-                    datasets: datasets_obfuscation_stats
-                }
-            }).height("600").width("1000").bkg("rgb(255,255,255)").toURL()
-            message.reply({
-                embeds: [
-                    Embed({
-                        title: "Lua Obfuscator - Statistics",
-                        color: Colors.Green,
-                        thumbnail: config.icon_url,
-                        description: `Live statistics of Lua Obfuscator.`,
-                        timestamp: true
-                    }).setImage(chart_obfuscation_stats).setURL(chart_obfuscation_stats),
-                ],
-            })
-        }*/
     } catch (error) {
         console.error(error)
     }
@@ -242,7 +202,7 @@ app.get("/api/chart", async (req, res) => {
 
 export {
     Embed, Debug,
-    statusDisplay, command, session,
+    statusDisplay, command, session, chartImage, commandCategories,
     client, config, env, cache, file_cache,
     start_tick
 }

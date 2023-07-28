@@ -49,6 +49,7 @@ export default class StatusDisplay {
             fields: [
                 {
                     name: `${GetEmoji("website")} **Website:**`,
+                    inline: false,
                     value: `
                     > **Homepage**: ${ping_responses.homepage?.status == 200 ? "Online" : "Offline"} ${ping_responses.homepage?.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${ping_responses.homepage?.statusText} - ${ping_responses.homepage?.status} | ${ping_responses.homepage?.ping ? ping_responses.homepage?.ping + "ms" : "N/A"})`)}
                     > **Forum**: ${ping_responses.forum?.status == 200 ? "Online" : "Offline"} ${ping_responses.forum?.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${ping_responses.forum?.statusText} - ${ping_responses.forum?.status} | ${ping_responses.forum?.ping ? ping_responses.forum?.ping + "ms" : "N/A"})`)}
@@ -56,6 +57,7 @@ export default class StatusDisplay {
                 ` },
                 {
                     name: `${GetEmoji("discord")} **Discord:**`,
+                    inline: false,
                     value: `
                     > **Bot Status**: ${self.client.uptime > 0 ? "Online" : "Offline"} ${self.client.uptime > 0 ? GetEmoji("online") : GetEmoji("offline")}
                     > **Bot Uptime**: ${inlineCode(FormatUptime(self.client.uptime) || "N/A")}
@@ -64,6 +66,7 @@ export default class StatusDisplay {
                 },
                 {
                     name: `${GetEmoji("server_luaobf")} **Lua Obfuscator - Server:**`,
+                    inline: false,
                     value: `
                     > **Ping**: ${inlineCode(ping_responses.server?.ping?.toString() || "N/A")}
                     > **Uptime**: ${inlineCode(FormatUptime(server_uptime) || "N/A")}
@@ -72,6 +75,7 @@ export default class StatusDisplay {
                 },
                 {
                     name: `${GetEmoji("server_discord")} **Bot Hosting - Server:**`,
+                    inline: false,
                     value: `
                     > **Uptime**: ${inlineCode(FormatUptime(new Date().getTime() - self.start_tick) || "N/A")}
                     > **Memory Usage**: ${inlineCode(FormatBytes(process.memoryUsage().heapUsed) || "N/A")}
@@ -92,6 +96,7 @@ export default class StatusDisplay {
             fields: [
                 {
                     name: `${GetEmoji("luaobfuscator")} **Obfusactor Statistics:**`,
+                    inline: false,
                     value: `
                     > **Total Files Uploaded**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_file) || "N/A")}
                     > **Total Obfuscations**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_obfuscations) || "N/A")}
@@ -100,6 +105,7 @@ export default class StatusDisplay {
                     `
                 }, {
                     name: `${GetEmoji("upload")} **Request Queue:**`,
+                    inline: false,
                     value: `
                     > **Current Requests:** ${inlineCode(ping_responses.server?.server_stats?.queue_active?.toString() || "N/A")}
                     > **Requests In Queue:** ${inlineCode(ping_responses.server?.server_stats?.queue_waiting?.toString() || "N/A")}

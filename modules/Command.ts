@@ -50,7 +50,8 @@ export interface command {
     name: string | Array<string>,
     callback: Function,
     permissions?: Array<bigint>,
-    required_roles?: Array<string>
+    required_roles?: Array<string>,
+    category: "Bot" | "Misc" | "Lua Obfuscator",
 }
 
 export interface cmdStructure {

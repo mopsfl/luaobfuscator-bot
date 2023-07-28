@@ -5,6 +5,7 @@ import FormatUptime from "../modules/FormatUptime";
 
 class Command {
     name = ["info"]
+    category = self.commandCategories.Bot
     description = "Returns some informations about the bot."
 
     callback = async (cmd: cmdStructure) => {

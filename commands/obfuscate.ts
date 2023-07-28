@@ -1,9 +1,11 @@
 import { bold } from "discord.js";
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
+import * as self from "../index"
 
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
+    category = self.commandCategories.LuaObfuscator
     description = ""
 
     callback = async (cmd: cmdStructure) => {

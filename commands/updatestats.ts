@@ -5,6 +5,7 @@ import GetEmoji from "../modules/GetEmoji";
 
 class Command {
     name = ["updatestats", "us"]
+    category = self.commandCategories.Misc
     description = "Forces to update update the status display informations."
     permissions = [PermissionFlagsBits.Administrator]
 
