@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false
 
-import { Client, Collection, Constructable, IntentsBitField } from "discord.js"
+import { Activity, ActivityType, Client, Collection, Constructable, IntentsBitField } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -25,9 +25,11 @@ const command = new Command()
 const session = new Session()
 const statusDisplay = new StatusDisplay()
 const chartImage = new ChartImage()
-const env = process.argv[2]
+const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
+
+const process_path = process.cwd()
 
 const client = new Client({
     intents: [
@@ -35,19 +37,26 @@ const client = new Client({
         IntentsBitField.Flags.GuildEmojisAndStickers,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.MessageContent
-    ]
+    ],
+    presence: {
+        status: "online",
+        activities: [{
+            name: `Lua Obfuscator`,
+            type: ActivityType.Watching,
+            url: config.STATUS_DISPLAY.endpoints.homepage,
+        }]
+    }
 })
 
 client.on("ready", async () => {
-    const process_path = process.cwd()
     await statusDisplay.init()
     await statusDisplay.UpdateDisplayStatus()
+
     const action_updateStats = () => new Promise((resolve, reject) => {
         return setTimeout(async () => {
             console.log(`> updating status display... (last update: ${Math.round((new Date().getTime() - statusDisplay.last_statusupdate) / 1000)} seconds ago)`)
             await statusDisplay.UpdateDisplayStatus()
-            //@ts-ignore
-            resolve();
+            resolve(true);
         }, config.status_update_interval)
     })
 
@@ -64,13 +73,12 @@ client.on("ready", async () => {
         })
     })
 
+    //statusDisplay recursion
     const actionRecursion = async () => {
-        await action_updateStats().then(() => {
+        await action_updateStats().then((res) => {
             setTimeout(actionRecursion, 100)
         })
-    }
-
-    actionRecursion()
+    }; actionRecursion()
 })
 
 client.on("messageCreate", async (message) => {
@@ -80,6 +88,7 @@ client.on("messageCreate", async (message) => {
 
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)
+
         command.commands.forEach(async c => {
             if (typeof (c.name) == "object" && !c.name.includes(_command) || typeof (c.name) == "string" && c.name != _command) return
             let allowed = true
@@ -160,10 +169,10 @@ app.listen(process.env.PORT, async () => {
         basePath: "./.cache",
         ttl: Infinity,
     })
-    fs.readdir(process.cwd() + "/.cache/charts", (err, files) => {
+    fs.readdir(process_path + "/.cache/charts", (err, files) => {
         if (err) throw err
         files.forEach(f => {
-            fs.unlink(path.join(process.cwd() + "/.cache/charts", f), (err) => {
+            fs.unlink(path.join(process_path + "/.cache/charts", f), (err) => {
                 if (err) throw err
             })
         })
@@ -217,13 +226,13 @@ app.get("/api/chart", async (req, res) => {
         if (await cache.get(buffer.toString())) {
             const cached_chart = await cache.get(buffer.toString())
             res.setHeader("X-Cached-Chart", "true")
-            return res.sendFile(process.cwd() + `/.cache/charts/${cached_chart}.png`)
+            return res.sendFile(process_path + `/.cache/charts/${cached_chart}.png`)
         } else {
             await cache.set(buffer.toString(), chart_id)
             //@ts-ignore
             await chart.toFile(`./.cache/charts/${chart_id}.png`)
             res.setHeader("X-Cached-Chart", "false")
-            return res.sendFile(process.cwd() + `/.cache/charts/${chart_id}.png`)
+            return res.sendFile(process_path + `/.cache/charts/${chart_id}.png`)
         }
     } catch (error) {
         console.error(error)

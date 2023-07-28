@@ -49,8 +49,8 @@ export default class Command {
 export interface command {
     name: string | Array<string>,
     callback: Function,
-    permissions: Array<bigint>,
-    required_roles: Array<string>
+    permissions?: Array<bigint>,
+    required_roles?: Array<string>
 }
 
 export interface cmdStructure {
