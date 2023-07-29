@@ -153,11 +153,7 @@ app.listen(process.env.PORT, async () => {
 })
 
 app.use(cors())
-app.use((req, res, next) => {
-    res.removeHeader("X-Powered-By")
-    next()
-})
-
+app.use((req, res, next) => { res.removeHeader("X-Powered-By"); next() })
 app.get("/api/discord/client/debug", async (req, res) => res.json(await cache.get("debug")))
 app.get("/api/discord/client/command-logs", async (req, res) => res.json(await cache.get("command_log")))
 app.get("/api/luaobfuscator/stats/last-outage", async (req, res) => {

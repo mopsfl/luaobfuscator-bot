@@ -1,7 +1,6 @@
-import { PermissionFlagsBits, Colors, Message, Collection, User, ClientUser, GuildMember } from "discord.js"
+import { PermissionFlagsBits, Message, GuildMember } from "discord.js"
 import * as self from "../index"
-import { UUID, randomUUID } from "crypto"
-import { RawUserData } from "discord.js/typings/rawDataTypes"
+import { randomUUID } from "crypto"
 
 export default class Command {
     constructor(

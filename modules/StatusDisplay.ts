@@ -1,6 +1,5 @@
 import * as self from "../index"
-import { Message, TextChannel, inlineCode, Colors, ButtonBuilder } from "discord.js";
-import Config from "../config"
+import { Message, TextChannel, inlineCode, Colors } from "discord.js";
 import GetEmoji from "./GetEmoji"
 import FormatUptime from "./FormatUptime";
 import FormatBytes from "./FormatBytes";

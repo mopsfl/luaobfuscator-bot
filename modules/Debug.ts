@@ -1,4 +1,3 @@
-import { debug } from "console"
 import * as self from "../index"
 
 export default async function (m: any, p: boolean = false) {

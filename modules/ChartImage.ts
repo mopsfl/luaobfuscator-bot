@@ -17,7 +17,6 @@ export default class ChartImage {
     }
 
     Create(data: ChartOptions): ChartJSImage {
-        //@ts-ignore
         const chart = new ChartJSImage().chart(data)
         return chart
     }

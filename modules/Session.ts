@@ -1,5 +1,5 @@
 import * as self from "../index"
-import { RandomUUIDOptions, randomBytes, randomInt, randomUUID } from "crypto"
+import { randomUUID } from "crypto"
 
 export default class Session {
     constructor() { }
