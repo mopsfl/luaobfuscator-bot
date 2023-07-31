@@ -8,6 +8,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Create a temporary link to access the cache."
     permissions = [PermissionFlagsBits.Administrator]
+    direct_message = false
 
     callback = async (cmd: cmdStructure) => {
         const embed = self.Embed({

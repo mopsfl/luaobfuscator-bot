@@ -8,6 +8,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Forces to update update the status display informations."
     permissions = [PermissionFlagsBits.Administrator]
+    direct_message = false
 
     callback = async (cmd: cmdStructure) => {
         const embed = self.Embed({

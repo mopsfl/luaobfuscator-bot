@@ -12,7 +12,7 @@ export default class Command {
     getArgs(message: Message) { return message.content.replace(/`+[^`]*`+/gm, "")?.trim()?.slice(this.prefix.length)?.split(' ') }
     getRawArgs(message: Message) { return message.content.slice(this.prefix.length).slice(this.getCommand(message).length + 1) }
     isBotMention(message: Message) { return message.mentions.users.find(id => id == global.client.user.id) }
-    hasPermission(user: GuildMember, permission_bit: bigint) { return user.permissions.has(permission_bit) || user.permissions.has(PermissionFlagsBits.Administrator) }
+    hasPermission(user: GuildMember, permission_bit: bigint) { return user?.permissions?.has(permission_bit) || user?.permissions?.has(PermissionFlagsBits.Administrator) }
     createCommandId() { return randomUUID() }
     parseMentions(message: Message) {
         const mentions = message.mentions.users
@@ -33,12 +33,12 @@ export default class Command {
         if (!cmd.allowed) return cmd.message.reply("Missing permissions")
         try {
             const success = await cmd.callback(cmd)
-            console.log(`> command '${cmd.name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
             cmd.success = success
             let command_log: Array<cmdStructure> = await self.cache.get("command_log")
             if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
             command_log.push(cmd)
             await self.cache.set(JSON.stringify(command_log), cmd)
+            console.log(`> command '${cmd.name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
         } catch (error) {
             self.Debug(error, true)
         }
@@ -51,6 +51,7 @@ export interface command {
     permissions?: Array<bigint>,
     required_roles?: Array<string>,
     category: "Bot" | "Misc" | "Lua Obfuscator",
+    direct_message: boolean,
 }
 
 export interface cmdStructure {

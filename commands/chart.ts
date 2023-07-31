@@ -7,6 +7,7 @@ class Command {
     name = ["chart"]
     category = self.commandCategories.LuaObfuscator
     description = "Creates a chart image with the given information."
+    direct_message = false
 
     callback = async (cmd: cmdStructure) => {
         const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": cmd.arguments.splice(1), "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]

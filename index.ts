@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false
 
-import { ActivityType, Client, Collection, IntentsBitField } from "discord.js"
+import { ActivityType, Client, Collection, IntentsBitField, Partials } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -36,10 +36,11 @@ const process_path = process.cwd()
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildEmojisAndStickers,
+        IntentsBitField.Flags.DirectMessages,
         IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.MessageContent
+        IntentsBitField.Flags.MessageContent,
     ],
+    partials: [Partials.Channel],
     presence: {
         status: "online",
         activities: [{
@@ -87,12 +88,12 @@ client.on("messageCreate", async (message) => {
     try {
         if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
-
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)
 
         command.commands.forEach(async c => {
             if (typeof (c.name) == "object" && !c.name.includes(_command) || typeof (c.name) == "string" && c.name != _command) return
+            if (message.channel.isDMBased() && c.direct_message == false) return console.log(`> command '${c.name}', requested by '${message.author.username}', blocked. (direct_message not allowed)`);
             let allowed = true
             for (let i = 0; i < c.permissions?.length; i++) {
                 const permission_bit = c.permissions[i];
@@ -100,6 +101,7 @@ client.on("messageCreate", async (message) => {
                     allowed = true
                 } else allowed = false
             }
+
             const cmd: cmdStructure = {
                 prefix: config.prefix,
                 name: c.name,
