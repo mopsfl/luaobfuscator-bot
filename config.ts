@@ -10,6 +10,7 @@ export default class Config {
 
     support_url = "https://discord.com/invite/Y556HXUByG"
     session_url = "https://luaobfuscator.com/?session="
+    api_url = "https://luaobfuscator.com/api/obfuscator/"
     icon_url = "https://luaobfuscator.com/img/logo.png"
 
     prod = {

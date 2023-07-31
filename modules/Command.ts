@@ -58,6 +58,7 @@ export interface cmdStructure {
     prefix: string,
     name: string | Array<string>,
     arguments: Array<string | number>,
+    raw_arguments: string,
     id: string,
     callback: Function,
     message: Message,

@@ -9,6 +9,7 @@ import fs from "fs"
 import cors from "cors"
 import path from "path"
 import Config from "./config"
+import Utils from "./modules/Utils"
 import Command, { cmdStructure, command } from "./modules/Command"
 import Debug from "./modules/Debug"
 import Embed from "./modules/Embed"
@@ -24,6 +25,7 @@ dotenv.config()
 const config = new Config()
 const command = new Command()
 const session = new Session()
+const utils = new Utils()
 const statusDisplay = new StatusDisplay()
 const chartImage = new ChartImage()
 const commandCategories = new CommandCategories()
@@ -106,6 +108,7 @@ client.on("messageCreate", async (message) => {
                 prefix: config.prefix,
                 name: c.name,
                 arguments: _args,
+                raw_arguments: command.getRawArgs(message),
                 id: command.createCommandId(),
                 callback: c.callback,
                 message: message,
@@ -200,7 +203,7 @@ app.get("/api/chart", async (req, res) => {
 
 export {
     Embed, Debug,
-    statusDisplay, command, session, chartImage, commandCategories,
+    statusDisplay, command, session, chartImage, commandCategories, utils,
     client, config, env, cache, file_cache,
     start_tick
 }
