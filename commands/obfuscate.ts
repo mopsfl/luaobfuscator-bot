@@ -43,7 +43,7 @@ class Command {
                 })
             })
         } else {
-            cmd.message.reply("Please provide a valid Lua script as a codeblock or a file.")
+            return cmd.message.reply("Please provide a valid Lua script as a codeblock or a file.")
         }
 
         let process_embed = self.Embed({
