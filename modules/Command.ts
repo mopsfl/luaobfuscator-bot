@@ -35,9 +35,9 @@ export default class Command {
             const success = await cmd.callback(cmd)
             cmd.success = success
             let command_log: Array<cmdStructure> = await self.cache.get("command_log")
-            if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
-            command_log.push(cmd)
-            await self.cache.set(JSON.stringify(command_log), cmd)
+            //if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
+            //command_log.push(cmd)
+            //await self.cache.set(JSON.stringify(command_log), cmd)
             console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
         } catch (error) {
             self.utils.SendErrorMessage("error", cmd, error)
