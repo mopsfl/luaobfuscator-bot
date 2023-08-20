@@ -38,8 +38,9 @@ export default class Command {
             if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
             command_log.push(cmd)
             await self.cache.set(JSON.stringify(command_log), cmd)
-            console.log(`> command '${cmd.name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
+            console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
         } catch (error) {
+            self.utils.SendErrorMessage("error", cmd, error)
             self.Debug(error, true)
         }
     }
@@ -57,6 +58,7 @@ export interface command {
 export interface cmdStructure {
     prefix: string,
     name: string | Array<string>,
+    used_command_name: string,
     arguments: Array<string | number>,
     raw_arguments: string,
     id: string,

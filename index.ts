@@ -1,5 +1,5 @@
 const start_tick = new Date().getTime()
-const DISABLE_DISCORDLOGIN = false
+const DISABLE_DISCORDLOGIN = false //does not login the discord client
 
 import { ActivityType, Client, Collection, IntentsBitField, Partials } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
@@ -107,6 +107,7 @@ client.on("messageCreate", async (message) => {
             const cmd: cmdStructure = {
                 prefix: config.prefix,
                 name: c.name,
+                used_command_name: _command,
                 arguments: _args,
                 raw_arguments: command.getRawArgs(message),
                 id: command.createCommandId(),
@@ -117,7 +118,6 @@ client.on("messageCreate", async (message) => {
                 success: false
             }
 
-            console.log(allowed);
             await command.handleCommand(cmd)
         })
     } catch (error) {
@@ -143,8 +143,8 @@ app.listen(process.env.PORT, async () => {
         })
     })
 
-    client.on("debug", async (m) => await Debug(m))
-    client.on("error", async (m) => await Debug(m))
+    //client.on("debug", async (m) => await Debug(m))
+    //client.on("error", async (m) => await Debug(m))
 
     console.log(`> express server listening on port ${process.env.PORT}\n> logging in...`)
     DISABLE_DISCORDLOGIN && console.log("> discord login blocked")

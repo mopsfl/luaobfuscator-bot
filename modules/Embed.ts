@@ -12,6 +12,5 @@ export default function (args: { title?: string, description?: string, color?: a
     if (args.footer) embed.setFooter(args.footer)
     if (args.fields) embed.setFields(args.fields)
     if (args.timestamp) embed.setTimestamp()
-
     return embed
 }

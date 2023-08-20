@@ -5,7 +5,7 @@ import { ChartDataset } from "../modules/ChartImage";
 
 class Command {
     name = ["chart"]
-    category = self.commandCategories.LuaObfuscator
+    category = self.commandCategories.Misc
     description = "Creates a chart image with the given information."
     direct_message = false
 
