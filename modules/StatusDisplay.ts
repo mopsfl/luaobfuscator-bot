@@ -119,10 +119,10 @@ export default class StatusDisplay {
 
     async UpdateDisplayStatus() {
         const responses: PingResponses = {
-            homepage: { ping: "N/A", status: "N/A", statusText: "N/A" },
-            forum: { ping: "N/A", status: "N/A", statusText: "N/A" },
-            api: { ping: "N/A", status: "N/A", statusText: "N/A" },
-            server: { ping: "N/A", status: "N/A", server_stats: {} }
+            homepage: { name: "homepage", ping: "N/A", status: "N/A", statusText: "N/A" },
+            forum: { name: "forum", ping: "N/A", status: "N/A", statusText: "N/A" },
+            api: { name: "api", ping: "N/A", status: "N/A", statusText: "N/A" },
+            server: { name: "stats", ping: "N/A", status: "N/A", server_stats: {} }
         }
         let finished_requests = 0
 
@@ -149,12 +149,37 @@ export default class StatusDisplay {
                     finished_requests++
                 } else console.error(error);
             }
-
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
                 if (!all_online) {
-                    const affected_services = Object.values(responses).filter(v => v.status != "N/A" || v.status != 200)
+                    const affected_services = Object.values(responses).filter(v => v.status != 200)
+
+                    if (self.config.STATUS_DISPLAY.alerts && this.last_outage.state == false) {
+                        self.config.STATUS_DISPLAY.ids_to_alert.forEach(uid => {
+                            let channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
+                                affected_services_text = ""
+
+                            affected_services.forEach(service => {
+                                affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status == 200 ? "Online" : "Offline"} ${service.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
+                            })
+                            if (channel.isTextBased()) channel.send({
+                                content: `<@${uid}>`,
+                                embeds: [
+                                    self.Embed({
+                                        title: `${GetEmoji("no")} Service Outage - Alert`,
+                                        description: "A service outage has been detected.",
+                                        color: Colors.Red,
+                                        fields: [
+                                            { name: "Affected Services:", value: affected_services_text, inline: false }
+                                        ],
+                                        timestamp: true,
+                                    })
+                                ]
+                            })
+                        })
+                    }
+
                     this.last_outage = {
                         state: true,
                         time: new Date().getTime(),
@@ -197,6 +222,7 @@ export interface PingResponses {
 }
 
 export interface PingResponse {
+    name?: string,
     ping?: number | string,
     status?: number | string,
     statusText?: string,
@@ -204,6 +230,7 @@ export interface PingResponse {
 }
 
 export interface ServerStatsResponse {
+    name?: string,
     ping: number | string,
     status?: number | string,
     statusText?: string,

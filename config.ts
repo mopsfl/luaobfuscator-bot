@@ -26,9 +26,14 @@ export default class Config {
     STATUS_DISPLAY = {
         status_update_interval: 5000,
         fetch_timeout: 10000,
+        alerts: true,
+        alert_channel: "1129884319645712497",
+        ids_to_alert: [
+            "1111257318961709117",
+        ],
         endpoints: {
             homepage: "https://luaobfuscator.com",
-            forum: "https://luaobfuscator.com/forum",
+            forum: "https://luaobfuscator.com/forums",
             api: "https://luaobfuscator.com/api/obfuscator/newscript",
             server: "https://luaobfuscator.com/forum/stats",
         }
