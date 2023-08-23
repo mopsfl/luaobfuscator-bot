@@ -1,6 +1,7 @@
 import { PermissionFlagsBits, Message, GuildMember } from "discord.js"
 import * as self from "../index"
 import { randomUUID } from "crypto"
+import NoHello from "./NoHello"
 
 export default class Command {
     constructor(
@@ -34,7 +35,7 @@ export default class Command {
         try {
             const success = await cmd.callback(cmd)
             cmd.success = success
-            let command_log: Array<cmdStructure> = await self.cache.get("command_log")
+            //let command_log: Array<cmdStructure> = await self.cache.get("command_log")
             //if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
             //command_log.push(cmd)
             //await self.cache.set(JSON.stringify(command_log), cmd)

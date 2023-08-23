@@ -18,6 +18,7 @@ import StatusDisplay from "./modules/StatusDisplay"
 import ChartImage from "./modules/ChartImage"
 import CommandCategories from "./modules/CommandCategories"
 import { Cache, FileSystemCache } from "file-system-cache"
+import NoHello from "./modules/NoHello"
 
 const app = express()
 dotenv.config()
@@ -89,9 +90,11 @@ client.on("ready", async () => {
 client.on("messageCreate", async (message) => {
     try {
         if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
+        if (NoHello(message)) return
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)
+
 
         command.commands.forEach(async c => {
             if (typeof (c.name) == "object" && !c.name.includes(_command) || typeof (c.name) == "string" && c.name != _command) return
@@ -129,7 +132,7 @@ app.listen(process.env.PORT, async () => {
     cache = await caching("memory")
     await cache.set("debug", [])
     await cache.set("stats_session_ids", [])
-    await cache.set("command_log", [])
+    //await cache.set("command_log", [])
     file_cache = new Cache({
         basePath: "./.cache",
         ttl: Infinity,
