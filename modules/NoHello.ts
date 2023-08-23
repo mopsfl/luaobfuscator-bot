@@ -1,7 +1,12 @@
 import { Message } from "discord.js";
 
 const nohello_words = [
-    "hello", "hi", "yo", "ey", "hallo", "hiya"
+    "hello", "hi", "yo", "ey", "hallo", "hiya",
+    "hey", "hola", "howdy", "sup", "hey there",
+    "greetings", "bonjour", "ciao", "aloha",
+    "hiyah", "heya", "holla", "hihi", "hail",
+    "whatsup", "hiyah", "hi-dee-ho", "hi-ya",
+    "hi-ho"
 ]
 
 export default function (message: Message) {
