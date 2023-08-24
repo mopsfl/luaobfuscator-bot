@@ -21,7 +21,10 @@ export default class StatusDisplay {
 
         public default_outage: Outage = { time: "N/A", status: "N/A", affected_services: [], state: false },
         public last_outage: Outage = default_outage,
-        public last_outage_cache: Outage = default_outage
+        public last_outage_cache: Outage = default_outage,
+        public current_outage_length: number = 0,
+        public current_outage_time: number = 0,
+        public current_outage_state: boolean = false,
     ) { }
 
     async init() {
@@ -154,8 +157,10 @@ export default class StatusDisplay {
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
                 if (!all_online) {
                     const affected_services = Object.values(responses).filter(v => v.status != 200)
-
-                    if (self.config.STATUS_DISPLAY.alerts && this.last_outage.state == false) {
+                    if (this.current_outage_time < 1) this.current_outage_time = new Date().getTime()
+                    this.current_outage_length++;
+                    if (self.config.STATUS_DISPLAY.alerts && this.current_outage_length >= 5 && this.current_outage_state == false) {
+                        this.current_outage_state = true
                         self.config.STATUS_DISPLAY.ids_to_alert.forEach(uid => {
                             let channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
                                 affected_services_text = ""
@@ -171,7 +176,8 @@ export default class StatusDisplay {
                                         description: "A service outage has been detected.",
                                         color: Colors.Red,
                                         fields: [
-                                            { name: "Affected Services:", value: affected_services_text, inline: false }
+                                            { name: "Affected Services:", value: affected_services_text, inline: false },
+                                            { name: "Outage Info:", value: `Outage since: <t:${Math.round(parseInt(this.current_outage_time.toString()) / 1000)}:R>`, inline: false }
                                         ],
                                         timestamp: true,
                                     })
@@ -193,6 +199,9 @@ export default class StatusDisplay {
                 } else {
                     const last_outage: Outage = await self.file_cache.getSync("last_outage")
                     this.last_outage.state = false
+                    this.current_outage_state = false
+                    this.current_outage_length = 0
+                    this.current_outage_time = 0
                     if (last_outage && last_outage.time) {
                         this.last_outage_cache = last_outage
                     }
