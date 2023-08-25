@@ -11,8 +11,14 @@ const nohello_words = [
 
 export default function (message: Message) {
     if (message.author.bot || message.channel.isDMBased()) return
-    nohello_words.forEach(word => message.content = message.content.replace(new RegExp(`${word}|\\s+`, "gm"), ""))
-    const nohello = message.mentions.users.size >= 1 && message.attachments.size <= 0 && message.content.replace(/\<@\d+\>/gm, "").length <= 9
-    if (nohello) message.reply(`https://nohello.net`)
+    let msg = message.content.replace(/\<@\d+\>/gm, "").replace(/^\s+/gm, "")
+    nohello_words.forEach(word => msg = msg.replace(new RegExp(`${word}`, "gm"), ""))
+    const nohello =
+        message.mentions.users.size >= 1 &&
+        message.attachments.size <= 0 &&
+        new RegExp(/\s/gm).test(msg) != true &&
+        msg.length <= 4
+
+    if (nohello && message.mentions.repliedUser == null) message.reply(`https://nohello.net`)
     return nohello
 }
