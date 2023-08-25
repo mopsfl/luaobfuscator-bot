@@ -182,7 +182,6 @@ app.get("/api/luaobfuscator/stats/outage-log", async (req, res) => {
     if (session_ids && session_ids.includes(req.query.session)) return res.json(await file_cache.getSync("outage_log"))
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 })
-
 app.get("/api/chart", async (req, res) => {
     try {
         if (!req.query.datasets) return res.status(400).json({ code: 400, message: "Bad Request" })

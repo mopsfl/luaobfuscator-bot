@@ -52,7 +52,7 @@ export default class ObfuscatorStats {
             if (previous_index <= -1) previous_index = 1
             if (req_stats[previous_index] > 0) req_stats[current_index] = (req_stats[current_index] - req_stats[previous_index])
         })
-        return req_stats.slice(1);
+        return req_stats.slice(req_stats.length - 7);
     }
 }
 
