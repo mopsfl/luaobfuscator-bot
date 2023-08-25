@@ -16,6 +16,7 @@ import Embed from "./modules/Embed"
 import Session from "./modules/Session"
 import StatusDisplay from "./modules/StatusDisplay"
 import ChartImage from "./modules/ChartImage"
+import ObfuscatorStats from "./modules/ObfuscatorStats"
 import CommandCategories from "./modules/CommandCategories"
 import { Cache, FileSystemCache } from "file-system-cache"
 import NoHello from "./modules/NoHello"
@@ -30,6 +31,7 @@ const utils = new Utils()
 const statusDisplay = new StatusDisplay()
 const chartImage = new ChartImage()
 const commandCategories = new CommandCategories()
+const obfuscatorStats = new ObfuscatorStats()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
@@ -137,6 +139,8 @@ app.listen(process.env.PORT, async () => {
         basePath: "./.cache",
         ttl: Infinity,
     })
+    if (!fs.existsSync(process_path + "/.cache")) fs.mkdirSync(process_path + "/.cache")
+    if (!fs.existsSync(process_path + "/.cache/charts")) fs.mkdirSync(process_path + "/.cache/charts")
     fs.readdir(process_path + "/.cache/charts", (err, files) => {
         if (err) throw err
         files.forEach(f => {
@@ -144,6 +148,10 @@ app.listen(process.env.PORT, async () => {
                 if (err) throw err
             })
         })
+    })
+
+    file_cache.fileExists(obfuscatorStats.file_cache_name).then(async file => {
+        if (!file) await file_cache.set(obfuscatorStats.file_cache_name, {})
     })
 
     //client.on("debug", async (m) => await Debug(m))
@@ -206,7 +214,7 @@ app.get("/api/chart", async (req, res) => {
 
 export {
     Embed, Debug,
-    statusDisplay, command, session, chartImage, commandCategories, utils,
+    statusDisplay, command, session, chartImage, commandCategories, utils, obfuscatorStats,
     client, config, env, cache, file_cache,
     start_tick
 }

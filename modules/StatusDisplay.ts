@@ -40,6 +40,23 @@ export default class StatusDisplay {
 
     async CreateStatusEmbed(ping_responses: PingResponses, server_uptime: number, show_next_update: boolean = false) {
         if (!this.initialized && !self.client) return self.Debug({ message: "Unable to create status embed.", error: "App not successfully initialized." }, true)
+        const stats_chart = self.chartImage.Create({
+            type: "bar",
+            data: {
+                labels: self.chartImage.GetLocalizedDateStrings(),
+                datasets: [{
+                    label: "File Uploads",
+                    data: await self.obfuscatorStats.ParseCurrentStat("total_file_uploads"),
+                    fill: true,
+                    backgroundColor: "rgba(54, 235, 169, 0.8)"
+                }, {
+                    label: "Obfuscations",
+                    data: await self.obfuscatorStats.ParseCurrentStat("total_obfuscations"),
+                    fill: true,
+                    backgroundColor: "rgba(54, 162, 235, 0.8)"
+                }]
+            }
+        }).backgroundColor("white").toURL();
         return [self.Embed({
             title: "Lua Obfuscator - Service Status",
             description: `All statuses of Lua Obfuscator services displayed.${show_next_update == true ? `
@@ -94,7 +111,7 @@ export default class StatusDisplay {
             color: Colors.Green,
             thumbnail: self.config.icon_url,
             timestamp: true,
-
+            image: stats_chart,
             fields: [
                 {
                     name: `${GetEmoji("luaobfuscator")} **Obfusactor Statistics:**`,
@@ -157,6 +174,8 @@ export default class StatusDisplay {
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
                 if (!all_online) {
                     const affected_services = Object.values(responses).filter(v => v.status != 200)
+
+                    // Outage Alert
                     if (this.current_outage_time < 1) this.current_outage_time = new Date().getTime()
                     this.current_outage_length++;
                     if (self.config.STATUS_DISPLAY.alerts && this.current_outage_length >= 5 && this.current_outage_state == false) {
@@ -216,6 +235,12 @@ export default class StatusDisplay {
                 this.last_total_file = responses.server.server_stats?.total_file
                 this.last_responses = responses
                 this.last_statusupdate = new Date().getTime()
+
+                self.obfuscatorStats.Update({
+                    total_file_uploads: responses.server.server_stats.total_file,
+                    total_obfuscations: responses.server.server_stats.total_obfuscations,
+                    time: new Date().getTime()
+                })
 
                 console.log(`> status display updated. (took ${new Date().getTime() - update_start_tick}ms)`)
             }

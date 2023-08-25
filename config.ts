@@ -33,7 +33,7 @@ export default class Config {
         ],
         endpoints: {
             homepage: "https://luaobfuscator.com",
-            forum: "https://luaobfuscator.com/forums",
+            forum: "https://luaobfuscator.com/forum",
             api: "https://luaobfuscator.com/api/obfuscator/newscript",
             server: "https://luaobfuscator.com/forum/stats",
         }
