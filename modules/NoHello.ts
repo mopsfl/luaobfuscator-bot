@@ -1,4 +1,5 @@
-import { Message } from "discord.js";
+import { Message, inlineCode } from "discord.js";
+import * as self from "../index"
 
 const nohello_words = [
     "hello", "hi", "yo", "ey", "hallo", "hiya",
@@ -12,7 +13,7 @@ const nohello_words = [
 export default function (message: Message) {
     if (message.author.bot || message.channel.isDMBased()) return
     let msg = message.content.replace(/\<@\d+\>/gm, "").replace(/^\s+/gm, "")
-    nohello_words.forEach(word => msg = msg.replace(new RegExp(`${word}`, "gm"), ""))
+    //nohello_words.forEach(word => msg = msg.replace(new RegExp(`${word}`, "gm"), ""))
     const nohello =
         message.mentions.users.size >= 1 &&
         message.attachments.size <= 0 &&
@@ -20,5 +21,13 @@ export default function (message: Message) {
         msg.length <= 4
 
     if (nohello && message.mentions.repliedUser == null) message.reply(`https://nohello.net`)
+    if (nohello_words.includes(msg)) {
+        message.channel.awaitMessages({ filter: (m) => m.author.id === message.author.id, time: 10000 }).then(msg => {
+            if (msg.size <= 0) {
+                message.reply(`https://nohello.net`)
+            } else {
+            }
+        })
+    }
     return nohello
 }
