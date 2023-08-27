@@ -45,12 +45,12 @@ export default class StatusDisplay {
             data: {
                 labels: self.chartImage.GetLocalizedDateStrings(),
                 datasets: [{
-                    label: "File Uploads",
+                    label: "Total Files Uploaded",
                     data: await self.obfuscatorStats.ParseCurrentStat("total_file_uploads"),
                     fill: true,
                     backgroundColor: "rgba(54, 235, 169, 0.8)"
                 }, {
-                    label: "Obfuscations",
+                    label: "Total Files Obfuscated",
                     data: await self.obfuscatorStats.ParseCurrentStat("total_obfuscations"),
                     fill: true,
                     backgroundColor: "rgba(54, 162, 235, 0.8)"
