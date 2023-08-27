@@ -59,7 +59,7 @@ export default class StatusDisplay {
         }).backgroundColor("white").toURL();
         return [self.Embed({
             title: "Lua Obfuscator - Service Status",
-            description: `All statuses of Lua Obfuscator services displayed.${show_next_update == true ? `
+            description: `The status of Lua Obfuscator services displayed.${show_next_update == true ? `
             \n${GetEmoji("update")} **Last Updated:** <t:${(new Date().getTime() / 1000).toFixed()}:R>` : ""}
             ${GetEmoji("offline")} **Last Outage:** ${this.last_outage.state ? `<t:${Math.round(parseInt(this.last_outage.time.toString()) / 1000)}:R>` : this.last_outage_cache.state ? `<t:${Math.round(parseInt(this.last_outage_cache.time.toString()) / 1000)}:R>` : `${inlineCode("N/A")}`}`,
             color: this.last_outage.state ? Colors.Red : Colors.Green,
