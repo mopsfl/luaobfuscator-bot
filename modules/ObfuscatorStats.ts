@@ -1,16 +1,9 @@
-/**
- * THIS MIGHT BE BUGGY
- * still in testing because this goofy thing is complicated for my brain
- */
-
 import * as self from "../index"
 
 export default class ObfuscatorStats {
     constructor(
         public file_cache_name = "obfuscator_stats",
-    ) {
-
-    }
+    ) { }
 
     async Get(): Promise<Saved_Stats> {
         return await self.file_cache.get(this.file_cache_name)
@@ -27,8 +20,8 @@ export default class ObfuscatorStats {
             const dates = self.chartImage.GetLocalizedDateStrings(8, true)
             dates.forEach(date => {
                 current_stats[date] = {
-                    total_obfuscations: 0,
-                    total_file_uploads: 0,
+                    total_obfuscations: today_stats.total_obfuscations,
+                    total_file_uploads: today_stats.total_file_uploads,
                     time: new Date().getTime()
                 }
             })

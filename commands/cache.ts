@@ -16,7 +16,7 @@ class Command {
             color: Colors.Yellow
         })
         await cmd.message.reply({ embeds: [embed] }).then(async msg => {
-            const session_id = await self.session.Create()
+            const session_id = await self.session.Create(60)
             const discord_buttons = [
                 new ButtonBuilder()
                     .setStyle(ButtonStyle.Link)
@@ -25,7 +25,11 @@ class Command {
                 new ButtonBuilder()
                     .setStyle(ButtonStyle.Link)
                     .setLabel("Outage Log")
-                    .setURL(`${self.env == "prod" ? "http://prem.daki.cc:6083" : "http://localhost:6969"}/api/luaobfuscator/stats/outage-log?session=${session_id}`)
+                    .setURL(`${self.env == "prod" ? "http://prem.daki.cc:6083" : "http://localhost:6969"}/api/luaobfuscator/stats/outage-log?session=${session_id}`),
+                new ButtonBuilder()
+                    .setStyle(ButtonStyle.Link)
+                    .setLabel("Obfuscator Stats")
+                    .setURL(`${self.env == "prod" ? "http://prem.daki.cc:6083" : "http://localhost:6969"}/api/luaobfuscator/stats/obfuscator-stats?session=${session_id}`)
             ],
                 row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
             await cmd.message.author.send({
