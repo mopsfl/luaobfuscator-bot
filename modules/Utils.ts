@@ -11,7 +11,7 @@ export default class Utils {
     hasCodeblock = function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) }
     parseWebhooks = function (string: string) { return string.match(/.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/gm) }
     parseCodeblock = function (string: string) { return string.replace(/(^`\S*)|`+.*/mg, "").trim() }
-    getFullDate = function () { const date = new Date(); return date.toLocaleDateString(undefined, { month: "2-digit", day: "numeric", year: "numeric" }) }
+    getFullDate = function () { const date = new Date(); return date.toLocaleDateString("en", { month: "2-digit", day: "numeric", year: "numeric" }) }
     createSession = async function (script: string) {
         const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script })
         return response.json()

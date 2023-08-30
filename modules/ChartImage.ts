@@ -9,7 +9,7 @@ export default class ChartImage {
         for (let i = 0; i < length; i++) {
             const currentDate = new Date(today);
             currentDate.setDate(currentDate.getDate() - i);
-            let localizedDateString = currentDate.toLocaleDateString(undefined, { month: "2-digit", day: "numeric", year: includeYear ? "numeric" : undefined });
+            let localizedDateString = currentDate.toLocaleDateString("en", { month: "2-digit", day: "numeric", year: includeYear ? "numeric" : undefined });
             localizedDateString = localizedDateString.replace(/\.$/, '');
             dateStrings.push(localizedDateString);
         }

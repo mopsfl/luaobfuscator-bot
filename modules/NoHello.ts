@@ -1,5 +1,4 @@
-import { Message, inlineCode } from "discord.js";
-import * as self from "../index"
+import { Message } from "discord.js";
 
 const nohello_words = [
     "hello", "hi", "yo", "ey", "hallo", "hiya",
