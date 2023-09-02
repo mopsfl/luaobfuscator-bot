@@ -19,12 +19,11 @@ export default function (message: Message) {
         new RegExp(/\s/gm).test(msg) != true &&
         msg.length <= 4
 
-    if (nohello && message.mentions.repliedUser == null) message.reply(`https://nohello.net`)
+    if (nohello && message.mentions.repliedUser == null) return message.reply(`https://nohello.net`)
     if (nohello_words.includes(msg)) {
         message.channel.awaitMessages({ filter: (m) => m.author.id === message.author.id, time: 10000 }).then(msg => {
             if (msg.size <= 0) {
                 message.reply(`https://nohello.net`)
-            } else {
             }
         })
     }
