@@ -2,6 +2,7 @@ import { PermissionFlagsBits, Message, GuildMember } from "discord.js"
 import * as self from "../index"
 import { randomUUID } from "crypto"
 import NoHello from "./NoHello"
+import { BotStats } from "../commands/botstats"
 
 export default class Command {
     constructor(
@@ -33,6 +34,11 @@ export default class Command {
         if (!(cmd.message instanceof Message)) return new Error("message is not a <Message>")
         if (!cmd.allowed) return cmd.message.reply("Missing permissions")
         try {
+            const bot_stats: BotStats = await self.file_cache.get("bot_stats")
+            if (bot_stats) {
+                bot_stats.total_commands_executed++;
+                await self.file_cache.set("bot_stats", bot_stats)
+            }
             const success = await cmd.callback(cmd)
             cmd.success = success
             //let command_log: Array<cmdStructure> = await self.cache.get("command_log")

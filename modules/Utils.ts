@@ -87,7 +87,7 @@ export interface ObfuscationProcess {
     embed?: EmbedBuilder,
     error?: Error | string,
     processes: Array<string>,
-    results: ObfuscationResult | Response | Error,
+    results: ObfuscationResult,
 }
 
 export interface ObfuscationResult {

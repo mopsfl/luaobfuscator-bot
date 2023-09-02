@@ -1,8 +1,9 @@
-import { Colors, EmbedBuilder, EmbedData, EmbedField, bold, codeBlock, hyperlink, inlineCode } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, EmbedData, EmbedField, bold, codeBlock, hyperlink, inlineCode } from "discord.js";
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import * as self from "../index"
 import { ObfuscationProcess, ObfuscationResult } from "../modules/Utils";
+import { BotStats } from "./botstats";
 
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
@@ -12,14 +13,15 @@ class Command {
     callback = async (cmd: cmdStructure) => {
         if (!cmd.message.channel.isDMBased()) {
             const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
-            await cmd.message.reply(`no, use website: ${bold(self.config.STATUS_DISPLAY.endpoints.homepage)} ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
+            await cmd.message.reply(`no, use website: ${bold(self.config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
             return true
         }
 
         let script_content = "",
             chunksAmount = 0,
             hasWebhook = false,
-            hasCodeBlock = self.utils.hasCodeblock(cmd.raw_arguments)
+            hasCodeBlock = self.utils.hasCodeblock(cmd.raw_arguments),
+            file_attachment: AttachmentBuilder
 
         // Get Script Content
         if (hasCodeBlock) {
@@ -74,7 +76,6 @@ class Command {
             }
         }
 
-
         await cmd.message.reply({ embeds: [obfuscation_process.embed] }).then(async msg => {
             async function updateProcess() {
                 let process_string = ""
@@ -101,8 +102,37 @@ class Command {
                 await updateProcess()
                 return obfuscation_process.results
             })
+            await createProcess(`${GetEmoji("loading")} Creating file attachment...`, `${GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
+                file_attachment = self.utils.createFileAttachment(Buffer.from(obfuscation_process.results.code))
+                if (typeof file_attachment != "object") {
+                    obfuscation_process.embed.setColor("Red")
+                    obfuscation_process.processes[process_id] = `${GetEmoji("no")} Creating file attachment failed!`
+                    return await updateProcess()
+                }
+                obfuscation_process.processes[process_id] = `${GetEmoji("yes")} File attachment created!`
+                await updateProcess()
+                return obfuscation_process.results
+            })
 
+            console.log(`Script by ${cmd.message.author.username} successfully obfuscated: ${obfuscation_process.results.sessionId}`)
+            const bot_stats: BotStats = await self.file_cache.get("bot_stats")
+            if (bot_stats) {
+                bot_stats.obfuscations++;
+                await self.file_cache.set("bot_stats", bot_stats)
+            }
 
+            const discord_buttons = [
+                new ButtonBuilder()
+                    .setStyle(ButtonStyle.Link)
+                    .setLabel("Open on Website")
+                    .setURL(`${self.config.session_url}${obfuscation_process.results.sessionId}`)
+            ],
+                row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
+
+            await cmd.message.reply({
+                files: [file_attachment],
+                components: [row]
+            })
         })
 
         return true
