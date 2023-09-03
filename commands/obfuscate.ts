@@ -85,17 +85,19 @@ class Command {
             }
 
             async function createProcess(process_text: string, process_text_finished: string, callback: Function) {
+                if (obfuscation_process.error) return
                 let process_id = obfuscation_process.processes.push(process_text); process_id -= 1
                 await updateProcess(); const callback_result: ObfuscationResult | Error = await callback(process_id)
                 if (callback_result instanceof Error || callback_result?.message) return callback_result
                 obfuscation_process.processes[process_id] = process_text_finished
-
             }
             await createProcess(`${GetEmoji("loading")} Obfuscating script...`, `${GetEmoji("yes")} Script obfuscated!`, async (process_id: number) => {
                 obfuscation_process.results = await self.utils.obfuscateScript(script_content, cmd.message)
-                if (!obfuscation_process.results.code) {
+                if (!obfuscation_process.results?.code) {
                     obfuscation_process.embed.setColor("Red")
                     obfuscation_process.processes[process_id] = `${GetEmoji("no")} Obfuscation failed!`
+                    obfuscation_process.error = obfuscation_process.results.message
+                    self.utils.SendErrorMessage("error", cmd, obfuscation_process.error, "Obfuscation Error")
                     return await updateProcess()
                 }
                 obfuscation_process.processes[process_id] = `${GetEmoji("yes")} Script obfuscated!`
@@ -103,6 +105,7 @@ class Command {
                 return obfuscation_process.results
             })
             await createProcess(`${GetEmoji("loading")} Creating file attachment...`, `${GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
+                if (!process_id) return
                 file_attachment = self.utils.createFileAttachment(Buffer.from(obfuscation_process.results.code))
                 if (typeof file_attachment != "object") {
                     obfuscation_process.embed.setColor("Red")
@@ -114,25 +117,27 @@ class Command {
                 return obfuscation_process.results
             })
 
-            console.log(`Script by ${cmd.message.author.username} successfully obfuscated: ${obfuscation_process.results.sessionId}`)
-            const bot_stats: BotStats = await self.file_cache.get("bot_stats")
-            if (bot_stats) {
-                bot_stats.obfuscations++;
-                await self.file_cache.set("bot_stats", bot_stats)
+            if (!obfuscation_process.error) {
+                console.log(`Script by ${cmd.message.author.username} successfully obfuscated: ${obfuscation_process.results.sessionId}`)
+                const bot_stats: BotStats = await self.file_cache.get("bot_stats")
+                if (bot_stats) {
+                    bot_stats.obfuscations++;
+                    await self.file_cache.set("bot_stats", bot_stats)
+                }
+
+                const discord_buttons = [
+                    new ButtonBuilder()
+                        .setStyle(ButtonStyle.Link)
+                        .setLabel("Open on Website")
+                        .setURL(`${self.config.session_url}${obfuscation_process.results.sessionId}`)
+                ],
+                    row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
+
+                await cmd.message.reply({
+                    files: [file_attachment],
+                    components: [row]
+                })
             }
-
-            const discord_buttons = [
-                new ButtonBuilder()
-                    .setStyle(ButtonStyle.Link)
-                    .setLabel("Open on Website")
-                    .setURL(`${self.config.session_url}${obfuscation_process.results.sessionId}`)
-            ],
-                row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
-
-            await cmd.message.reply({
-                files: [file_attachment],
-                components: [row]
-            })
         })
 
         return true

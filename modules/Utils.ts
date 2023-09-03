@@ -24,9 +24,11 @@ export default class Utils {
     }
     obfuscateScript = async function (script: string, message?: Message): Promise<ObfuscationResult> {
         const response = await fetch(`${self.config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.API_KEY } }).catch(error => {
+            if (message) this.SendErrorMessage(error, message)
             throw error
         })
-        return response?.json()
+        if (response.ok) return await response.json()
+        return { message: "Unexpected error occurred while obfuscating your script." }
     }
     createFileAttachment = function (content: Buffer | BufferResolvable, name?: string) {
         const attachment = new AttachmentBuilder(content, { name: name || "obfuscated.lua" })

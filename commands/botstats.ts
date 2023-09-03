@@ -19,10 +19,12 @@ class Command {
             },
             fields: [
                 {
-                    name: "Statistics:", value: `
-                ${inlineCode("Obfuscations:")} ${inlineCode(bot_stats.obfuscations.toString())}
-                ${inlineCode("Executed Commands:")} ${inlineCode(bot_stats.total_commands_executed.toString())}
-                `, inline: false
+                    name: "Statistics:",
+                    value: `
+                        ${inlineCode("Obfuscations:")} ${inlineCode(bot_stats.obfuscations.toString())}
+                        ${inlineCode("Executed Commands:")} ${inlineCode(bot_stats.total_commands_executed.toString())}
+                    `,
+                    inline: false
                 }
             ]
         })
