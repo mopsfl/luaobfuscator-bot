@@ -51,13 +51,14 @@ export default class Utils {
 
         switch (type) {
             case "error": {
+                const embed_field = [
+                    { name: "Error:", value: codeBlock(errorText), inline: false },
+                ]
+                if (self.env == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
                 cmd.message.reply({
                     embeds: [self.Embed({
                         title: `${GetEmoji("no")} ${title || error instanceof Error && `${error.name}` || "Unknown Internal Error"}`,
-                        fields: [
-                            { name: "Error:", value: codeBlock(errorText), inline: false },
-                            self.env == "dev" && { name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false }
-                        ],
+                        fields: embed_field,
                         timestamp: true,
                         color: Colors.Red,
                         footer: {
