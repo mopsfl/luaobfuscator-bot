@@ -1,4 +1,4 @@
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, EmbedData, EmbedField, bold, codeBlock, hyperlink, inlineCode } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Colors, bold, codeBlock, inlineCode } from "discord.js";
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import * as self from "../index"

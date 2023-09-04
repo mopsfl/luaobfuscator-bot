@@ -74,13 +74,12 @@ client.on("ready", async () => {
     fs.readdir(`${process_path}/commands`, (err, files) => {
         if (err) return Debug(err, true)
         files.forEach(file => {
-            file = file.replace(".ts", ".js")
+            file = file.replace(/\.\w+/gm, ".js")
             const cmd_node = require(`${process_path}/dist/commands/${file}`)
             const cmd: command = new cmd_node()
-            commands.set(cmd.name, cmd)
+            commands.set(cmd.name[0], cmd)
         })
     })
-
     //statusDisplay recursion
     const actionRecursion = async () => {
         await action_updateStats().then((res) => {
