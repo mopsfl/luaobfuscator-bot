@@ -4,6 +4,7 @@ import GetEmoji from "../modules/GetEmoji";
 import * as self from "../index"
 import { ObfuscationProcess, ObfuscationResult } from "../modules/Utils";
 import { BotStats } from "./botstats";
+import luamin from "luamin"
 
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
@@ -106,7 +107,7 @@ class Command {
             })
             await createProcess(`${GetEmoji("loading")} Creating file attachment...`, `${GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
                 if (!process_id) return
-                file_attachment = self.utils.createFileAttachment(Buffer.from(obfuscation_process.results.code))
+                file_attachment = self.utils.createFileAttachment(Buffer.from(luamin.minify(obfuscation_process.results.code)))
                 if (typeof file_attachment != "object") {
                     obfuscation_process.embed.setColor("Red")
                     obfuscation_process.processes[process_id] = `${GetEmoji("no")} Creating file attachment failed!`
