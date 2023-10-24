@@ -5,7 +5,7 @@ import { BotStats } from "./botstats";
 
 class Command {
     name = ["deobf", "deobfuscate"]
-    category = self.commandCategories.Bot
+    category = self.commandCategories.LuaObfuscator
     description = "Deobfuscates a obfuscated script!!!! fr"
 
     callback = async (cmd: cmdStructure) => {

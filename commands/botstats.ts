@@ -5,7 +5,7 @@ import { cmdStructure } from "../modules/Command";
 class Command {
     name = ["botstats", "bs", "bots"]
     category = self.commandCategories.Bot
-    description = "Returns the bot's stats."
+    description = "Shows some of the bots stats."
 
     callback = async (cmd: cmdStructure) => {
         const bot_stats: BotStats = await self.file_cache.getSync("bot_stats")

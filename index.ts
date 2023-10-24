@@ -166,6 +166,7 @@ app.listen(process.env.PORT, async () => {
     if (!file_cache.getSync("last_outage")) file_cache.setSync("last_outage", { time: "N/A", affected_services: [] })
     if (!file_cache.getSync("outage_log")) file_cache.setSync("outage_log", { outages: [] })
     if (!file_cache.getSync("bot_stats")) file_cache.setSync("bot_stats", { obfuscations: 0, total_commands_executed: 0 })
+    if (!file_cache.getSync("cmd_stats")) file_cache.setSync("cmd_stats", {})
 })
 
 app.use(cors())

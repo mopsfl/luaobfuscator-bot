@@ -29,12 +29,17 @@ export default class Command {
         return users
     }
 
+    getAllCommands() {
+        return self.command.commands
+    }
+
     async handleCommand(cmd: cmdStructure) {
         if (typeof (cmd.callback) != "function") return new Error("callback is not a <Function>")
         if (!(cmd.message instanceof Message)) return new Error("message is not a <Message>")
         if (!cmd.allowed) return cmd.message.reply("Missing permissions")
         try {
-            const bot_stats: BotStats = await self.file_cache.get("bot_stats")
+            const bot_stats: BotStats = await self.file_cache.get("bot_stats"),
+                cmd_stats: BotStats = await self.file_cache.getSync("cmd_stats")
             if (bot_stats) {
                 if (!bot_stats.total_commands_executed) bot_stats.total_commands_executed = 0
                 bot_stats.total_commands_executed++;
@@ -42,6 +47,11 @@ export default class Command {
             }
             const success = await cmd.callback(cmd)
             cmd.success = success
+            if (cmd_stats) {
+                if (!cmd_stats[cmd.name[0]]) cmd_stats[cmd.name[0]] = 0
+                cmd_stats[cmd.name[0]]++;
+                await self.file_cache.set("cmd_stats", cmd_stats)
+            }
             //let command_log: Array<cmdStructure> = await self.cache.get("command_log")
             //if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
             //command_log.push(cmd)
