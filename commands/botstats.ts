@@ -23,6 +23,7 @@ class Command {
                     value: `
                         ${inlineCode("Obfuscations:")} ${inlineCode(bot_stats.obfuscations.toString())}
                         ${inlineCode("Executed Commands:")} ${inlineCode(bot_stats.total_commands_executed.toString())}
+                        ${inlineCode("Retards that tried deobf:")} ${inlineCode(bot_stats.total_monkey_deobfuscations.toString())}
                     `,
                     inline: false
                 }
@@ -36,7 +37,8 @@ class Command {
 
 export interface BotStats {
     obfuscations: number,
-    total_commands_executed: number
+    total_commands_executed: number,
+    total_monkey_deobfuscations: number,
 }
 
 module.exports = Command

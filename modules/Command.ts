@@ -36,6 +36,7 @@ export default class Command {
         try {
             const bot_stats: BotStats = await self.file_cache.get("bot_stats")
             if (bot_stats) {
+                if (!bot_stats.total_commands_executed) bot_stats.total_commands_executed = 0
                 bot_stats.total_commands_executed++;
                 await self.file_cache.set("bot_stats", bot_stats)
             }

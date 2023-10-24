@@ -122,6 +122,7 @@ class Command {
                 console.log(`Script by ${cmd.message.author.username} successfully obfuscated: ${obfuscation_process.results.sessionId}`)
                 const bot_stats: BotStats = await self.file_cache.get("bot_stats")
                 if (bot_stats) {
+                    if (!bot_stats.obfuscations) bot_stats.obfuscations = 0
                     bot_stats.obfuscations++;
                     await self.file_cache.set("bot_stats", bot_stats)
                 }
