@@ -21,15 +21,15 @@ class Command {
                 new ButtonBuilder()
                     .setStyle(ButtonStyle.Link)
                     .setLabel("Last Outage")
-                    .setURL(`${self.env == "prod" ? "http://prem.daki.cc:6083" : "http://localhost:6969"}/api/luaobfuscator/stats/last-outage?session=${session_id}`),
+                    .setURL(`${self.env == "prod" ? process.env.SERVER : "http://localhost:6969"}/api/luaobfuscator/stats/last-outage?session=${session_id}`),
                 new ButtonBuilder()
                     .setStyle(ButtonStyle.Link)
                     .setLabel("Outage Log")
-                    .setURL(`${self.env == "prod" ? "http://prem.daki.cc:6083" : "http://localhost:6969"}/api/luaobfuscator/stats/outage-log?session=${session_id}`),
+                    .setURL(`${self.env == "prod" ? process.env.SERVER : "http://localhost:6969"}/api/luaobfuscator/stats/outage-log?session=${session_id}`),
                 new ButtonBuilder()
                     .setStyle(ButtonStyle.Link)
                     .setLabel("Obfuscator Stats")
-                    .setURL(`${self.env == "prod" ? "http://prem.daki.cc:6083" : "http://localhost:6969"}/api/luaobfuscator/stats/obfuscator-stats?session=${session_id}`)
+                    .setURL(`${self.env == "prod" ? process.env.SERVER : "http://localhost:6969"}/api/luaobfuscator/stats/obfuscator-stats?session=${session_id}`)
             ],
                 row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
             await cmd.message.author.send({
