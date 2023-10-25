@@ -8,7 +8,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Creates a temporary chart image with the given dataset. (this is a testing command)"
     direct_message = false
-    syntax_usage = "<char_type> <number> <number> <number> ..."
+    syntax_usage = "<chart_type> <number> <number> <number> ..."
     permissions = [PermissionFlagsBits.Administrator]
 
     callback = async (cmd: cmdStructure) => {
