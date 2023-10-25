@@ -154,7 +154,7 @@ export default class StatusDisplay {
             try {
                 const start_tick = new Date().getTime()
                 const code = await getStatusCode(endpoint)
-                if (value == "server") { responses[value].server_stats = await fetch(endpoint).then(res => res.ok && res.json()) }
+                if (value == "server") { responses[value].server_stats = await fetch(endpoint, { cache: "no-cache" }).then(res => res.ok && res.json()) }
                 responses[value].ping = new Date().getTime() - start_tick
                 responses[value].status = (code == 405 && value == "api" ? 200 : code)
                 responses[value].statusText = (code == 405 && value == "api" ? http_status[200] : http_status[code])
