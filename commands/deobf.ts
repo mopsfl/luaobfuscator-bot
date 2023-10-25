@@ -6,7 +6,8 @@ import { BotStats } from "./botstats";
 class Command {
     name = ["deobf", "deobfuscate"]
     category = self.commandCategories.LuaObfuscator
-    description = "Deobfuscates a obfuscated script!!!! fr"
+    description = "Deobfuscates a obfuscated script!! real!i!!i!"
+    syntax_usage = "<file | codeblock>"
 
     callback = async (cmd: cmdStructure) => {
         await cmd.message.reply("Sorry, this ain't Luraph! :man_shrugging:")

@@ -6,7 +6,7 @@ import GetEmoji from "../modules/GetEmoji";
 class Command {
     name = ["cache"]
     category = self.commandCategories.Misc
-    description = "Create a temporary link to access the cache."
+    description = "Create a temporary link to access the cache. This command is for staff only!"
     permissions = [PermissionFlagsBits.Administrator]
     direct_message = false
 

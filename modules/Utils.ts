@@ -1,4 +1,4 @@
-import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, codeBlock } from "discord.js"
+import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, PermissionFlagsBits, codeBlock } from "discord.js"
 import * as self from "../index"
 import { cmdStructure } from "./Command"
 import { randomUUID } from "crypto"
@@ -12,6 +12,10 @@ export default class Utils {
     parseWebhooks = function (string: string) { return string.match(/.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/gm) }
     parseCodeblock = function (string: string) { return string.replace(/(^`\S*)|`+.*/mg, "").trim() }
     getFullDate = function () { const date = new Date(); return date.toLocaleDateString("en", { month: "2-digit", day: "numeric", year: "numeric" }) }
+    getPermissionsName = function (bit: bigint) {
+        const _index = Object.values(PermissionFlagsBits).findIndex(n => n === bit)
+        return Object.keys(PermissionFlagsBits)[_index]
+    }
     createSession = async function (script: string) {
         const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script })
         return response.json()
@@ -45,7 +49,7 @@ export default class Utils {
         }
         return chunks
     }
-    SendErrorMessage(type: "error" | "syntax", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>) {
+    SendErrorMessage(type: "error" | "syntax" | "permission", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>) {
         const errorId = randomUUID()
         let errorText = error instanceof Error && error.message || typeof (error) == "string" && error || "unknown internal error"
 
@@ -74,6 +78,20 @@ export default class Utils {
                         title: `${GetEmoji("no")} ${title || "Syntax Error"}`,
                         description: codeBlock(errorText),
                         fields: syntaxErrorFields,
+                        timestamp: true,
+                        color: Colors.Red,
+                        footer: {
+                            text: `error_id: ${errorId}`
+                        }
+                    })]
+                })
+                break;
+            }
+            case "permission": {
+                cmd.message.reply({
+                    embeds: [self.Embed({
+                        title: `${GetEmoji("no")} ${title || "Permissions Error"}`,
+                        description: codeBlock(errorText),
                         timestamp: true,
                         color: Colors.Red,
                         footer: {

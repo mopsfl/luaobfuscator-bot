@@ -1,4 +1,4 @@
-import { Colors, inlineCode } from "discord.js";
+import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import { ChartDataset } from "../modules/ChartImage";
@@ -6,8 +6,10 @@ import { ChartDataset } from "../modules/ChartImage";
 class Command {
     name = ["chart"]
     category = self.commandCategories.Misc
-    description = "Creates a chart image with the given information."
+    description = "Creates a temporary chart image with the given dataset. (this is a testing command)"
     direct_message = false
+    syntax_usage = "<char_type> <number> <number> <number> ..."
+    permissions = [PermissionFlagsBits.Administrator]
 
     callback = async (cmd: cmdStructure) => {
         const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": cmd.arguments.splice(1), "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]

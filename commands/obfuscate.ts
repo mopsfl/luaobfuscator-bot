@@ -9,7 +9,8 @@ import luamin from "luamin"
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
     category = self.commandCategories.LuaObfuscator
-    description = ""
+    description = "Obfuscates your given input using the REST API with the default options."
+    syntax_usage = "<file | codeblock>"
 
     callback = async (cmd: cmdStructure) => {
         if (!cmd.message.channel.isDMBased()) {

@@ -7,3 +7,4 @@ package-lock.json
 /.cache
 .env
 .vscode
+dist.zip

@@ -36,7 +36,7 @@ export default class Command {
     async handleCommand(cmd: cmdStructure) {
         if (typeof (cmd.callback) != "function") return new Error("callback is not a <Function>")
         if (!(cmd.message instanceof Message)) return new Error("message is not a <Message>")
-        if (!cmd.allowed) return cmd.message.reply("Missing permissions")
+        if (!cmd.allowed) return self.utils.SendErrorMessage("permission", cmd, "Missing required permissions.")
         try {
             const bot_stats: BotStats = await self.file_cache.get("bot_stats"),
                 cmd_stats: BotStats = await self.file_cache.getSync("cmd_stats")
@@ -71,6 +71,8 @@ export interface command {
     required_roles?: Array<string>,
     category: "Bot" | "Misc" | "Lua Obfuscator",
     direct_message: boolean,
+    description: string,
+    syntax_usage: string
 }
 
 export interface cmdStructure {

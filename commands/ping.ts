@@ -13,7 +13,7 @@ class Command {
             color: Colors.Yellow
         })
         await cmd.message.reply({ embeds: [embed] }).then(msg => {
-            embed.setDescription(`Ping: ${inlineCode(msg.createdTimestamp - new Date().getTime() + "ms")}`).setColor(Colors.Green)
+            embed.setDescription(`Ping: ${inlineCode((msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, ""))}`).setColor(Colors.Green)
             msg.edit({ embeds: [embed] })
         })
         return true
