@@ -8,9 +8,18 @@ class Command {
     description = "Returns a list of all commands and other useful informations for the bot."
 
     callback = async (cmd: cmdStructure) => {
-        let embed: EmbedBuilder
-        if (cmd.arguments[0] && typeof (cmd.arguments[0]) === "string" && self.command.commands.get(cmd.arguments[0].replace(/\!/, ""))) {
-            const _command = self.command.commands.get(cmd.arguments[0].replace(/\!/, ""))
+        let embed: EmbedBuilder,
+            validcommand = false,
+            fullcommand_name = ""
+
+        self.command.commands.forEach(_command => {
+            if (!validcommand) {
+                validcommand = cmd.arguments[0] && typeof (cmd.arguments[0]) === "string" && _command.name.includes(cmd.arguments[0].replace(/\!/, ""))
+                fullcommand_name = _command.name[0]
+            }
+        })
+        if (validcommand && typeof (cmd.arguments[0]) === "string") {
+            const _command = self.command.commands.get(fullcommand_name.replace(/\!/, ""))
             let required_perms = ""
             if (_command.permissions) {
                 _command.permissions.forEach(perm => {
