@@ -29,7 +29,7 @@ export default class Config {
         alerts: true,
         alert_channel: "1129884319645712497",
         ids_to_alert: [
-            "1111257318961709117",
+            "792875215243575306",
         ],
         endpoints: {
             homepage: "https://luaobfuscator.com",
