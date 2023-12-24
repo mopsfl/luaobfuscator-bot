@@ -172,6 +172,7 @@ export default class StatusDisplay {
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
+                console.log(FormatUptime(server_uptime));
                 if (!all_online) {
                     const affected_services = Object.values(responses).filter(v => v.status != 200)
 
