@@ -18,7 +18,8 @@
     "prestart": "npm run build",
     "start": "node dist/index.js prod",
     "preserve": "npm run build",
-    "serve": "concurrently \"npx tsc -w\" \"nodemon dist/index.js dev\""
+    "serve": "concurrently \"npx tsc -w\" \"nodemon dist/index.js dev\"",
+    "start_daki": "node ./dist/index.js"
   },
   "devDependencies": {
     "@types/cache-manager": "^4.0.2",
