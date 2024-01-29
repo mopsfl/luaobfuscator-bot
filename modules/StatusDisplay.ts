@@ -188,7 +188,7 @@ export default class StatusDisplay {
                             affected_services.forEach(service => {
                                 affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status == 200 ? "Online" : "Offline"} ${service.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
-                            if (channel.isTextBased()) channel.send({
+                            if (channel?.isTextBased() && self.env === "prod") channel.send({
                                 content: `<@${uid}>`,
                                 embeds: [
                                     self.Embed({

@@ -27,7 +27,7 @@ export default class Config {
         status_update_interval: 5000,
         fetch_timeout: 10000,
         alerts: true,
-        alert_channel: "1129884319645712497",
+        alert_channel: "1112384996259414110",
         ids_to_alert: [
             "792875215243575306",
         ],
