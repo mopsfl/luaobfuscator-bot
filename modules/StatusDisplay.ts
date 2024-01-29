@@ -15,6 +15,7 @@ export default class StatusDisplay {
         public initialized: boolean = false,
         public last_statusupdate: number = new Date().getTime(),
 
+        public lastXMin_Count: number = 0, //idk how to call this lol
         public last_total_obfuscations: number = 0,
         public last_total_file: number = 0,
         public last_responses: string | PingResponses = "N/A",
@@ -119,8 +120,8 @@ export default class StatusDisplay {
                     value: `
                     > **Total Files Uploaded**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_file) || "N/A")}
                     > **Total Obfuscations**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_obfuscations) || "N/A")}
-                    > **Obfuscations/last 1 min**: ${inlineCode("~" + FormatNumber(this.last_total_obfuscations != 0 ? ping_responses.server?.server_stats?.total_obfuscations - this.last_total_obfuscations : 0) || "N/A")}
-                    > **Files uploaded/last 1 min**: ${inlineCode("~" + FormatNumber(this.last_total_file != 0 ? ping_responses.server?.server_stats?.total_file - this.last_total_file : 0) || "N/A")}
+                    > **Obfuscations/last 5 min**: ${inlineCode("~" + FormatNumber(this.last_total_obfuscations != 0 ? ping_responses.server?.server_stats?.total_obfuscations - this.last_total_obfuscations : 0) || "N/A")}
+                    > **Files uploaded/last 5 min**: ${inlineCode("~" + FormatNumber(this.last_total_file != 0 ? ping_responses.server?.server_stats?.total_file - this.last_total_file : 0) || "N/A")}
                     `
                 }, {
                     name: `${GetEmoji("upload")} **Request Queue:**`,
@@ -154,7 +155,7 @@ export default class StatusDisplay {
             try {
                 const start_tick = new Date().getTime()
                 const code = await getStatusCode(endpoint)
-                if (value == "server") { responses[value].server_stats = await fetch(endpoint, { cache: "no-cache" }).then(res => res.ok && res.json()) }
+                if (value == "server") { responses[value].server_stats = await fetch(endpoint).then(res => res.ok && res.json()) }
                 responses[value].ping = new Date().getTime() - start_tick
                 responses[value].status = (code == 405 && value == "api" ? 200 : code)
                 responses[value].statusText = (code == 405 && value == "api" ? http_status[200] : http_status[code])
@@ -172,7 +173,6 @@ export default class StatusDisplay {
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
-                console.log(FormatUptime(server_uptime));
                 if (!all_online) {
                     const affected_services = Object.values(responses).filter(v => v.status != 200)
 
@@ -232,8 +232,12 @@ export default class StatusDisplay {
                     embeds: await this.CreateStatusEmbed(responses, server_uptime, true, all_online)
                 })
 
-                this.last_total_obfuscations = responses.server.server_stats?.total_obfuscations
-                this.last_total_file = responses.server.server_stats?.total_file
+                this.lastXMin_Count++;
+                if (this.lastXMin_Count >= 5) {
+                    this.last_total_obfuscations = responses.server.server_stats?.total_obfuscations;
+                    this.last_total_file = responses.server.server_stats?.total_file;
+                    this.lastXMin_Count = 0;
+                }
                 this.last_responses = responses
                 this.last_statusupdate = new Date().getTime()
 

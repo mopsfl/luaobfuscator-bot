@@ -49,7 +49,15 @@ export default class Utils {
         }
         return chunks
     }
-    SendErrorMessage(type: "error" | "syntax" | "permission", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>) {
+
+    async DeleteErrorMessageCallback(msg: Message, deleteMs: number) {
+        if (!deleteMs) return;
+        setTimeout(async () => {
+            if (msg.deletable === true)
+                await msg.delete();
+        }, deleteMs);
+    }
+    async SendErrorMessage(type: "error" | "syntax" | "permission" | "ratelimit", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>, deleteMs?: number) {
         const errorId = randomUUID()
         let errorText = error instanceof Error && error.message || typeof (error) == "string" && error || "unknown internal error"
 
@@ -59,7 +67,7 @@ export default class Utils {
                     { name: "Error:", value: codeBlock(errorText), inline: false },
                 ]
                 if (self.env == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
-                cmd.message.reply({
+                await cmd.message.reply({
                     embeds: [self.Embed({
                         title: `${GetEmoji("no")} ${title || error instanceof Error && `${error.name}` || "Unknown Internal Error"}`,
                         fields: embed_field,
@@ -73,7 +81,7 @@ export default class Utils {
                 break;
             }
             case "syntax": {
-                cmd.message.reply({
+                await cmd.message.reply({
                     embeds: [self.Embed({
                         title: `${GetEmoji("no")} ${title || "Syntax Error"}`,
                         description: codeBlock(errorText),
@@ -88,7 +96,7 @@ export default class Utils {
                 break;
             }
             case "permission": {
-                cmd.message.reply({
+                await cmd.message.reply({
                     embeds: [self.Embed({
                         title: `${GetEmoji("no")} ${title || "Permissions Error"}`,
                         description: codeBlock(errorText),
@@ -99,6 +107,23 @@ export default class Utils {
                         }
                     })]
                 })
+                break;
+            }
+            case "ratelimit": {
+                await await cmd.message.reply({
+                    embeds: [self.Embed({
+                        title: `${GetEmoji("no")} Ratelimit`,
+                        fields: [
+                            { inline: false, name: "Message:", value: codeBlock("You are using commands too fast! Calm down...") }
+                        ],
+                        timestamp: true,
+                        color: Colors.Red,
+                        footer: {
+                            text: `error_id: ${errorId}`
+                        }
+                    })]
+                }).then((msg) => this.DeleteErrorMessageCallback(msg, deleteMs));
+                break;
             }
         }
     }

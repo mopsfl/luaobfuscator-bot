@@ -7,7 +7,8 @@ import { BotStats } from "../commands/botstats"
 export default class Command {
     constructor(
         readonly prefix = self.config.prefix,
-        public commands?: Map<string, command>
+        public commands?: Map<string, command>,
+        public ratelimits: Map<string, boolean> = new Map()
     ) { }
 
     getCommand(message: Message) { return this.getArgs(message)?.shift()?.toLowerCase() }
@@ -37,6 +38,7 @@ export default class Command {
         if (typeof (cmd.callback) != "function") return new Error("callback is not a <Function>")
         if (!(cmd.message instanceof Message)) return new Error("message is not a <Message>")
         if (!cmd.allowed) return self.utils.SendErrorMessage("permission", cmd, "Missing required permissions.")
+        if (this.ratelimits.get(cmd.message.author.id) === true) return await self.utils.SendErrorMessage("ratelimit", cmd, null, null, null, 5000);
         try {
             const bot_stats: BotStats = await self.file_cache.get("bot_stats"),
                 cmd_stats: BotStats = await self.file_cache.getSync("cmd_stats")
@@ -45,6 +47,8 @@ export default class Command {
                 bot_stats.total_commands_executed++;
                 await self.file_cache.set("bot_stats", bot_stats)
             }
+            this.ratelimits.set(cmd.message.author.id, true);
+
             const success = await cmd.callback(cmd)
             cmd.success = success
             if (cmd_stats) {
@@ -56,8 +60,10 @@ export default class Command {
             //if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
             //command_log.push(cmd)
             //await self.cache.set(JSON.stringify(command_log), cmd)
+            this.ratelimits.set(cmd.message.author.id, false);
             console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
         } catch (error) {
+            this.ratelimits.set(cmd.message.author.id, false);
             self.utils.SendErrorMessage("error", cmd, error)
             self.Debug(error, true)
         }
