@@ -232,8 +232,9 @@ export default class StatusDisplay {
                     embeds: await this.CreateStatusEmbed(responses, server_uptime, true, all_online)
                 })
 
-                this.lastXMin_Count++;
-                if (this.lastXMin_Count >= 5) {
+                if (this.lastXMin_Count < 5) {
+                    this.lastXMin_Count++;
+                } else if (this.lastXMin_Count >= 5) {
                     this.last_total_obfuscations = responses.server.server_stats?.total_obfuscations;
                     this.last_total_file = responses.server.server_stats?.total_file;
                     this.lastXMin_Count = 0;
