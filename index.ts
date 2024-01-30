@@ -167,6 +167,7 @@ app.listen(process.env.PORT, async () => {
     if (!file_cache.getSync("outage_log")) file_cache.setSync("outage_log", { outages: [] })
     if (!file_cache.getSync("bot_stats")) file_cache.setSync("bot_stats", { obfuscations: 0, total_commands_executed: 0 })
     if (!file_cache.getSync("cmd_stats")) file_cache.setSync("cmd_stats", {})
+    if (!file_cache.getSync("bot_settings")) file_cache.setSync("bot_settings", { alerts: true })
 })
 
 app.use(cors())
@@ -216,6 +217,10 @@ app.get("/api/chart", async (req, res) => {
         return res.status(500).json({ code: 500, message: "Internal Server Error", error: error })
     }
 })
+
+export interface Bot_Settings {
+    alerts: boolean
+}
 
 export {
     Embed, Debug,

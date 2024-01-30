@@ -181,28 +181,31 @@ export default class StatusDisplay {
                     this.current_outage_length++;
                     if (self.config.STATUS_DISPLAY.alerts && this.current_outage_length >= 5 && this.current_outage_state == false) {
                         this.current_outage_state = true
-                        self.config.STATUS_DISPLAY.ids_to_alert.forEach(uid => {
+                        self.config.STATUS_DISPLAY.ids_to_alert.forEach(async uid => {
                             let channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
                                 affected_services_text = ""
 
                             affected_services.forEach(service => {
                                 affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status == 200 ? "Online" : "Offline"} ${service.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
-                            if (channel?.isTextBased() && self.env === "prod") channel.send({
-                                content: `<@${uid}>`,
-                                embeds: [
-                                    self.Embed({
-                                        title: `${GetEmoji("no")} Service Outage - Alert`,
-                                        description: "A service outage has been detected.",
-                                        color: Colors.Red,
-                                        fields: [
-                                            { name: "Affected Services:", value: affected_services_text, inline: false },
-                                            { name: "Outage Info:", value: `Outage since: <t:${Math.round(parseInt(this.current_outage_time.toString()) / 1000)}:R>`, inline: false }
-                                        ],
-                                        timestamp: true,
-                                    })
-                                ]
-                            })
+                            const bot_settings: self.Bot_Settings = await self.file_cache.get("bot_settings")
+                            if (channel?.isTextBased() && bot_settings.alerts === true) {
+                                channel.send({
+                                    content: `<@${uid}>`,
+                                    embeds: [
+                                        self.Embed({
+                                            title: `${GetEmoji("no")} Service Outage - Alert`,
+                                            description: "A service outage has been detected.",
+                                            color: Colors.Red,
+                                            fields: [
+                                                { name: "Affected Services:", value: affected_services_text, inline: false },
+                                                { name: "Outage Info:", value: `Outage since: <t:${Math.round(parseInt(this.current_outage_time.toString()) / 1000)}:R>`, inline: false }
+                                            ],
+                                            timestamp: true,
+                                        })
+                                    ]
+                                })
+                            }
                         })
                     }
 
