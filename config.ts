@@ -38,5 +38,4 @@ export default class Config {
             server: "https://luaobfuscator.com/forum/stats",
         }
     }
-
 }

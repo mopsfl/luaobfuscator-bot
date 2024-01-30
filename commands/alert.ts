@@ -25,10 +25,10 @@ class Command {
 
         cmd.message.reply({ embeds: [embed] }).then(async msg => {
             const bot_settings: Bot_Settings = await self.file_cache.get("bot_settings")
-            bot_settings.alerts = !bot_settings.alerts;
+            bot_settings.alert_pings = !bot_settings.alert_pings;
             await self.file_cache.set("bot_settings", bot_settings)
 
-            embed.setDescription(`${GetEmoji("yes")} Setting ${inlineCode("alerts")} set to ${inlineCode(bot_settings.alerts.toString())}.`)
+            embed.setDescription(`${GetEmoji("yes")} Setting ${inlineCode("alert_pings")} set to ${inlineCode(bot_settings.alert_pings.toString())}.`)
                 .setColor(Colors.Green)
 
             msg.edit({ embeds: [embed] })

@@ -219,7 +219,7 @@ app.get("/api/chart", async (req, res) => {
 })
 
 export interface Bot_Settings {
-    alerts: boolean
+    alert_pings: boolean
 }
 
 export {

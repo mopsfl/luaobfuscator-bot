@@ -189,9 +189,9 @@ export default class StatusDisplay {
                                 affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status == 200 ? "Online" : "Offline"} ${service.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
                             const bot_settings: self.Bot_Settings = await self.file_cache.get("bot_settings")
-                            if (channel?.isTextBased() && bot_settings.alerts === true) {
+                            if (channel?.isTextBased()) {
                                 channel.send({
-                                    content: `<@${uid}>`,
+                                    content: bot_settings.alert_pings === true ? `<@${uid}>` : undefined,
                                     embeds: [
                                         self.Embed({
                                             title: `${GetEmoji("no")} Service Outage - Alert`,
