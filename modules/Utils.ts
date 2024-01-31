@@ -21,13 +21,13 @@ export default class Utils {
         return response.json()
     }
     manualObfuscateScript = async function (session: string, config: Object, message?: Message) {
-        const response = await fetch(`${self.config.api_url}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.API_KEY } }).catch(error => {
+        const response = await fetch(`${self.config.api_url}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
             throw error
         })
         return response.json()
     }
     obfuscateScript = async function (script: string, message?: Message): Promise<ObfuscationResult> {
-        const response = await fetch(`${self.config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.API_KEY } }).catch(error => {
+        const response = await fetch(`${self.config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
             if (message) this.SendErrorMessage(error, message)
             throw error
         })
