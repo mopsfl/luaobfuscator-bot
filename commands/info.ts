@@ -18,7 +18,7 @@ class Command {
             ],
             color: Colors.Green,
             footer: {
-                text: "LuaObfuscator Bot • made by mopsfl#4588",
+                text: "LuaObfuscator Bot • made by mopsfl",
                 iconURL: self.config.icon_url
             },
             thumbnail: self.config.icon_url

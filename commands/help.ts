@@ -55,8 +55,8 @@ class Command {
                 if (!commands_field.find(c => c.name == command.category)) commands_field.push({ name: command.category, value: "", inline: false })
                 const index = commands_field.findIndex(c => c.name == command.category)
                 commands_field[index].value += `${bold(underscore(inlineCode(typeof (command.name) == "object" && command.name[0] || typeof (command.name) == "string" && command.name)))}, `
-            }); commands_field.forEach(f => commands_field[commands_field.indexOf(f)].value = f.value.replace(/,\s*$/, ""))
-
+            });
+            commands_field.forEach(f => commands_field[commands_field.indexOf(f)].value = f.value.replace(/,\s*$/, ""))
             commands_field.push({
                 name: "Note:",
                 value: `Use ${underscore(inlineCode(`${self.config.prefix}help`))} ${underscore(inlineCode("<command>"))} to get more specific information about the command.`,

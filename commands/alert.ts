@@ -7,7 +7,7 @@ import { Bot_Settings } from "../index";
 class Command {
     name = ["alert"]
     category = self.commandCategories.Misc
-    description = "Toggles the api ourage alerts."
+    description = "Toggles the api outage alert pings."
     permissions = [PermissionFlagsBits.Administrator]
     direct_message = false
 

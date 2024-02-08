@@ -8,7 +8,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Makes a test request to the luaobfuscator bot api."
     permissions = [PermissionFlagsBits.Administrator]
-    direct_message = true
+    direct_message = false
 
     callback = async (cmd: cmdStructure) => {
         const embed = self.Embed({
@@ -26,13 +26,13 @@ class Command {
                 embed.setDescription(`${GetEmoji("yes")} API test finished. Results have been sent to your dm's.`).setColor(Colors.Green)
                 msg.edit({ embeds: [embed] })
                 embed.setDescription(`${GetEmoji("yes")} **API Ping:**
-                > Url: ${inlineCode(process.env.SERVER)}
-                > Ping: ${inlineCode((new Date().getTime() - _pingStart + "ms").replace(/\-/, ""))}
-                > Type: ${inlineCode(res.type)}
-                ${GetEmoji("yes")} **Response:**
-                > ${res.ok === true ? GetEmoji("yes") : GetEmoji("no")} OK: ${inlineCode(res.ok === true ? "true" : "false")}
-                > ${res.ok === true ? GetEmoji("yes") : GetEmoji("no")} Response Code: ${inlineCode(res.status.toString())} - ${inlineCode(res.statusText)}
-                `).setTitle("API Test Results")
+                    > Url: ${inlineCode(process.env.SERVER)}
+                    > Ping: ${inlineCode((new Date().getTime() - _pingStart + "ms").replace(/\-/, ""))}
+                    > Type: ${inlineCode(res.type)}
+                    ${GetEmoji("yes")} **Response:**
+                    > ${res.ok === true ? GetEmoji("yes") : GetEmoji("no")} OK: ${inlineCode(res.ok === true ? "true" : "false")}
+                    > ${res.ok === true ? GetEmoji("yes") : GetEmoji("no")} Response Code: ${inlineCode(res.status.toString())} - ${inlineCode(res.statusText)}
+                    `).setTitle("API Test Results")
                 cmd.message.author.send({ embeds: [embed] })
             })
         })

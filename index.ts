@@ -131,7 +131,7 @@ client.on("messageCreate", async (message) => {
 
 app.listen(process.env.PORT, async () => {
     cache = await caching("memory")
-    await cache.set("debug", [])
+    //await cache.set("debug", [])
     await cache.set("stats_session_ids", [])
     //await cache.set("command_log", [])
     file_cache = new Cache({
@@ -153,9 +153,6 @@ app.listen(process.env.PORT, async () => {
         if (!file) await file_cache.set(obfuscatorStats.file_cache_name, {})
     })
 
-    //client.on("debug", async (m) => await Debug(m))
-    //client.on("error", async (m) => await Debug(m))
-
     console.log(`> express server listening on port ${process.env.PORT}\n> logging in...`)
     DISABLE_DISCORDLOGIN && console.log("> discord login blocked")
     !DISABLE_DISCORDLOGIN && await client.login(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]).then(async () => {
@@ -168,54 +165,20 @@ app.listen(process.env.PORT, async () => {
     if (!file_cache.getSync("bot_stats")) file_cache.setSync("bot_stats", { obfuscations: 0, total_commands_executed: 0 })
     if (!file_cache.getSync("cmd_stats")) file_cache.setSync("cmd_stats", {})
     if (!file_cache.getSync("bot_settings")) file_cache.setSync("bot_settings", { alerts: true })
+    if (!file_cache.getSync("error_logs")) file_cache.setSync("error_logs", [])
 })
 
 app.use(cors())
 app.use((req, res, next) => { res.removeHeader("X-Powered-By"); next() })
-app.get("/api/discord/client/debug", async (req, res) => res.json(await cache.get("debug")))
-app.get("/api/discord/client/command-logs", async (req, res) => res.json(await cache.get("command_log")))
-app.get("/api/luaobfuscator/stats/last-outage", async (req, res) => {
+app.get("/", async (req, res) => res.sendStatus(200));
+app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplay))
+app.get("/api/v1/cache/:name", async (req, res) => {
     const session_ids: Array<any> = await cache.get("stats_session_ids")
-    if (session_ids && session_ids.includes(req.query.session)) return res.json(await file_cache.getSync("last_outage"))
-    return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
-})
-app.get("/api/luaobfuscator/stats/outage-log", async (req, res) => {
-    const session_ids: Array<any> = await cache.get("stats_session_ids")
-    if (session_ids && session_ids.includes(req.query.session)) return res.json(await file_cache.getSync("outage_log"))
-    return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
-})
-app.get("/api/luaobfuscator/stats/obfuscator-stats", async (req, res) => {
-    const session_ids: Array<any> = await cache.get("stats_session_ids")
-    if (session_ids && session_ids.includes(req.query.session)) return res.json(await file_cache.getSync(obfuscatorStats.file_cache_name))
-    return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
-})
-app.get("/api/chart", async (req, res) => {
-    try {
-        if (!req.query.datasets) return res.status(400).json({ code: 400, message: "Bad Request" })
-        const chart = chartImage.Create({
-            type: req.query.type?.toString() || "line",
-            data: {
-                labels: chartImage.GetLocalizedDateStrings(),
-                datasets: JSON.parse(req.query.datasets.toString())
-            }
-        })
-        const chart_id = (await session.Create()).toString()
-        const buffer = await chart.toBuffer()
-        if (await cache.get(buffer.toString())) {
-            const cached_chart = await cache.get(buffer.toString())
-            res.setHeader("X-Cached-Chart", "true")
-            return res.sendFile(process_path + `/.cache/charts/${cached_chart}.png`)
-        } else {
-            await cache.set(buffer.toString(), chart_id)
-            //@ts-ignore
-            await chart.toFile(`./.cache/charts/${chart_id}.png`)
-            res.setHeader("X-Cached-Chart", "false")
-            return res.sendFile(process_path + `/.cache/charts/${chart_id}.png`)
-        }
-    } catch (error) {
-        console.error(error)
-        return res.status(500).json({ code: 500, message: "Internal Server Error", error: error })
+    if (session_ids && session_ids.includes(req.query.session)) {
+        if (req.params.name === "status_display") return res.json(statusDisplay);
+        return res.json(await file_cache.getSync(req.params.name))
     }
+    return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 })
 
 export interface Bot_Settings {

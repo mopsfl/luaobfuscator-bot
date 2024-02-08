@@ -88,7 +88,7 @@ export default class StatusDisplay {
                     name: `${GetEmoji("server_luaobf")} **Lua Obfuscator - Server:**`,
                     inline: false,
                     value: `
-                    > **Ping**: ${inlineCode(ping_responses.server?.ping?.toString() || "N/A")}
+                    > **Ping**: ${inlineCode(ping_responses.server?.ping?.toString() + "ms" || "N/A")}
                     > **Uptime**: ${inlineCode(FormatUptime(server_uptime) || "N/A")}
                     > **Memory Usage**: ${inlineCode(FormatBytes(ping_responses.server?.server_stats.memory_usage) || "N/A")}
                     `
@@ -189,7 +189,7 @@ export default class StatusDisplay {
                                 affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status == 200 ? "Online" : "Offline"} ${service.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
                             const bot_settings: self.Bot_Settings = await self.file_cache.get("bot_settings")
-                            if (channel?.isTextBased()) {
+                            if (channel?.isTextBased() && self.env === "prod") {
                                 channel.send({
                                     content: bot_settings.alert_pings === true ? `<@${uid}>` : undefined,
                                     embeds: [

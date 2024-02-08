@@ -20,7 +20,7 @@ export default class Utils {
         const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script })
         return response.json()
     }
-    manualObfuscateScript = async function (session: string, config: Object, message?: Message) {
+    manualObfuscateScript = async function (session: string, config: Object) {
         const response = await fetch(`${self.config.api_url}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
             throw error
         })
@@ -57,6 +57,7 @@ export default class Utils {
                 await msg.delete();
         }, deleteMs);
     }
+
     async SendErrorMessage(type: "error" | "syntax" | "permission" | "ratelimit", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>, deleteMs?: number) {
         const errorId = randomUUID()
         let errorText = error instanceof Error && error.message || typeof (error) == "string" && error || "unknown internal error"
@@ -110,7 +111,7 @@ export default class Utils {
                 break;
             }
             case "ratelimit": {
-                await await cmd.message.reply({
+                await cmd.message.reply({
                     embeds: [self.Embed({
                         title: `${GetEmoji("no")} Ratelimit`,
                         fields: [
@@ -126,6 +127,16 @@ export default class Utils {
                 break;
             }
         }
+
+        const error_logs: Array<any> = await self.file_cache.getSync("error_logs")
+        error_logs.push({
+            errorId: errorId,
+            error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack, cause: error.cause } : error,
+            time: cmd.timestamp,
+            user: cmd.message.author.id,
+            arguments: cmd.raw_arguments
+        })
+        self.file_cache.setSync("error_logs", error_logs)
     }
 }
 
