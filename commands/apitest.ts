@@ -33,7 +33,12 @@ class Command {
                     > ${res.ok === true ? GetEmoji("yes") : GetEmoji("no")} OK: ${inlineCode(res.ok === true ? "true" : "false")}
                     > ${res.ok === true ? GetEmoji("yes") : GetEmoji("no")} Response Code: ${inlineCode(res.status.toString())} - ${inlineCode(res.statusText)}
                     `).setTitle("API Test Results")
-                cmd.message.author.send({ embeds: [embed] })
+                cmd.message.author.send({ embeds: [embed] }).catch(async err => {
+                    embed.setColor(Colors.Red)
+                        .setDescription(`${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`)
+                    await msg.edit({ embeds: [embed] })
+                    console.error(err)
+                })
             })
         })
         return true

@@ -44,6 +44,11 @@ class Command {
                 })
             })
 
+            embed.setDescription(`${GetEmoji("yes")} Temporary cache link created. I've sent you the link via dms.`)
+                .setColor(Colors.Green)
+                .setFooter({ text: `${cmd.id}` })
+                .setTimestamp()
+            await msg.edit({ embeds: [embed] }).catch(async err => await self.Debug(err, true))
             await cmd.message.author.send({
                 embeds: [
                     self.Embed({
@@ -60,12 +65,12 @@ class Command {
                         timestamp: true
                     })
                 ]
+            }).catch(async err => {
+                embed.setColor(Colors.Red)
+                    .setDescription(`${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`)
+                await msg.edit({ embeds: [embed] })
+                console.error(err)
             })
-            embed.setDescription(`${GetEmoji("yes")} Temporary cache link created. I've sent you the link via dms.`)
-                .setColor(Colors.Green)
-                .setFooter({ text: `${cmd.id}` })
-                .setTimestamp()
-            msg.edit({ embeds: [embed] }).catch(async err => await self.Debug(err, true))
         })
         return true
     }

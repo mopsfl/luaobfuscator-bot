@@ -47,6 +47,17 @@ class Command {
                     timestamp: true,
                     footer: { text: cmd.arguments[0].toString() },
                 })]
+            }).catch(async err => {
+                msg.edit({
+                    embeds: [self.Embed({
+                        title: `${GetEmoji("no")} Reply Error`,
+                        description: `${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`,
+                        color: Colors.Red,
+                        timestamp: true,
+                        footer: { text: cmd.arguments[0].toString() }
+                    })]
+                })
+                console.error(err)
             })
             msg.edit({
                 embeds: [self.Embed({
