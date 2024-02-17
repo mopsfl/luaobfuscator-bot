@@ -45,7 +45,7 @@ export default class Command {
             if (bot_stats) {
                 if (!bot_stats.total_commands_executed) bot_stats.total_commands_executed = 0
                 bot_stats.total_commands_executed++;
-                await self.file_cache.set("bot_stats", bot_stats)
+                self.file_cache.set("bot_stats", bot_stats)
             }
             this.ratelimits.set(cmd.message.author.id, true);
 
@@ -54,7 +54,7 @@ export default class Command {
             if (cmd_stats) {
                 if (!cmd_stats[cmd.name[0]]) cmd_stats[cmd.name[0]] = 0
                 cmd_stats[cmd.name[0]]++;
-                await self.file_cache.set("cmd_stats", cmd_stats)
+                self.file_cache.set("cmd_stats", cmd_stats)
             }
             //let command_log: Array<cmdStructure> = await self.cache.get("command_log")
             //if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
