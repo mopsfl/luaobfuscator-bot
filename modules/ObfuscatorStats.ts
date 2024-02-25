@@ -27,6 +27,7 @@ export default class ObfuscatorStats {
             })
         }
         current_stats[current_date] = today_stats
+        if (current_stats[current_date].total_file_uploads === undefined || current_stats[current_date].total_obfuscations === undefined) return
         return await this.Set(current_stats);
     }
 
