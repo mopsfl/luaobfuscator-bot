@@ -20,6 +20,7 @@ import ObfuscatorStats from "./modules/ObfuscatorStats"
 import CommandCategories from "./modules/CommandCategories"
 import { Cache, FileSystemCache } from "file-system-cache"
 import NoHello from "./modules/NoHello"
+import DeobfLaugh from "./modules/DeobfLaugh"
 
 const app = express()
 dotenv.config()
@@ -91,7 +92,7 @@ client.on("ready", async () => {
 client.on("messageCreate", async (message) => {
     try {
         if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
-        if (NoHello(message)) return
+        if (NoHello(message) || DeobfLaugh(message)) return
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)

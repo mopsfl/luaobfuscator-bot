@@ -1,5 +1,5 @@
 import * as self from "../index"
-import { Message, TextChannel, inlineCode, Colors } from "discord.js";
+import { Message, TextChannel, inlineCode, Colors, Channel } from "discord.js";
 import GetEmoji from "./GetEmoji"
 import FormatUptime from "./FormatUptime";
 import FormatBytes from "./FormatBytes";
@@ -10,7 +10,7 @@ import FormatNumber from "./FormatNumber";
 
 export default class StatusDisplay {
     constructor(
-        public status_channel?: TextChannel,
+        public status_channel?: Channel,
         public status_message?: Message,
         public initialized: boolean = false,
         public last_statusupdate: number = new Date().getTime(),
@@ -30,8 +30,8 @@ export default class StatusDisplay {
 
     async init() {
         await self.client.channels.fetch(self.config[self.env].STATUS_CHANNEL_ID).then(async channel => {
-            //@ts-ignore - dont know how to fix this type error
             this.status_channel = channel
+            if (!this.status_channel.isTextBased()) return console.error(`channel ${this.status_channel} must be textBased.`)
             await this.status_channel.messages.fetch().then(messages => {
                 this.status_message = messages.first()
                 this.initialized = true
