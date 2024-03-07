@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, Colors, ComponentType, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, Colors, ComponentType, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
@@ -9,30 +9,40 @@ class Command {
     description = "Test command to test discord.js select menus."
 
     callback = async (cmd: cmdStructure) => {
+        let script_content = "",
+            chunksAmount = 0,
+            hasWebhook = false,
+            hasCodeBlock = self.utils.hasCodeblock(cmd.raw_arguments),
+            file_attachment: AttachmentBuilder
+
+        // Get Script Content
+        if (hasCodeBlock) {
+            hasWebhook = self.utils.hasWebhook(cmd.raw_arguments)
+            script_content = self.utils.parseCodeblock(cmd.raw_arguments)
+        } else if ([...cmd.message.attachments].length > 0) {
+            const attachment = cmd.message.attachments.first()
+            const url = attachment?.url
+            if (!url) self.utils.SendErrorMessage("error", cmd, "Unable to get url from attachment.")
+            await fetch(url).then(async res => {
+                const chunks = await self.utils.readAllChunks(res.body)
+                chunksAmount = chunks.length
+                chunks.forEach(chunk => {
+                    script_content += Buffer.from(chunk).toString() || ""
+                })
+            })
+        } else return self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
+            { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
+            { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
+        ])
+
         const select = new StringSelectMenuBuilder()
             .setCustomId("select_options")
             .setPlaceholder("Select an option")
             .addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel("Basic Minimal")
-                    .setDescription("Basic Minimal")
-                    .setValue('basicminimal'),
-                new StringSelectMenuOptionBuilder()
-                    .setLabel('Basic Good')
-                    .setDescription('Basic Good')
-                    .setValue('basicgood'),
-                new StringSelectMenuOptionBuilder()
-                    .setLabel('Obfuscate')
-                    .setDescription('Obfuscate')
-                    .setValue('obfuscate'),
-                new StringSelectMenuOptionBuilder()
-                    .setLabel('Chaotic Good')
-                    .setDescription('Chaotic Good')
-                    .setValue('chaoticgood'),
-                new StringSelectMenuOptionBuilder()
-                    .setLabel('Chaotic Evil')
-                    .setDescription('Chaotic Evil')
-                    .setValue('chaoticevil'),
+                    .setLabel("EncryptStrings")
+                    .setDescription(`Encrypts strings into something like local foo = v8('\\x42..')`)
+                    .setValue('EncryptStrings'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Back')
                     .setValue('back')
@@ -51,10 +61,11 @@ class Command {
                 .setCustomId("cancel")
                 .setStyle(ButtonStyle.Danger)
 
-        const embed = self.Embed({
+        const embed_main = self.Embed({
             color: Colors.Green,
             timestamp: true,
             title: "Custom Obfuscation",
+            description: `${GetEmoji("yes")} Script session created!`,
             fields: [
                 { name: "Script Session:", value: inlineCode("N/A"), inline: false },
                 { name: "Selected Options:", value: inlineCode("N/A"), inline: false },
@@ -63,63 +74,98 @@ class Command {
                 text: `Lua Obfuscator Bot`,
                 iconURL: self.config.icon_url,
             }
+        }), embed_loading = self.Embed({
+            color: Colors.Yellow,
+            timestamp: true,
+            title: "Custom Obfuscation",
+            description: `${GetEmoji("loading")} Creating script session...`,
+            footer: {
+                text: `Lua Obfuscator Bot`,
+                iconURL: self.config.icon_url,
+            }
         })
-        let row_buttons: any = new ActionRowBuilder().addComponents(obfuscate, options, cancel),
-            row_options: any = new ActionRowBuilder().addComponents(select),
-            response = await cmd.message.reply({ components: [row_buttons], embeds: [embed] }),
-            collector_mainButtons = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
+
+        let selected_options = { MinifiyAll: true, CustomPlugins: {} },
+            option_presets = {
+                "EncryptStrings": [100]
+            }
 
         try {
-            collector_mainButtons.on("collect", async i => {
-                switch (i.customId) {
-                    case "obfuscate":
-                        row_buttons.components.forEach((c: ButtonBuilder) => {
-                            c.setDisabled(true)
-                            if (c.data.label === "Obfuscate") c.setEmoji("<:loading:1135544416933785651>").setLabel(" ")
-                        })
-                        await response.edit({ components: [row_buttons] })
-                        await i.reply("obfuscate")
-                        break;
-                    case "cancel":
-                        embed.data.fields = []
-                        embed.setDescription("Obfuscation cancelled.").setColor(Colors.Red).setTitle(" ")
-                        response.edit({ components: [], embeds: [embed] }).then(() => {
-                            setTimeout(() => {
-                                response.deletable && response.delete()
-                            }, 5000);
-                        })
-                        collector_mainButtons.stop()
-                        break;
-                    case "options":
+            let row_buttons: any = new ActionRowBuilder().addComponents(obfuscate, options, cancel),
+                row_options: any = new ActionRowBuilder().addComponents(select),
+                response = await cmd.message.reply({ embeds: [embed_loading] }),
+                collector_mainButtons = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
+            await self.utils.createSession(script_content).then(async _response => {
+                console.log(`created new script session ${_response.sessionId}`);
+
+                embed_main.data.fields[0].value = inlineCode(_response.sessionId)
+                response.edit({ components: [row_buttons], embeds: [embed_main] })
+                collector_mainButtons.on("collect", async i => {
+                    if (i.user.id !== cmd.message.author.id) {
                         i.deferUpdate()
-                        var response_options = await response.edit({ components: [row_options] }),
-                            collector_options = response_options.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_00 })
+                        return;
+                    }
+                    switch (i.customId) {
+                        case "obfuscate":
+                            row_buttons.components.forEach((c: ButtonBuilder) => {
+                                c.setDisabled(true)
+                                if (c.data.label === "Obfuscate") c.setEmoji("<:loading:1135544416933785651>").setLabel(" ")
+                            })
+                            await response.edit({ components: [row_buttons] })
+                            console.log(selected_options);
+                            await self.utils.manualObfuscateScript(_response.sessionId, selected_options).then(async res => {
+                                file_attachment = self.utils.createFileAttachment(Buffer.from(res.code))
+                                await response.edit({
+                                    files: [file_attachment],
+                                    components: [],
+                                    embeds: []
+                                })
+                            })
+                            break;
+                        case "cancel":
+                            embed_main.data.fields = []
+                            embed_main.setDescription("Obfuscation cancelled.").setColor(Colors.Red).setTitle(" ")
+                            response.edit({ components: [], embeds: [embed_main] }).then(() => setTimeout(() => response.deletable && response.delete(), 5000))
+                            collector_mainButtons.stop()
+                            break;
+                        case "options":
+                            i.deferUpdate()
+                            var response_options = await response.edit({ components: [row_options] }),
+                                collector_options = response_options.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_00 })
 
-                        collector_options.on("collect", async i_options => {
-                            const selection = i_options.values[0]
-                            switch (selection) {
-                                case "back":
-                                    response.edit({ components: [row_buttons] })
-                                    await i_options.deferUpdate()
-                                    collector_options.stop()
-                                    break;
-                                default:
-                                    const optionIndex = select.options.findIndex(o => o.data.value === selection)
-                                    select.spliceOptions(optionIndex, 1)
-                                    row_options = new ActionRowBuilder().addComponents(select)
+                            collector_options.on("collect", async i_options => {
+                                if (i_options.user.id !== cmd.message.author.id) {
+                                    i_options.deferUpdate()
+                                    return;
+                                }
+                                const selection = i_options.values[0]
+                                switch (selection) {
+                                    case "back":
+                                        response.edit({ components: [row_buttons] })
+                                        await i_options.deferUpdate()
+                                        collector_options.stop()
+                                        break;
+                                    default:
+                                        const optionIndex = select.options.findIndex(o => o.data.value === selection)
+                                        select.spliceOptions(optionIndex, 1)
+                                        console.log(`remove option index ${optionIndex} from list`);
 
-                                    if (embed.data.fields[1].value === "`N/A`") embed.data.fields[1].value = ""
-                                    embed.data.fields[1].value = embed.data.fields[1].value + `\n${inlineCode(selection)}`
+                                        row_options = new ActionRowBuilder().addComponents(select)
 
-                                    response.edit({ embeds: [embed], components: [row_options] })
-                                    await i_options.deferUpdate()
-                                    break;
-                            }
-                        })
-                        break;
-                    default:
-                        break;
-                }
+                                        if (embed_main.data.fields[1].value === "`N/A`") embed_main.data.fields[1].value = ""
+                                        embed_main.data.fields[1].value = embed_main.data.fields[1].value + `\n> ${inlineCode(selection)}`
+                                        selected_options.CustomPlugins[selection] = option_presets[selection]
+
+                                        response.edit({ embeds: [embed_main], components: [row_options] })
+                                        await i_options.deferUpdate()
+                                        break;
+                                }
+                            })
+                            break;
+                        default:
+                            break;
+                    }
+                })
             })
         } catch (error) {
             console.error(error)
