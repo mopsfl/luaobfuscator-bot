@@ -3,6 +3,17 @@ import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 
+const _options = [
+    { label: "MinifiyAll", description: `This results in all code on a single line, no comments..`, value: "MinifiyAll" },
+    { label: "Virtualize", description: `Makes the final code virtualized.`, value: "Virtualize" },
+    { label: "EncryptStrings", description: `Encrypts strings into something like local foo = v8('\\x42..')`, value: "EncryptStrings" },
+    { label: "MutateAllLiterals", description: `Mutates all numeric literals into basic +/- binary nodes.`, value: "MutateAllLiterals" },
+    { label: "MixedBooleanArithmetic", description: `Mutates literals into mixed boolean arithmerics.`, value: "MixedBooleanArithmetic" },
+    { label: "JunkifyAllIfStatements", description: `Injects opaque conditions into the if statement.`, value: "JunkifyAllIfStatements" },
+    { label: "JunkifyBlockToIf", description: `Turns do/end blocks into opaque if statements.`, value: "JunkifyBlockToIf" },
+    { label: "ControlFlowFlattenAllBlocks", description: `Injects basic while loops with a state counter.`, value: "ControlFlowFlattenAllBlocks" },
+]
+
 class Command {
     name = ["dropdowntest", "dt"]
     category = self.commandCategories.Misc
@@ -38,11 +49,8 @@ class Command {
         const select = new StringSelectMenuBuilder()
             .setCustomId("select_options")
             .setPlaceholder("Select an option")
+            .setOptions(_options)
             .addOptions(
-                new StringSelectMenuOptionBuilder()
-                    .setLabel("EncryptStrings")
-                    .setDescription(`Encrypts strings into something like local foo = v8('\\x42..')`)
-                    .setValue('EncryptStrings'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Back')
                     .setValue('back')
@@ -85,9 +93,16 @@ class Command {
             }
         })
 
-        let selected_options = { MinifiyAll: true, CustomPlugins: {} },
+        let selected_options = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} },
             option_presets = {
-                "EncryptStrings": [100]
+                "EncryptStrings": [100],
+                "MutateAllLiterals": [100],
+                "MixedBooleanArithmetic": [100],
+                "JunkifyAllIfStatements": [100],
+                "JunkifyBlockToIf": [100],
+                "ControlFlowFlattenV1AllBlocks": [100],
+                "Virtualize": true,
+                "MinifiyAll": true,
             }
 
         try {
@@ -114,7 +129,7 @@ class Command {
                             await response.edit({ components: [row_buttons] })
                             console.log(selected_options);
                             await self.utils.manualObfuscateScript(_response.sessionId, selected_options).then(async res => {
-                                file_attachment = self.utils.createFileAttachment(Buffer.from(res.code))
+                                file_attachment = self.utils.createFileAttachment(Buffer.from(res.code), _response.sessionId)
                                 await response.edit({
                                     files: [file_attachment],
                                     components: [],
@@ -154,7 +169,13 @@ class Command {
 
                                         if (embed_main.data.fields[1].value === "`N/A`") embed_main.data.fields[1].value = ""
                                         embed_main.data.fields[1].value = embed_main.data.fields[1].value + `\n> ${inlineCode(selection)}`
-                                        selected_options.CustomPlugins[selection] = option_presets[selection]
+                                        if (selected_options[selection] !== undefined) {
+                                            selected_options[selection] = option_presets[selection]
+                                            console.log(selected_options);
+                                        } else {
+                                            selected_options.CustomPlugins[selection] = option_presets[selection]
+                                            console.log(selected_options);
+                                        }
 
                                         response.edit({ embeds: [embed_main], components: [row_options] })
                                         await i_options.deferUpdate()
