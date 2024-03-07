@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, ComponentType, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, Colors, ComponentType, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
@@ -10,17 +10,29 @@ class Command {
 
     callback = async (cmd: cmdStructure) => {
         const select = new StringSelectMenuBuilder()
-            .setCustomId("test")
-            .setPlaceholder("Placeholder")
+            .setCustomId("select_options")
+            .setPlaceholder("Select an option")
             .addOptions(
                 new StringSelectMenuOptionBuilder()
-                    .setLabel("EncryptStrings")
-                    .setDescription("Encrypts all* the strings* some strings with special characters might not be included")
-                    .setValue('EncryptStrings'),
+                    .setLabel("Basic Minimal")
+                    .setDescription("Basic Minimal")
+                    .setValue('basicminimal'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('Minifier')
-                    .setDescription('Rename the local variables to v0, v1, v2, etc...')
-                    .setValue('Minifier'),
+                    .setLabel('Basic Good')
+                    .setDescription('Basic Good')
+                    .setValue('basicgood'),
+                new StringSelectMenuOptionBuilder()
+                    .setLabel('Obfuscate')
+                    .setDescription('Obfuscate')
+                    .setValue('obfuscate'),
+                new StringSelectMenuOptionBuilder()
+                    .setLabel('Chaotic Good')
+                    .setDescription('Chaotic Good')
+                    .setValue('chaoticgood'),
+                new StringSelectMenuOptionBuilder()
+                    .setLabel('Chaotic Evil')
+                    .setDescription('Chaotic Evil')
+                    .setValue('chaoticevil'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Back')
                     .setValue('back')
@@ -33,57 +45,85 @@ class Command {
             options = new ButtonBuilder()
                 .setLabel("Customize Options")
                 .setCustomId("options")
-                .setStyle(ButtonStyle.Primary)
+                .setStyle(ButtonStyle.Primary),
+            cancel = new ButtonBuilder()
+                .setLabel("Cancel")
+                .setCustomId("cancel")
+                .setStyle(ButtonStyle.Danger)
 
         const embed = self.Embed({
-            title: "Custom Obfuscation - Options",
+            color: Colors.Green,
+            timestamp: true,
+            title: "Custom Obfuscation",
             fields: [
-                { name: "Selected Options:", value: "N/A", inline: false }
-            ]
-        })
-        const row: any = new ActionRowBuilder().addComponents(obfuscate, options),
-            response = await cmd.message.reply({ components: [row], embeds: [embed] }),
-            collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
-        let total_selected_options = 0,
-            _selected_options = []
-
-        collector.on("collect", async i => {
-            if (i.customId === "obfuscate") {
-                cmd.message.reply("obfuscate")
-                i.deferReply()
-            } else if (i.customId === "options") {
-                var row: any = new ActionRowBuilder().addComponents(select),
-                    selectResponse = await response.edit({ components: [row] }),
-                    collector = selectResponse.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_00 })
-
-                collector.on("collect", async i => {
-                    const selection = i.values[0];
-                    if (!_selected_options.includes(selection) && selection !== "nooptionfound" && selection !== "back") {
-                        _selected_options.push(selection)
-                        if (embed.data.fields[0].value === "N/A") embed.data.fields[0].value = ""
-                        total_selected_options++;
-                        embed.setFields([
-                            { name: "Selected Options:", value: `${embed.data.fields[0].value}\n${total_selected_options}. ${inlineCode(selection)}`, inline: false }
-                        ])
-                        select.options.splice(select.options.findIndex(s => s.data.value === selection), 1)
-                        if (select.options.length <= 0) {
-                            select.addOptions(
-                                new StringSelectMenuOptionBuilder()
-                                    .setLabel("N/A")
-                                    .setValue('nooptionfound')
-                            )
-                        }
-                        var row: any = new ActionRowBuilder().addComponents(select)
-                        await response.edit({ embeds: [embed], components: [row] })
-                    } else if (selection === "back") {
-                        var row: any = new ActionRowBuilder().addComponents(obfuscate, options),
-                            selectResponse = await response.edit({ components: [row] })
-                    }
-                    i.deferReply()
-                })
+                { name: "Script Session:", value: inlineCode("N/A"), inline: false },
+                { name: "Selected Options:", value: inlineCode("N/A"), inline: false },
+            ],
+            footer: {
+                text: `Lua Obfuscator Bot`,
+                iconURL: self.config.icon_url,
             }
-            i.deferUpdate()
         })
+        let row_buttons: any = new ActionRowBuilder().addComponents(obfuscate, options, cancel),
+            row_options: any = new ActionRowBuilder().addComponents(select),
+            response = await cmd.message.reply({ components: [row_buttons], embeds: [embed] }),
+            collector_mainButtons = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
+
+        try {
+            collector_mainButtons.on("collect", async i => {
+                switch (i.customId) {
+                    case "obfuscate":
+                        row_buttons.components.forEach((c: ButtonBuilder) => {
+                            c.setDisabled(true)
+                            if (c.data.label === "Obfuscate") c.setEmoji("<:loading:1135544416933785651>").setLabel(" ")
+                        })
+                        await response.edit({ components: [row_buttons] })
+                        await i.reply("obfuscate")
+                        break;
+                    case "cancel":
+                        embed.data.fields = []
+                        embed.setDescription("Obfuscation cancelled.").setColor(Colors.Red).setTitle(" ")
+                        response.edit({ components: [], embeds: [embed] }).then(() => {
+                            setTimeout(() => {
+                                response.deletable && response.delete()
+                            }, 5000);
+                        })
+                        collector_mainButtons.stop()
+                        break;
+                    case "options":
+                        i.deferUpdate()
+                        var response_options = await response.edit({ components: [row_options] }),
+                            collector_options = response_options.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_00 })
+
+                        collector_options.on("collect", async i_options => {
+                            const selection = i_options.values[0]
+                            switch (selection) {
+                                case "back":
+                                    response.edit({ components: [row_buttons] })
+                                    await i_options.deferUpdate()
+                                    collector_options.stop()
+                                    break;
+                                default:
+                                    const optionIndex = select.options.findIndex(o => o.data.value === selection)
+                                    select.spliceOptions(optionIndex, 1)
+                                    row_options = new ActionRowBuilder().addComponents(select)
+
+                                    if (embed.data.fields[1].value === "`N/A`") embed.data.fields[1].value = ""
+                                    embed.data.fields[1].value = embed.data.fields[1].value + `\n${inlineCode(selection)}`
+
+                                    response.edit({ embeds: [embed], components: [row_options] })
+                                    await i_options.deferUpdate()
+                                    break;
+                            }
+                        })
+                        break;
+                    default:
+                        break;
+                }
+            })
+        } catch (error) {
+            console.error(error)
+        }
         return true
     }
 }
