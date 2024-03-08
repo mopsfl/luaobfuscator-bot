@@ -4,7 +4,7 @@ import { cmdStructure } from "../modules/Command";
 import { BotStats } from "./botstats";
 
 class Command {
-    name = ["deobf", "deobfuscate"]
+    name = ["deobfuscate", "deobf"]
     category = self.commandCategories.LuaObfuscator
     description = "Deobfuscates a obfuscated script!! real!i!!i!"
     syntax_usage = "<file | codeblock>"

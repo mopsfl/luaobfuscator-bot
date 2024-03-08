@@ -1,4 +1,4 @@
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, Colors, ComponentType, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, Colors, ComponentType, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
@@ -11,17 +11,31 @@ const _options = [
     { label: "MixedBooleanArithmetic", description: `Mutates literals into mixed boolean arithmerics.`, value: "MixedBooleanArithmetic" },
     { label: "JunkifyAllIfStatements", description: `Injects opaque conditions into the if statement.`, value: "JunkifyAllIfStatements" },
     { label: "JunkifyBlockToIf", description: `Turns do/end blocks into opaque if statements.`, value: "JunkifyBlockToIf" },
-    { label: "ControlFlowFlattenAllBlocks", description: `Injects basic while loops with a state counter.`, value: "ControlFlowFlattenAllBlocks" },
+    { label: "ControlFlowFlattenAllBlocks", description: `Injects basic while loops with a state counter.`, value: "ControlFlowFlattenV1AllBlocks" },
     { label: "EncryptFuncDeclaration", description: `Turns the declaration of a (global) function into an encrypted string.`, value: "EncryptFuncDeclaration" },
     { label: "SwizzleLookups", description: `Swizzle lookups, will turn foo.bar into foo['bar'].`, value: "SwizzleLookups" },
 ]
 
+const _isObfuscating = []
+
 class Command {
-    name = ["dropdowntest", "dt"]
-    category = self.commandCategories.Misc
-    description = "Test command to test discord.js select menus."
+    name = ["customobfuscate", "co", "cobf"]
+    category = self.commandCategories.LuaObfuscator
+    description = "Obfuscates your given input using the REST API with your selected options."
+    syntax_usage = "<file | codeblock>"
 
     callback = async (cmd: cmdStructure) => {
+        if (!cmd.message.channel.isDMBased()) {
+            const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
+            await cmd.message.reply(`no, use website: ${bold(self.config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
+            return true
+        }
+
+        if (_isObfuscating[cmd.message.author.id] === true) {
+            return self.utils.SendErrorMessage("ratelimit", cmd, null)
+        }
+        _isObfuscating[cmd.message.author.id] = true
+
         let script_content = "",
             chunksAmount = 0,
             hasWebhook = false,
@@ -43,10 +57,13 @@ class Command {
                     script_content += Buffer.from(chunk).toString() || ""
                 })
             })
-        } else return self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
-            { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
-            { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
-        ])
+        } else {
+            _isObfuscating[cmd.message.author.id] = false
+            return self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
+                { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
+                { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
+            ])
+        }
 
         const select = new StringSelectMenuBuilder()
             .setCustomId("select_options")
@@ -137,14 +154,16 @@ class Command {
                                     embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
                                     self.utils.SendErrorMessage("error", cmd, res?.message, "Obfuscation Error")
                                     response.edit({ embeds: [embed_main], components: [] })
+                                    _isObfuscating[cmd.message.author.id] = false
                                     return
                                 }
-                                file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), _response.sessionId)
+                                file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${_response.sessionId}.lua`)
                                 await response.edit({
                                     files: [file_attachment],
                                     components: [],
                                     embeds: []
                                 })
+                                _isObfuscating[cmd.message.author.id] = false
                             })
                             break;
                         case "cancel":
@@ -152,6 +171,7 @@ class Command {
                             embed_main.setDescription("Obfuscation cancelled.").setColor(Colors.Red).setTitle(" ")
                             response.edit({ components: [], embeds: [embed_main] }).then(() => setTimeout(() => response.deletable && response.delete(), 5000))
                             collector_mainButtons.stop()
+                            _isObfuscating[cmd.message.author.id] = false
                             break;
                         case "options":
                             i.deferUpdate()
@@ -200,6 +220,7 @@ class Command {
             })
         } catch (error) {
             console.error(error)
+            _isObfuscating[cmd.message.author.id] = false
         }
         return true
     }
