@@ -57,6 +57,7 @@ class Command {
         _isObfuscating[cmd.message.author.id] = true
 
         let script_content = "",
+            session = "",
             chunksAmount = 0,
             hasWebhook = false,
             hasCodeBlock = self.utils.hasCodeblock(cmd.raw_arguments),
@@ -98,6 +99,7 @@ class Command {
             obfuscate = new ButtonBuilder()
                 .setLabel("Obfuscate")
                 .setCustomId("obfuscate")
+                .setEmoji("<:update:1129139085362090145>")
                 .setStyle(ButtonStyle.Success),
             options = new ButtonBuilder()
                 .setLabel("Customize Plugins")
@@ -118,9 +120,9 @@ class Command {
             title: "Custom Obfuscation",
             description: `${GetEmoji("yes")} Script session created!`,
             fields: [
-                { name: "Script Session:", value: inlineCode("N/A"), inline: false },
-                { name: "Selected Plugins:", value: inlineCode("N/A"), inline: false },
-                { name: "Documentation:", value: `Read our documentation for more information about each option.\n${hyperlink("Documentation", self.config.STATUS_DISPLAY.endpoints.forum + "/docs#plugins")}`, inline: false },
+                { name: "Script Session:", value: "> " + inlineCode("N/A"), inline: false },
+                { name: "Selected Plugins:", value: inlineCode("Default"), inline: false },
+                { name: "Documentation:", value: `Read our documentation for more information about each plugin.\n${hyperlink("Documentation", self.config.STATUS_DISPLAY.endpoints.forum + "/docs#plugins")}`, inline: false },
             ],
             footer: {
                 text: `Lua Obfuscator Bot`,
@@ -144,16 +146,20 @@ class Command {
                 row_buttons2: any = new ActionRowBuilder().addComponents(continueObf),
                 row_plugins: any = new ActionRowBuilder().addComponents(select),
                 response = await cmd.message.reply({ embeds: [embed_loading] }),
-                collector_mainButtons = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_00 })
+                collector_mainButtons = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 })
 
-            self.utils.NewPromise(300000, async (resolve: Function, reject: Function) => {
+            self.utils.NewPromise(60000, async (resolve: Function, reject: Function) => {
                 await self.utils.createSession(script_content).then(async _response => {
                     console.log(`created new script session ${_response.sessionId}`);
 
+                    resolve();
+                    session = _response.sessionId
                     embed_main.data.fields[0].value = inlineCode(_response.sessionId)
                     response.edit({ components: [row_buttons], embeds: [embed_main] })
 
-                    collector_mainButtons.on("end", () => { _isObfuscating[cmd.message.author.id] = false })
+                    collector_mainButtons.on("end", () => {
+                        _isObfuscating[cmd.message.author.id] = false
+                    })
                     collector_mainButtons.on("collect", async i => {
                         if (i.user.id !== cmd.message.author.id) {
                             i.deferUpdate()
@@ -176,6 +182,8 @@ class Command {
                                         _isObfuscating[cmd.message.author.id] = false
                                         return
                                     }
+
+                                    script_content = res?.code
                                     file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${_response.sessionId}.lua`)
                                     await response.edit({
                                         files: [file_attachment],
@@ -197,7 +205,6 @@ class Command {
                                 var response_plugins = await response.edit({ components: [row_plugins] }),
                                     collector_plugins = response_plugins.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_00 })
 
-                                collector_plugins.on("end", () => { _isObfuscating[cmd.message.author.id] = false })
                                 collector_plugins.on("collect", async i_plugins => {
                                     if (i_plugins.user.id !== cmd.message.author.id) {
                                         i_plugins.deferUpdate()
@@ -215,8 +222,7 @@ class Command {
                                             select.spliceOptions(optionIndex, 1)
 
                                             row_plugins = new ActionRowBuilder().addComponents(select)
-
-                                            if (embed_main.data.fields[1].value === "`N/A`") embed_main.data.fields[1].value = ""
+                                            if (embed_main.data.fields[1].value === "`Default`") embed_main.data.fields[1].value = ""
                                             embed_main.data.fields[1].value = embed_main.data.fields[1].value + `\n> ${inlineCode(selection)}`
                                             if (selected_plugins[selection] !== undefined) {
                                                 selected_plugins[selection] = plugin_presets[selection]
@@ -231,7 +237,21 @@ class Command {
                                 })
                                 break;
                             case "continue":
-                                i.reply("continue")
+                                selected_plugins = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} }
+                                embed_main.data.fields[1].value = inlineCode("Default")
+                                embed_main.setColor(Colors.Green).setDescription(`${GetEmoji("yes")} Script session created!`)
+                                select.setOptions(_plugins).addOptions(
+                                    new StringSelectMenuOptionBuilder()
+                                        .setLabel('Back')
+                                        .setValue('back')
+                                        .setEmoji("<:update:1129139085362090145>")
+                                )
+                                row_buttons.components.forEach((c: ButtonBuilder) => {
+                                    c.setDisabled(false)
+                                    if (c.data.label === " ") c.setEmoji("<:update:1129139085362090145>").setLabel("Obfuscate")
+                                })
+                                response.edit({ components: [row_buttons], files: [], embeds: [embed_main] })
+                                await i.deferUpdate()
                                 break;
                             default:
                                 i.deferUpdate()
@@ -241,7 +261,6 @@ class Command {
                     })
                 })
             }).catch(err => {
-                self.utils.SendErrorMessage("error", cmd, err)
                 _isObfuscating[cmd.message.author.id] = false
                 console.error(err)
             })
