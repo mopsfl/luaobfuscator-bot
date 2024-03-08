@@ -21,10 +21,14 @@ export default class Utils {
         return response.json()
     }
     manualObfuscateScript = async function (session: string, config: Object) {
-        const response = await fetch(`${self.config.api_url}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
-            throw error
-        })
-        return response.json()
+        try {
+            const response = await fetch(`${self.config.api_url}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
+                throw error
+            })
+            return response.json()
+        } catch (error) {
+            console.error()
+        }
     }
     obfuscateScript = async function (script: string, message?: Message): Promise<ObfuscationResult> {
         const response = await fetch(`${self.config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
@@ -141,6 +145,19 @@ export default class Utils {
         }
 
         await this.SaveErrorToLogs(errorId, error, cmd)
+    }
+
+    NewPromise(timeout: number, callback: Function) {
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                reject(new Error(`Request timed out after ${timeout}ms`));
+            }, timeout);
+
+            callback(
+                (value: any) => { clearTimeout(timer); resolve(value) },
+                (error: any) => { clearTimeout(timer); reject(error) }
+            );
+        });
     }
 }
 
