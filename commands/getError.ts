@@ -31,43 +31,48 @@ class Command {
             { name: "Error ID:", value: codeBlock(_error.errorId || "N/A"), inline: false },
         ]
 
-        cmd.message.reply({
-            embeds: [self.Embed({
-                description: `${GetEmoji("loading")} Getting error information... Please wait...`,
-                color: Colors.Yellow,
-                footer: { text: cmd.arguments[0].toString() },
-                timestamp: true
-            })]
-        }).then(msg => {
-            cmd.message.author.send({
+        try {
+            cmd.message.reply({
                 embeds: [self.Embed({
-                    title: `${GetEmoji("no")} Error Information`,
-                    fields: _fields,
+                    description: `${GetEmoji("loading")} Getting error information... Please wait...`,
                     color: Colors.Yellow,
-                    timestamp: true,
-                    footer: { text: cmd.arguments[0].toString() },
-                })]
-            }).catch(async err => {
-                msg.edit({
-                    embeds: [self.Embed({
-                        title: `${GetEmoji("no")} Reply Error`,
-                        description: `${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`,
-                        color: Colors.Red,
-                        timestamp: true,
-                        footer: { text: cmd.arguments[0].toString() }
-                    })]
-                })
-                console.error(err)
-            })
-            msg.edit({
-                embeds: [self.Embed({
-                    description: `${GetEmoji("yes")} I've sent you the error information via dms!`,
-                    color: Colors.Green,
                     footer: { text: cmd.arguments[0].toString() },
                     timestamp: true
                 })]
+            }).then(msg => {
+                cmd.message.author.send({
+                    embeds: [self.Embed({
+                        title: `${GetEmoji("no")} Error Information`,
+                        fields: _fields,
+                        color: Colors.Yellow,
+                        timestamp: true,
+                        footer: { text: cmd.arguments[0].toString() },
+                    })]
+                }).catch(async err => {
+                    msg.edit({
+                        embeds: [self.Embed({
+                            title: `${GetEmoji("no")} Reply Error`,
+                            description: `${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`,
+                            color: Colors.Red,
+                            timestamp: true,
+                            footer: { text: cmd.arguments[0].toString() }
+                        })]
+                    })
+                    console.error(err)
+                })
+                msg.edit({
+                    embeds: [self.Embed({
+                        description: `${GetEmoji("yes")} I've sent you the error information via dms!`,
+                        color: Colors.Green,
+                        footer: { text: cmd.arguments[0].toString() },
+                        timestamp: true
+                    })]
+                })
             })
-        })
+        } catch (error) {
+            console.error(error)
+            self.utils.SendErrorMessage("error", cmd, error)
+        }
     }
 }
 

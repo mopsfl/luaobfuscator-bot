@@ -12,6 +12,8 @@ const _options = [
     { label: "JunkifyAllIfStatements", description: `Injects opaque conditions into the if statement.`, value: "JunkifyAllIfStatements" },
     { label: "JunkifyBlockToIf", description: `Turns do/end blocks into opaque if statements.`, value: "JunkifyBlockToIf" },
     { label: "ControlFlowFlattenAllBlocks", description: `Injects basic while loops with a state counter.`, value: "ControlFlowFlattenAllBlocks" },
+    { label: "EncryptFuncDeclaration", description: `Turns the declaration of a (global) function into an encrypted string.`, value: "EncryptFuncDeclaration" },
+    { label: "SwizzleLookups", description: `Swizzle lookups, will turn foo.bar into foo['bar'].`, value: "SwizzleLookups" },
 ]
 
 class Command {
@@ -101,6 +103,8 @@ class Command {
                 "JunkifyAllIfStatements": [100],
                 "JunkifyBlockToIf": [100],
                 "ControlFlowFlattenV1AllBlocks": [100],
+                "EncryptFuncDeclaration": true,
+                "SwizzleLookups": [100],
                 "Virtualize": true,
                 "MinifiyAll": true,
             }
@@ -126,10 +130,16 @@ class Command {
                                 c.setDisabled(true)
                                 if (c.data.label === "Obfuscate") c.setEmoji("<:loading:1135544416933785651>").setLabel(" ")
                             })
-                            await response.edit({ components: [row_buttons] })
-                            console.log(selected_options);
+                            embed_main.setColor(Colors.Yellow).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("loading")} Obfuscating script... Please wait...`)
+                            await response.edit({ components: [row_buttons], embeds: [embed_main] })
                             await self.utils.manualObfuscateScript(_response.sessionId, selected_options).then(async res => {
-                                file_attachment = self.utils.createFileAttachment(Buffer.from(res.code), _response.sessionId)
+                                if (!res?.code) {
+                                    embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
+                                    self.utils.SendErrorMessage("error", cmd, res?.message, "Obfuscation Error")
+                                    response.edit({ embeds: [embed_main], components: [] })
+                                    return
+                                }
+                                file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), _response.sessionId)
                                 await response.edit({
                                     files: [file_attachment],
                                     components: [],

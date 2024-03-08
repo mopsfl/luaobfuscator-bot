@@ -1,4 +1,4 @@
-import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, PermissionFlagsBits, codeBlock } from "discord.js"
+import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js"
 import * as self from "../index"
 import { cmdStructure } from "./Command"
 import { randomUUID } from "crypto"
@@ -56,6 +56,18 @@ export default class Utils {
             if (msg.deletable === true)
                 await msg.delete();
         }, deleteMs);
+    }
+
+    async SaveErrorToLogs(errorId: string, error: Error | string, cmd?: cmdStructure) {
+        const error_logs: Array<any> = await self.file_cache.getSync("error_logs")
+        error_logs.push({
+            errorId: errorId,
+            error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack, cause: error.cause } : error,
+            time: cmd?.timestamp || new Date().getTime(),
+            user: cmd?.message?.author.id || inlineCode("N/A"),
+            arguments: cmd?.raw_arguments || "N/A"
+        })
+        self.file_cache.setSync("error_logs", error_logs)
     }
 
     async SendErrorMessage(type: "error" | "syntax" | "permission" | "ratelimit", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>, deleteMs?: number) {
@@ -128,15 +140,7 @@ export default class Utils {
             }
         }
 
-        const error_logs: Array<any> = await self.file_cache.getSync("error_logs")
-        error_logs.push({
-            errorId: errorId,
-            error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack, cause: error.cause } : error,
-            time: cmd.timestamp,
-            user: cmd.message.author.id,
-            arguments: cmd.raw_arguments
-        })
-        self.file_cache.setSync("error_logs", error_logs)
+        await this.SaveErrorToLogs(errorId, error, cmd)
     }
 }
 
