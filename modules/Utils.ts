@@ -17,8 +17,12 @@ export default class Utils {
         return Object.keys(PermissionFlagsBits)[_index]
     }
     createSession = async function (script: string) {
-        const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } })
-        return response.json()
+        try {
+            const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } })
+            return response.json()
+        } catch (error) {
+            console.error(error)
+        }
     }
     manualObfuscateScript = async function (session: string, config: Object) {
         try {
