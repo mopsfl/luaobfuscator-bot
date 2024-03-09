@@ -1,10 +1,13 @@
+// todo: when selecting to custom plugins, use default obfuscation. only create session when using customize plugins.
+//       fix continue not switching sessions when using default obfuscate first
+
 import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, Colors, ComponentType, hyperlink, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 
 const _plugins = [
-    { label: "MinifiyAll", description: `This results in all code on a single line, no comments..`, value: "MinifiyAll" },
+    { label: "MinifyAll", description: `This results in all code on a single line, no comments..`, value: "MinifiyAll" },
     { label: "Virtualize", description: `Makes the final code virtualized.`, value: "Virtualize" },
     { label: "EncryptStrings", description: `Encrypts strings into something like local foo = v8('\\x42..')`, value: "EncryptStrings" },
     { label: "MutateAllLiterals", description: `Mutates all numeric literals into basic +/- binary nodes.`, value: "MutateAllLiterals" },
@@ -154,9 +157,9 @@ class Command {
 
                     resolve();
                     session = _response.sessionId
-                    embed_main.data.fields[0].value = inlineCode(_response.sessionId)
+                    embed_main.data.fields[0].value = inlineCode(session)
                     response.edit({ components: [row_buttons], embeds: [embed_main] })
-
+                    console.log(session);
                     collector_mainButtons.on("end", () => {
                         _isObfuscating[cmd.message.author.id] = false
                     })
@@ -174,24 +177,48 @@ class Command {
                                 })
                                 embed_main.setColor(Colors.Yellow).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("loading")} Obfuscating script! Please wait...`)
                                 await response.edit({ components: [row_buttons], embeds: [embed_main] })
-                                await self.utils.manualObfuscateScript(_response.sessionId, selected_plugins).then(async res => {
-                                    if (!res?.code) {
-                                        embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
-                                        self.utils.SendErrorMessage("error", cmd, res?.message, "Obfuscation Error")
-                                        response.edit({ embeds: [embed_main], components: [] })
-                                        _isObfuscating[cmd.message.author.id] = false
-                                        return
-                                    }
+                                // todo: make this smaller
+                                if (embed_main.data.fields[1].value === "`Default`") {
+                                    await self.utils.obfuscateScript(script_content, cmd.message).then(async res => {
+                                        if (!res?.code) {
+                                            embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
+                                            self.utils.SendErrorMessage("error", cmd, res?.message, "Obfuscation Error")
+                                            response.edit({ embeds: [embed_main], components: [] })
+                                            _isObfuscating[cmd.message.author.id] = false
+                                            return
+                                        }
 
-                                    script_content = res?.code
-                                    file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${_response.sessionId}.lua`)
-                                    await response.edit({
-                                        files: [file_attachment],
-                                        components: [row_buttons2],
-                                        embeds: []
+                                        script_content = res?.code
+                                        session = res?.sessionId
+                                        console.log(session);
+                                        file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${session}.lua`)
+                                        await response.edit({
+                                            files: [file_attachment],
+                                            components: [row_buttons2],
+                                            embeds: []
+                                        })
+                                        _isObfuscating[cmd.message.author.id] = false
                                     })
-                                    _isObfuscating[cmd.message.author.id] = false
-                                })
+                                } else {
+                                    await self.utils.manualObfuscateScript(session, selected_plugins).then(async res => {
+                                        if (!res?.code) {
+                                            embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
+                                            self.utils.SendErrorMessage("error", cmd, res?.message, "Obfuscation Error")
+                                            response.edit({ embeds: [embed_main], components: [] })
+                                            _isObfuscating[cmd.message.author.id] = false
+                                            return
+                                        }
+
+                                        script_content = res?.code
+                                        file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${session}.lua`)
+                                        await response.edit({
+                                            files: [file_attachment],
+                                            components: [row_buttons2],
+                                            embeds: []
+                                        })
+                                        _isObfuscating[cmd.message.author.id] = false
+                                    })
+                                }
                                 break;
                             case "cancel":
                                 embed_main.data.fields = []
