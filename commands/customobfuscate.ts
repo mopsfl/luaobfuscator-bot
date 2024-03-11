@@ -120,7 +120,7 @@ class Command {
         const embed_main = self.Embed({
             color: Colors.Green,
             timestamp: true,
-            title: "Custom Obfuscation",
+            title: "Custom Obfuscation (BETA)",
             description: `${GetEmoji("yes")} Script session created!`,
             fields: [
                 { name: "Script Session:", value: "> " + inlineCode("N/A"), inline: false },
@@ -128,16 +128,16 @@ class Command {
                 { name: "Documentation:", value: `Read our documentation for more information about each plugin.\n${hyperlink("Documentation", self.config.STATUS_DISPLAY.endpoints.forum + "/docs#plugins")}`, inline: false },
             ],
             footer: {
-                text: `Lua Obfuscator Bot`,
+                text: `Lua Obfuscator Bot - This is still in work and might have bugs!`,
                 iconURL: self.config.icon_url,
             }
         }), embed_loading = self.Embed({
             color: Colors.Yellow,
             timestamp: true,
-            title: "Custom Obfuscation",
+            title: "Custom Obfuscation (BETA)",
             description: `${GetEmoji("loading")} Creating script session...`,
             footer: {
-                text: `Lua Obfuscator Bot`,
+                text: `Lua Obfuscator Bot - This is still in work and might have bugs!`,
                 iconURL: self.config.icon_url,
             }
         })
