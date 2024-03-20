@@ -1,5 +1,5 @@
 import * as self from "../index"
-import { Message, TextChannel, inlineCode, Colors, Channel, codeBlock } from "discord.js";
+import { Message, TextChannel, inlineCode, Colors, Channel, codeBlock, hyperlink } from "discord.js";
 import GetEmoji from "./GetEmoji"
 import FormatUptime from "./FormatUptime";
 import FormatBytes from "./FormatBytes";
@@ -83,6 +83,7 @@ export default class StatusDisplay {
                     > **Bot Status**: ${self.client.uptime > 0 ? "Online" : "Offline"} ${self.client.uptime > 0 ? GetEmoji("online") : GetEmoji("offline")}
                     > **Bot Uptime**: ${inlineCode(FormatUptime(self.client.uptime) || "N/A")}
                     > **Members**: ${inlineCode(CountMembers().toString())}
+                    > **Live Status:** ${hyperlink("Status Page", `https://mopsfl.de/status/luaobfuscator`)}
                     `
                 },
                 {

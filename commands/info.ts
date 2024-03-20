@@ -14,6 +14,7 @@ class Command {
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
                 { name: "• Uptime", value: inlineCode(FormatUptime(self.client?.uptime)), inline: true },
+                { name: "• Status Page", value: hyperlink("Lua Obfuscator Bot - Status Page", `https://mopsfl.de/status/luaobfuscator`), inline: false },
                 { name: "• Support Server", value: `${self.config.support_url}`, inline: false },
             ],
             color: Colors.Green,
