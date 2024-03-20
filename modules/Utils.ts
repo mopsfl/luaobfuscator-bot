@@ -57,6 +57,9 @@ export default class Utils {
         }
         return chunks
     }
+    ToBase64(str: string) {
+        return Buffer.from(str).toString("base64")
+    }
 
     async DeleteErrorMessageCallback(msg: Message, deleteMs: number) {
         if (!deleteMs) return;

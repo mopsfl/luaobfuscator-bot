@@ -21,6 +21,7 @@ import CommandCategories from "./modules/CommandCategories"
 import { Cache, FileSystemCache } from "file-system-cache"
 import NoHello from "./modules/NoHello"
 import DeobfLaugh from "./modules/DeobfLaugh"
+import { gzipSync } from "zlib";
 
 const app = express()
 dotenv.config()
@@ -38,6 +39,16 @@ let cache: MemoryCache
 let file_cache: FileSystemCache
 
 const process_path = process.cwd()
+var base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
+
+const cacheValues = {
+    "last_outage": { time: "N/A", affected_services: [] },
+    "outage_log": { outages: [] },
+    "bot_stats": { obfuscations: 0, total_commands_executed: 0 },
+    "cmd_stats": {},
+    "bot_settings": { alerts: true },
+    "error_logs": []
+}
 
 const client = new Client({
     intents: [
@@ -161,12 +172,25 @@ app.listen(process.env.PORT, async () => {
     })
     console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
 
-    if (!file_cache.getSync("last_outage")) file_cache.setSync("last_outage", { time: "N/A", affected_services: [] })
+    /*if (!file_cache.getSync("last_outage")) file_cache.setSync("last_outage", { time: "N/A", affected_services: [] })
     if (!file_cache.getSync("outage_log")) file_cache.setSync("outage_log", { outages: [] })
     if (!file_cache.getSync("bot_stats")) file_cache.setSync("bot_stats", { obfuscations: 0, total_commands_executed: 0 })
     if (!file_cache.getSync("cmd_stats")) file_cache.setSync("cmd_stats", {})
     if (!file_cache.getSync("bot_settings")) file_cache.setSync("bot_settings", { alerts: true })
     if (!file_cache.getSync("error_logs")) file_cache.setSync("error_logs", [])
+
+    const _tempFileCache = file_cache.getSync("outage_log")
+    if (_tempFileCache && !base64regex.test(_tempFileCache)) {
+        //@ts-ignore
+        file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_tempFileCache))))
+    }*/
+    Object.keys(cacheValues).forEach((n, i) => {
+        const _cacheValue = file_cache.getSync(n)
+        if (!_cacheValue) file_cache.setSync(n, Object.values(cacheValues)[i] || {})
+        if (n === "outage_log" && !base64regex.test(_cacheValue)) { //@ts-ignore
+            file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_cacheValue))))
+        }
+    })
 })
 
 app.use(cors())
@@ -175,9 +199,16 @@ app.get("/", async (req, res) => res.sendStatus(200));
 app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplay))
 app.get("/api/v1/cache/:name", async (req, res) => {
     const session_ids: Array<any> = await cache.get("stats_session_ids")
-    if (session_ids && session_ids.includes(req.query.session)) {
-        if (req.params.name === "status_display") return res.json(statusDisplay);
-        return res.json(await file_cache.getSync(req.params.name))
+    if (session_ids && session_ids.includes(req.query.session) || env === "dev") {
+        try {
+            if (req.params.name === "status_display") return res.json(statusDisplay);
+            const cacheValue = await file_cache.getSync(req.params.name)
+            if (!cacheValue) return res.sendStatus(404)
+            return res.setHeader("content-encoding", "gzip").send(Buffer.from(cacheValue, "base64"))
+        } catch (error) {
+            console.error(error)
+            return res.setHeader("content-encoding", "").sendStatus(500)
+        }
     }
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 })

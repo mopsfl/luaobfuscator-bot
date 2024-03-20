@@ -1,5 +1,5 @@
 import * as self from "../index"
-import { Message, TextChannel, inlineCode, Colors, Channel } from "discord.js";
+import { Message, TextChannel, inlineCode, Colors, Channel, codeBlock } from "discord.js";
 import GetEmoji from "./GetEmoji"
 import FormatUptime from "./FormatUptime";
 import FormatBytes from "./FormatBytes";
@@ -7,6 +7,7 @@ import CountMembers from "./CountMembers";
 import getStatusCode from "url-status-code"
 import http_status from "http-status"
 import FormatNumber from "./FormatNumber";
+import { gunzipSync, gzipSync } from "zlib";
 
 export default class StatusDisplay {
     constructor(
@@ -168,7 +169,24 @@ export default class StatusDisplay {
                     responses[value].status = status
                     responses[value].statusText = http_status[status]
                     finished_requests++
-                } else console.error(error);
+                } else {
+                    console.error(error);
+                    let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel)
+                    alert_channel.isTextBased() && alert_channel.send({
+                        content: `<@1111257318961709117>`,
+                        embeds: [
+                            self.Embed({
+                                title: `${GetEmoji("no")} Status Display - Error`,
+                                description: "An unexpected error occurred while updating the status display.",
+                                color: Colors.Red,
+                                fields: [
+                                    { name: "Stack:", value: codeBlock(error.stack), inline: false }
+                                ],
+                                timestamp: true,
+                            })
+                        ]
+                    })
+                }
             }
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
@@ -182,15 +200,15 @@ export default class StatusDisplay {
                     if (self.config.STATUS_DISPLAY.alerts && this.current_outage_length >= 5 && this.current_outage_state == false) {
                         this.current_outage_state = true
                         self.config.STATUS_DISPLAY.ids_to_alert.forEach(async uid => {
-                            let channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
+                            let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
                                 affected_services_text = ""
 
                             affected_services.forEach(service => {
                                 affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status == 200 ? "Online" : "Offline"} ${service.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
                             const bot_settings: self.Bot_Settings = await self.file_cache.get("bot_settings")
-                            if (channel?.isTextBased() && self.env === "prod") {
-                                channel.send({
+                            if (alert_channel?.isTextBased() && self.env === "prod") {
+                                alert_channel.send({
                                     content: bot_settings.alert_pings === true ? `<@${uid}>` : undefined,
                                     embeds: [
                                         self.Embed({
@@ -214,11 +232,16 @@ export default class StatusDisplay {
                         time: new Date().getTime(),
                         affected_services: affected_services
                     }
-                    const outage_log: OutageLog = await self.file_cache.getSync("outage_log")
-                    outage_log.outages.push(this.last_outage)
+                    try {
+                        //@ts-ignore
+                        const outage_log: OutageLog = JSON.parse(gunzipSync(Buffer.from(await self.file_cache.getSync("outage_log"), "base64")))
+                        outage_log.outages.push(this.last_outage)
 
-                    self.file_cache.setSync("last_outage", this.last_outage)
-                    self.file_cache.setSync("outage_log", outage_log)
+                        self.file_cache.setSync("last_outage", this.last_outage) //@ts-ignore
+                        self.file_cache.setSync("outage_log", self.utils.ToBase64(gzipSync(JSON.stringify(outage_log))))
+                    } catch (error) {
+                        console.error(error)
+                    }
                 } else {
                     const last_outage: Outage = await self.file_cache.getSync("last_outage")
                     this.last_outage.state = false
