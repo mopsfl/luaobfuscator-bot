@@ -8,6 +8,7 @@ import getStatusCode from "url-status-code"
 import http_status from "http-status"
 import FormatNumber from "./FormatNumber";
 import { gunzipSync, gzipSync } from "zlib";
+import { randomUUID } from "crypto";
 
 export default class StatusDisplay {
     constructor(
@@ -172,7 +173,8 @@ export default class StatusDisplay {
                     finished_requests++
                 } else {
                     console.error(error);
-                    let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel)
+                    let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
+                        errorId = randomUUID()
                     alert_channel.isTextBased() && alert_channel.send({
                         content: `<@1111257318961709117>`,
                         embeds: [
@@ -183,10 +185,14 @@ export default class StatusDisplay {
                                 fields: [
                                     { name: "Stack:", value: codeBlock(error.stack), inline: false }
                                 ],
+                                footer: {
+                                    text: `errorId: ${errorId}`
+                                },
                                 timestamp: true,
                             })
                         ]
                     })
+                    self.utils.SaveErrorToLogs(errorId, error)
                 }
             }
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
