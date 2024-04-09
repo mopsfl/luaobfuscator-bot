@@ -7,7 +7,7 @@ import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 
 const _plugins = [
-    { label: "MinifyAll", description: `This results in all code on a single line, no comments..`, value: "MinifiyAll" },
+    { label: "MinifyAll", description: `This results the code on a single line, no comments, etc...`, value: "MinifiyAll" },
     { label: "Virtualize", description: `Makes the final code virtualized.`, value: "Virtualize" },
     { label: "EncryptStrings", description: `Encrypts strings into something like local foo = v8('\\x42..')`, value: "EncryptStrings" },
     { label: "MutateAllLiterals", description: `Mutates all numeric literals into basic +/- binary nodes.`, value: "MutateAllLiterals" },
@@ -38,7 +38,14 @@ const _plugins = [
     "WriteLuaBit32": true,
     "Virtualize": true,
     "MinifiyAll": true,
-}, _isObfuscating = []
+}, _presets = [
+    { label: "Chaotic Evil", value: "Chaotic Evil" },
+    { label: "Chaotic Good", value: "Chaotic Good" },
+    { label: "Obfuscate", value: "Obfuscate" },
+    { label: "Basic Good", value: "Basic Good" },
+    { label: "Basic Minimal", value: "Basic Minimal" },
+],
+    _isObfuscating = []
 
 
 class Command {
@@ -91,19 +98,23 @@ class Command {
 
         const select = new StringSelectMenuBuilder()
             .setCustomId("select_plugins")
-            .setPlaceholder("Select an option")
+            .setPlaceholder("Select a plugin")
             .setOptions(_plugins)
             .addOptions(
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Back')
                     .setValue('back')
-                    .setEmoji("<:update:1129139085362090145>")
+                    .setEmoji("◀️")
             ),
             obfuscate = new ButtonBuilder()
                 .setLabel("Obfuscate")
                 .setCustomId("obfuscate")
                 .setEmoji("<:update:1129139085362090145>")
                 .setStyle(ButtonStyle.Success),
+            setpreset = new ButtonBuilder()
+                .setLabel("Change Preset")
+                .setCustomId("setpreset")
+                .setStyle(ButtonStyle.Primary),
             options = new ButtonBuilder()
                 .setLabel("Customize Plugins")
                 .setCustomId("options")
@@ -124,7 +135,7 @@ class Command {
             description: `${GetEmoji("yes")} Script session created!`,
             fields: [
                 { name: "Script Session:", value: "> " + inlineCode("N/A"), inline: false },
-                { name: "Selected Plugins:", value: inlineCode("Default"), inline: false },
+                { name: "Selected Plugins:", value: inlineCode("Default Preset"), inline: false },
                 { name: "Documentation:", value: `Read our documentation for more information about each plugin.\n${hyperlink("Documentation", self.config.STATUS_DISPLAY.endpoints.forum + "/docs#plugins")}`, inline: false },
             ],
             footer: {
@@ -145,7 +156,7 @@ class Command {
         let selected_plugins = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} }
 
         try {
-            let row_buttons: any = new ActionRowBuilder().addComponents(obfuscate, options, cancel),
+            let row_buttons: any = new ActionRowBuilder().addComponents(obfuscate, setpreset, options, cancel),
                 row_buttons2: any = new ActionRowBuilder().addComponents(continueObf),
                 row_plugins: any = new ActionRowBuilder().addComponents(select),
                 response = await cmd.message.reply({ embeds: [embed_loading] }),
@@ -178,7 +189,7 @@ class Command {
                                 embed_main.setColor(Colors.Yellow).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("loading")} Obfuscating script! Please wait...`)
                                 await response.edit({ components: [row_buttons], embeds: [embed_main] })
                                 // todo: make this smaller
-                                if (embed_main.data.fields[1].value === "`Default`") {
+                                if (embed_main.data.fields[1].value === "`Default Preset`") {
                                     await self.utils.obfuscateScript(script_content, cmd.message).then(async res => {
                                         if (!res?.code) {
                                             embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
@@ -263,9 +274,12 @@ class Command {
                                     }
                                 })
                                 break;
+                            case "setpreset":
+                                i.deferUpdate()
+                                break;
                             case "continue":
                                 selected_plugins = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} }
-                                embed_main.data.fields[1].value = inlineCode("Default")
+                                embed_main.data.fields[1].value = inlineCode("Default Preset")
                                 embed_main.setColor(Colors.Green).setDescription(`${GetEmoji("yes")} Script session created!`)
                                 select.setOptions(_plugins).addOptions(
                                     new StringSelectMenuOptionBuilder()
