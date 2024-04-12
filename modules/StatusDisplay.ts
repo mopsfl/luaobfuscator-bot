@@ -173,7 +173,7 @@ export default class StatusDisplay {
                     finished_requests++
                 } else {
                     console.error(error);
-                    let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
+                    /*let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
                         errorId = randomUUID()
                     alert_channel.isTextBased() && alert_channel.send({
                         content: `<@1111257318961709117>`,
@@ -192,7 +192,7 @@ export default class StatusDisplay {
                             })
                         ]
                     })
-                    self.utils.SaveErrorToLogs(errorId, error)
+                    self.utils.SaveErrorToLogs(errorId, error)*/
                 }
             }
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {

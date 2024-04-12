@@ -31,7 +31,7 @@ export default class ObfuscatorStats {
         return await this.Set(current_stats);
     }
 
-    async ParseCurrentStat(name?: "total_file_uploads" | "total_obfuscations") {
+    async ParseCurrentStat(name?: "total_file_uploads" | "total_obfuscations", returnFullStatList = false) {
         let current_stats = await this.Get(),
             req_stats = []
 
@@ -45,8 +45,9 @@ export default class ObfuscatorStats {
 
             if (previous_index <= -1) previous_index = 1
             if (req_stats[previous_index] > 0) req_stats[current_index] = (req_stats[current_index] - req_stats[previous_index])
+            if (req_stats[current_index] < 0) req_stats[current_index] = 0
         })
-        return req_stats.slice(req_stats.length - 7);
+        return !returnFullStatList ? req_stats.slice(req_stats.length - 7) : req_stats
     }
 }
 

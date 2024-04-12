@@ -196,18 +196,22 @@ app.listen(process.env.PORT, async () => {
 app.use(cors())
 app.use((req, res, next) => { res.removeHeader("X-Powered-By"); next() })
 app.get("/", async (req, res) => res.sendStatus(200));
+app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
+    total_obfuscations: await obfuscatorStats.ParseCurrentStat("total_obfuscations", true),
+    total_file_uploads: await obfuscatorStats.ParseCurrentStat("total_file_uploads", true),
+}))
 app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplay))
 app.get("/api/v1/cache/:name", async (req, res) => {
     const session_ids: Array<any> = await cache.get("stats_session_ids")
     if (session_ids && session_ids.includes(req.query.session) || env === "dev") {
+        const cacheValue = await file_cache.getSync(req.params.name)
         try {
             if (req.params.name === "status_display") return res.json(statusDisplay);
-            const cacheValue = await file_cache.getSync(req.params.name)
             if (!cacheValue) return res.sendStatus(404)
             return res.setHeader("content-encoding", "gzip").send(Buffer.from(cacheValue, "base64"))
         } catch (error) {
             console.error(error)
-            return res.setHeader("content-encoding", "").sendStatus(500)
+            return res.setHeader("content-encoding", "").json(cacheValue)
         }
     }
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
