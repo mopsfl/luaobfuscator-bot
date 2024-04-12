@@ -321,7 +321,7 @@ class Command {
                                     _userSavesSelect.addOptions(new StringSelectMenuOptionBuilder()
                                         .setLabel(_save_id)
                                         .setValue(_save_id)
-                                        .setDescription(self.utils.ObjectKeysToString(_savePlugins, [false])))
+                                        .setDescription(self.utils.ObjectKeysToString(_savePlugins, [false]).slice(0, 100)))
                                 })
 
                                 if (Object.keys(_userSaves).length <= 0) {
