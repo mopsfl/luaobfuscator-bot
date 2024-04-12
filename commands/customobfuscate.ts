@@ -1,7 +1,7 @@
 // todo: when selecting to custom plugins, use default obfuscation. only create session when using customize plugins.
 //       fix continue not switching sessions when using default obfuscate first
 
-import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, Colors, ComponentType, hyperlink, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, codeBlock, Colors, ComponentType, hyperlink, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
@@ -46,7 +46,6 @@ const _plugins = [
     { label: "Basic Minimal", value: "Basic Minimal" },
 ],
     _isObfuscating = []
-
 
 class Command {
     name = ["customobfuscate", "co", "cobf"]
@@ -115,6 +114,10 @@ class Command {
                 .setLabel("Change Preset")
                 .setCustomId("setpreset")
                 .setStyle(ButtonStyle.Primary),
+            loadsave = new ButtonBuilder()
+                .setLabel("Load Custom Presets")
+                .setCustomId("loadsave")
+                .setStyle(ButtonStyle.Primary),
             options = new ButtonBuilder()
                 .setLabel("Customize Plugins")
                 .setCustomId("options")
@@ -126,7 +129,11 @@ class Command {
             continueObf = new ButtonBuilder()
                 .setLabel("Continue obfuscation")
                 .setCustomId("continue")
-                .setStyle(ButtonStyle.Success)
+                .setStyle(ButtonStyle.Success),
+            savePlugins = new ButtonBuilder()
+                .setLabel("Save as Preset")
+                .setCustomId("saveplugins")
+                .setStyle(ButtonStyle.Primary)
 
         const embed_main = self.Embed({
             color: Colors.Green,
@@ -153,17 +160,19 @@ class Command {
             }
         })
 
-        let selected_plugins = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} }
+        let selected_plugins = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} },
+            _loaded_userpluginsave = false
 
         try {
-            let row_buttons: any = new ActionRowBuilder().addComponents(obfuscate, setpreset, options, cancel),
-                row_buttons2: any = new ActionRowBuilder().addComponents(continueObf),
+            let row_buttons: any = new ActionRowBuilder().addComponents(obfuscate, options, loadsave, cancel),
+                row_buttons2: any = new ActionRowBuilder().addComponents(continueObf, savePlugins),
                 row_plugins: any = new ActionRowBuilder().addComponents(select),
                 response = await cmd.message.reply({ embeds: [embed_loading] }),
                 collector_mainButtons = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 })
 
             self.utils.NewPromise(60000, async (resolve: Function, reject: Function) => {
                 await self.utils.createSession(script_content).then(async _response => {
+                    if (!_response) return self.utils.SendErrorMessage("error", cmd, "Unable to create sessionId!", "API Error")
                     console.log(`created new script session ${_response.sessionId}`);
 
                     resolve();
@@ -201,8 +210,11 @@ class Command {
 
                                         script_content = res?.code
                                         session = res?.sessionId
-                                        console.log(session);
                                         file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${session}.lua`)
+
+                                        if (_loaded_userpluginsave === true || embed_main.data.fields[1].value === "`Default Preset`") {
+                                            row_buttons2.components.splice(1, 1)
+                                        }
                                         await response.edit({
                                             files: [file_attachment],
                                             components: [row_buttons2],
@@ -222,6 +234,10 @@ class Command {
 
                                         script_content = res?.code
                                         file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${session}.lua`)
+
+                                        if (_loaded_userpluginsave === true || embed_main.data.fields[1].value === "`Default Preset`") {
+                                            row_buttons2.components.splice(1, 1)
+                                        }
                                         await response.edit({
                                             files: [file_attachment],
                                             components: [row_buttons2],
@@ -260,7 +276,7 @@ class Command {
                                             select.spliceOptions(optionIndex, 1)
 
                                             row_plugins = new ActionRowBuilder().addComponents(select)
-                                            if (embed_main.data.fields[1].value === "`Default`") embed_main.data.fields[1].value = ""
+                                            if (embed_main.data.fields[1].value === "`Default Preset`") embed_main.data.fields[1].value = ""
                                             embed_main.data.fields[1].value = embed_main.data.fields[1].value + `\n> ${inlineCode(selection)}`
                                             if (selected_plugins[selection] !== undefined) {
                                                 selected_plugins[selection] = plugin_presets[selection]
@@ -293,6 +309,61 @@ class Command {
                                 })
                                 response.edit({ components: [row_buttons], files: [], embeds: [embed_main] })
                                 await i.deferUpdate()
+                                break;
+                            case "loadsave":
+                                const _userSaves = await self.userPluginSaves.GetUserPluginSaves(cmd.message.author.id),
+                                    _userSavesSelect = new StringSelectMenuBuilder()
+                                        .setCustomId("_userSavesSelect")
+                                        .setPlaceholder("Select your save")
+
+                                Object.keys(_userSaves).forEach(_save_id => {
+                                    const _savePlugins = _userSaves[_save_id]
+                                    _userSavesSelect.addOptions(new StringSelectMenuOptionBuilder()
+                                        .setLabel(_save_id)
+                                        .setValue(_save_id)
+                                        .setDescription(self.utils.ObjectKeysToString(_savePlugins, [false])))
+                                })
+
+                                if (Object.keys(_userSaves).length <= 0) {
+                                    const _iResponse = i.reply({
+                                        embeds: [self.Embed({
+                                            color: Colors.Red,
+                                            title: `${GetEmoji("no")} Error`,
+                                            description: codeBlock(`You don't have any custom presets saved.`),
+                                            timestamp: true
+                                        })]
+                                    }).then(msg => {
+                                        setTimeout(() => {
+                                            msg.delete()
+                                        }, 5000);
+                                    })
+                                    return;
+                                }
+
+                                const _user_saves_row: any = new ActionRowBuilder().addComponents(_userSavesSelect);
+                                response.edit({ components: [_user_saves_row], files: [], embeds: [embed_main] })
+                                i.deferUpdate()
+
+                                const collector_userSaves = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 120000 })
+                                collector_userSaves.on("collect", async i_usersaves => {
+                                    const selection = i_usersaves.values[0]
+                                    if (_userSaves[selection]) {
+                                        selected_plugins = _userSaves[selection]
+                                        const _pluginNames = self.userPluginSaves.GetPluginNamesFromPluginObject(selected_plugins, [false])
+                                        _pluginNames.forEach(_pname => {
+                                            if (embed_main.data.fields[1].value === "`Default Preset`") embed_main.data.fields[1].value = ""
+                                            embed_main.data.fields[1].value = embed_main.data.fields[1].value + `\n> ${inlineCode(_pname)}`
+                                        })
+                                    }
+                                    _loaded_userpluginsave = true
+                                    i_usersaves.deferUpdate()
+                                    response.edit({ components: [row_buttons], files: [], embeds: [embed_main] })
+                                })
+                                break;
+                            case "saveplugins":
+                                const [_userPresetSaveId, _saved_plugins] = await self.userPluginSaves.SaveUserPluginPreset(cmd.message.author.id, selected_plugins)
+                                console.log(_userPresetSaveId, _saved_plugins);
+                                i.reply({ content: `plugin preset saved with id ${_userPresetSaveId}` })
                                 break;
                             default:
                                 i.deferUpdate()

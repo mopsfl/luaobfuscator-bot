@@ -19,7 +19,7 @@ export default class Utils {
     createSession = async function (script: string) {
         try {
             const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } })
-            return response.json()
+            return response.ok && response.json()
         } catch (error) {
             console.error(error)
         }
@@ -165,6 +165,23 @@ export default class Utils {
                 (error: any) => { clearTimeout(timer); reject(error) }
             );
         });
+    }
+
+    ObjectKeysToString(obj: {}, ignoredValues = []) {
+        let str = "";
+        function traverse(_obj: {}) {
+            Object.keys(_obj).forEach(key => {
+                if (Array.isArray(_obj[key]) && !ignoredValues.includes(_obj[key])) {
+                    str += `${key}, `;
+                } else if (typeof _obj[key] === "object") {
+                    traverse(_obj[key]);
+                } else {
+                    if (!ignoredValues.includes(_obj[key])) str += `${key}, `;
+                }
+            });
+        }
+        traverse(obj);
+        return str.replace(/,\s$/g, "");
     }
 }
 

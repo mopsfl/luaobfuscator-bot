@@ -18,6 +18,7 @@ import StatusDisplay from "./modules/StatusDisplay"
 import ChartImage from "./modules/ChartImage"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
 import CommandCategories from "./modules/CommandCategories"
+import UserPluginSaves from "./modules/UserPluginSaves"
 import { Cache, FileSystemCache } from "file-system-cache"
 import NoHello from "./modules/NoHello"
 import DeobfLaugh from "./modules/DeobfLaugh"
@@ -34,6 +35,7 @@ const statusDisplay = new StatusDisplay()
 const chartImage = new ChartImage()
 const commandCategories = new CommandCategories()
 const obfuscatorStats = new ObfuscatorStats()
+const userPluginSaves = new UserPluginSaves()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
@@ -47,7 +49,8 @@ const cacheValues = {
     "bot_stats": { obfuscations: 0, total_commands_executed: 0 },
     "cmd_stats": {},
     "bot_settings": { alerts: true },
-    "error_logs": []
+    "error_logs": [],
+    "customobfuscate_usersaves": {}
 }
 
 const client = new Client({
@@ -223,7 +226,7 @@ export interface Bot_Settings {
 
 export {
     Embed, Debug,
-    statusDisplay, command, session, chartImage, commandCategories, utils, obfuscatorStats,
+    statusDisplay, command, session, chartImage, commandCategories, utils, obfuscatorStats, userPluginSaves,
     client, config, env, cache, file_cache,
     start_tick
 }
