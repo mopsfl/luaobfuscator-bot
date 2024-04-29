@@ -4,9 +4,9 @@ import { Message } from "discord.js";
 import * as self from "../index";
 
 const reference = [
-    ["I", "me", "my", "own"],
-    ["need", "must", "have", "should", "will", "want"],
-    ["deobfuscator", "deobf", "de-obf", "de-obfuscator", "deobfuscating", "deobfsc", "deobfuscat", "unobfuscate", "un obfuscate"]
+    ["i", "me", "my", "own", "can"],
+    ["need", "must", "have", "should", "will", "want", "someone", "u", "you"],
+    ["deobfuscator", "deobf", "de-obf", "de-obfuscator", "deobfuscating", "deobfsc", "deobfuscat", "unobfuscate", "decompile", "decrypt", "unencrypt"]
 ]
 
 const LaughGifUrl = "https://tenor.com/view/haha-gif-6815166390687140758"

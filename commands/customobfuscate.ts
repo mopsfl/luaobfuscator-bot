@@ -1,7 +1,7 @@
 // todo: when selecting to custom plugins, use default obfuscation. only create session when using customize plugins.
-//       fix continue not switching sessions when using default obfuscate first
+//       fix crash (unknown interaction) after continuing obfuscation
 
-import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, codeBlock, Colors, ComponentType, hyperlink, inlineCode, quote, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, CacheType, codeBlock, Colors, ComponentType, hyperlink, inlineCode, InteractionCollector, Message, quote, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
@@ -172,7 +172,7 @@ class Command {
 
             self.utils.NewPromise(60000, async (resolve: Function, reject: Function) => {
                 await self.utils.createSession(script_content).then(async _response => {
-                    if (!_response) return self.utils.SendErrorMessage("error", cmd, "Unable to create sessionId!", "API Error")
+                    if (!_response || !_response.sessionId) return self.utils.SendErrorMessage("error", cmd, "Unable to create sessionId!", "API Error")
                     console.log(`created new script session ${_response.sessionId}`);
 
                     resolve();
@@ -184,6 +184,7 @@ class Command {
                         _isObfuscating[cmd.message.author.id] = false
                     })
                     collector_mainButtons.on("collect", async i => {
+                        var response_plugins: Message, collector_plugins: InteractionCollector<StringSelectMenuInteraction<CacheType>>
                         if (i.user.id !== cmd.message.author.id) {
                             i.deferUpdate()
                             return;
@@ -256,14 +257,16 @@ class Command {
                                 break;
                             case "options":
                                 i.deferUpdate()
-                                var response_plugins = await response.edit({ components: [row_plugins] }),
-                                    collector_plugins = response_plugins.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_00 })
+                                if (collector_plugins) collector_plugins.stop()
+                                response_plugins = await response.edit({ components: [row_plugins] })
+                                collector_plugins = response_plugins.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_00 })
 
                                 collector_plugins.on("collect", async i_plugins => {
                                     if (i_plugins.user.id !== cmd.message.author.id) {
                                         i_plugins.deferUpdate()
                                         return;
                                     }
+
                                     const selection = i_plugins.values[0]
                                     switch (selection) {
                                         case "back":
@@ -325,7 +328,7 @@ class Command {
                                 })
 
                                 if (Object.keys(_userSaves).length <= 0) {
-                                    const _iResponse = i.reply({
+                                    i.reply({
                                         embeds: [self.Embed({
                                             color: Colors.Red,
                                             title: `${GetEmoji("no")} Error`,
