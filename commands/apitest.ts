@@ -8,6 +8,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Makes a test request to the luaobfuscator bot api."
     permissions = [PermissionFlagsBits.Administrator]
+    public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {

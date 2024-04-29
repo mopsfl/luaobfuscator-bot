@@ -8,6 +8,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Forces to update the status display informations."
     permissions = [PermissionFlagsBits.Administrator]
+    public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {

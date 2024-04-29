@@ -38,6 +38,7 @@ export default class Command {
         if (typeof (cmd.callback) != "function") return new Error("callback is not a <Function>")
         if (!(cmd.message instanceof Message)) return new Error("message is not a <Message>")
         if (!cmd.allowed) return self.utils.SendErrorMessage("permission", cmd, "Missing required permissions.")
+        if (!cmd.public_command && !self.config.allowed_guild_ids.includes(cmd.message.guildId)) return self.utils.SendErrorMessage("permission", cmd, "This command is disabled for this guild.")
         if (this.ratelimits.get(cmd.message.author.id) === true) return await self.utils.SendErrorMessage("ratelimit", cmd, null, null, null, 5000);
         try {
             const bot_stats: BotStats = await self.file_cache.get("bot_stats"),
@@ -78,7 +79,8 @@ export interface command {
     category: "Bot" | "Misc" | "Lua Obfuscator",
     direct_message: boolean,
     description: string,
-    syntax_usage: string
+    syntax_usage: string,
+    public_command: boolean
 }
 
 export interface cmdStructure {
@@ -93,4 +95,5 @@ export interface cmdStructure {
     timestamp: number,
     allowed: boolean,
     success: boolean,
+    public_command: boolean
 }

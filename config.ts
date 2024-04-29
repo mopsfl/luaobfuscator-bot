@@ -13,6 +13,8 @@ export default class Config {
     api_url = "https://luaobfuscator.com/api/obfuscator/"
     icon_url = "https://luaobfuscator.com/img/logo.png"
 
+    allowed_guild_ids = ["1112349916744917054", "1129884318634877032"]
+
     prod = {
         SERVER_ID: "1112349916744917054",
         STATUS_CHANNEL_ID: "1128995128745402468"

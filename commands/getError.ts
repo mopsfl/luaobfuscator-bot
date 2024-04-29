@@ -9,6 +9,7 @@ class Command {
     description = "Returns the information of the given error id."
     permissions = [PermissionFlagsBits.Administrator]
     syntax_usage = "<error_id>"
+    public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {

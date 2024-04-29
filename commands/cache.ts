@@ -27,6 +27,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Create a temporary link to access some data from the cache."
     permissions = [PermissionFlagsBits.Administrator]
+    public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {

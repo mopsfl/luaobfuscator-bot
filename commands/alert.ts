@@ -9,6 +9,7 @@ class Command {
     category = self.commandCategories.Misc
     description = "Toggles the api outage alert pings."
     permissions = [PermissionFlagsBits.Administrator]
+    public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {

@@ -115,6 +115,7 @@ client.on("messageCreate", async (message) => {
         command.commands.forEach(async c => {
             if (typeof (c.name) == "object" && !c.name.includes(_command) || typeof (c.name) == "string" && c.name != _command) return
             if (message.channel.isDMBased() && c.direct_message == false) return console.log(`> command '${c.name}', requested by '${message.author.username}', blocked. (direct_message not allowed)`);
+
             let allowed = true
             for (let i = 0; i < c.permissions?.length; i++) {
                 const permission_bit = c.permissions[i];
@@ -134,7 +135,8 @@ client.on("messageCreate", async (message) => {
                 message: message,
                 timestamp: new Date().getTime(),
                 allowed: allowed,
-                success: false
+                success: false,
+                public_command: c.public_command
             }
 
             await command.handleCommand(cmd)
