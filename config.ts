@@ -13,6 +13,8 @@ export default class Config {
     api_url = "https://luaobfuscator.com/api/obfuscator/"
     icon_url = "https://luaobfuscator.com/img/logo.png"
 
+    repo_commits_url = "https://api.github.com/repos/mopsfl/luaobfuscator-bot/commits?page=1&per_page=1"
+
     allowed_guild_ids = ["1112349916744917054", "1129884318634877032"]
 
     prod = {

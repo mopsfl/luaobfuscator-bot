@@ -6,5 +6,5 @@ export default function (ms: number): string {
     totalSeconds %= 3600;
     let minutes = Math.floor(totalSeconds / 60);
     let seconds = Math.floor(totalSeconds % 60);
-    return `${days > 0 ? days + " days, " : ""}${hours > 0 ? hours + " hrs, " : ""}${minutes > 0 ? minutes + " mins, " : ""}${seconds} secs`
+    return `${days > 0 ? days + " day(s), " : ""}${hours > 0 ? hours + " hr(s), " : ""}${minutes > 0 ? minutes + " min(s), " : ""}${seconds} sec(s)`
 }
