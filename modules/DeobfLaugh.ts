@@ -23,10 +23,8 @@ export default function (message: Message) {
     const ref1 = reference[0].some(keyword => msg.includes(keyword));
     const ref2 = reference[1].some(keyword => msg.includes(keyword));
     const ref3 = reference[2].some(keyword => msg.includes(keyword));
+    const term = ref1 && ref2 && ref3
+    if (term) message.reply(LaughGifUrl);
 
-    if (ref1 && ref2 && ref3) {
-        message.reply(LaughGifUrl);
-    }
-
-    return true
+    return term
 }
