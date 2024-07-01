@@ -10,7 +10,7 @@ class Command {
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
-    category = self.commandCategories.Bot
+    category = self.commandCategories.Misc
     description = "Creates a backup of all cache keys and its values."
 
     callback = async (cmd: cmdStructure) => {
@@ -29,8 +29,8 @@ class Command {
         fastFolderSize(process.cwd() + "/.cache", async (err, bytes) => {
             if (err) return console.error(err)
 
-            let _timeGetCache = new Date().getTime()
             await cmd.message.reply({ embeds: [embed] }).then(async msg => {
+                let _timeGetCache = new Date().getTime()
                 Object.keys(self.cacheValues).forEach(async (ckey, idx) => {
                     _cacheValues[ckey] = await self.file_cache.get(ckey).catch(console.error)
 
@@ -40,7 +40,7 @@ class Command {
                         msg.edit({ embeds: [embed] })
                         let _timeUploadCache = new Date().getTime()
 
-                        await fetch(process.env.CLOUDFLARE_KV_APIURL + process.env.CLOUDFLARE_KV_BACKUP_KEY, {
+                        await fetch(process.env.CLOUDFLARE_KV_WRITEAPIURL + process.env.CLOUDFLARE_KV_BACKUP_KEY, {
                             method: "POST",
                             body: JSON.stringify({ value: self.utils.ToBase64(JSON.stringify(_cacheValues)), metadata: { time: new Date().getTime(), saved_keys: Object.keys(self.cacheValues) } })
                         }).then(res => res.json()).then((res: CloudflareKVResponse) => {
