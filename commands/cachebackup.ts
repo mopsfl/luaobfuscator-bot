@@ -4,6 +4,7 @@ import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import fastFolderSize from "fast-folder-size";
 import FormatBytes from "../modules/FormatBytes";
+import { gzipSync } from "zlib";
 
 class Command {
     name = ["cachebackup"]
@@ -40,20 +41,37 @@ class Command {
                         msg.edit({ embeds: [embed] })
                         let _timeUploadCache = new Date().getTime()
 
-                        await fetch(process.env.CLOUDFLARE_KV_WRITEAPIURL + process.env.CLOUDFLARE_KV_BACKUP_KEY, {
-                            method: "POST",
-                            body: JSON.stringify({ value: self.utils.ToBase64(JSON.stringify(_cacheValues)), metadata: { time: new Date().getTime(), saved_keys: Object.keys(self.cacheValues) } })
-                        }).then(res => res.json()).then((res: CloudflareKVResponse) => {
-                            if (res.success) {
-                                embed.setDescription(`${GetEmoji("yes")} Cache values fetched. (took ${inlineCode(_timeGetCacheDone)})\n${GetEmoji("yes")} Cache data uploaded! (took ${inlineCode(`${new Date().getTime() - _timeUploadCache}ms`)})\n\nBackup Size: ${inlineCode(FormatBytes(bytes))}`)
-                                embed.setColor(Colors.Green)
-                                msg.edit({ embeds: [embed] })
-                            } else {
-                                embed.setDescription(`${GetEmoji("yes")} Cache values fetched. (took ${inlineCode(_timeGetCacheDone)})\n${GetEmoji("no")} Error while uploading cache data! (code: ${res.errors[0].code})`)
+                        try {
+                            //@ts-ignore
+                            const compressed_backup = self.utils.ToBase64(gzipSync(JSON.stringify(_cacheValues)))
+                            await fetch(process.env.CLOUDFLARE_KV_WRITEAPIURL + process.env.CLOUDFLARE_KV_BACKUP_KEY, {
+                                method: "POST",
+                                body: JSON.stringify({ value: compressed_backup, metadata: { time: new Date().getTime(), saved_keys: Object.keys(self.cacheValues) } })
+                            }).then(res => res.json()).then((res: CloudflareKVResponse) => {
+                                if (res.success) {
+                                    embed.setDescription(`${GetEmoji("yes")} Cache values fetched. (took ${inlineCode(_timeGetCacheDone)})\n${GetEmoji("yes")} Cache data uploaded! (took ${inlineCode(`${new Date().getTime() - _timeUploadCache}ms`)})\n\nBackup Size: ${inlineCode(FormatBytes(bytes))}`)
+                                    embed.setColor(Colors.Green)
+                                    msg.edit({ embeds: [embed] })
+                                } else {
+                                    embed.setDescription(`${GetEmoji("yes")} Cache values fetched. (took ${inlineCode(_timeGetCacheDone)})\n${GetEmoji("no")} Error while uploading cache data! (code: ${res.errors[0].code})`)
+                                    embed.setColor(Colors.Red)
+                                    msg.edit({ embeds: [embed] })
+                                }
+                            }).catch(async error => {
+                                embed.setDescription(`${GetEmoji("no")} Failed to upload backup!`)
                                 embed.setColor(Colors.Red)
-                                msg.edit({ embeds: [embed] })
-                            }
-                        })
+                                await msg.edit({ embeds: [embed] })
+                                self.utils.SendErrorMessage("error", cmd, error)
+                                return
+                            })
+                        } catch (error) {
+                            console.error(error)
+                            embed.setDescription(`${GetEmoji("no")} Failed to upload backup!`)
+                            embed.setColor(Colors.Red)
+                            await msg.edit({ embeds: [embed] })
+                            self.utils.SendErrorMessage("error", cmd, error)
+                            return
+                        }
                     }
                 })
             })
