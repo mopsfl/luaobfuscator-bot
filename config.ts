@@ -38,7 +38,7 @@ export default class Config {
         endpoints: {
             homepage: "https://luaobfuscator.com",
             forum: "https://luaobfuscator.com/forum",
-            api: "https://luaobfuscator.com/api/obfuscator/newscript",
+            api: "https://api.luaobfuscator.com/v1/obfuscator/newscript",
             server: "https://luaobfuscator.com/forum/stats",
         }
     }
