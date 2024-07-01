@@ -83,7 +83,7 @@ client.on("ready", async () => {
         }, config.status_update_interval)
     })
 
-    //command register
+    // register commands
     const commands: any = new Collection()
     command.commands = commands
     fs.readdir(`${process_path}/commands`, (err, files) => {
@@ -95,7 +95,7 @@ client.on("ready", async () => {
             commands.set(cmd.name[0], cmd)
         })
     })
-    //statusDisplay recursion
+    // statusDisplay recursion
     const actionRecursion = async () => {
         await action_updateStats().then((res) => {
             setTimeout(actionRecursion, 100)
@@ -189,8 +189,8 @@ app.listen(process.env.PORT, async () => {
         //@ts-ignore
         file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_tempFileCache))))
     }*/
-    Object.keys(cacheValues).forEach((n, i) => {
-        const _cacheValue = file_cache.getSync(n)
+    Object.keys(cacheValues).forEach(async (n, i) => {
+        const _cacheValue = await file_cache.get(n).catch(console.error)
         if (!_cacheValue) file_cache.setSync(n, Object.values(cacheValues)[i] || {})
         if (n === "outage_log" && !base64regex.test(_cacheValue)) { //@ts-ignore
             file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_cacheValue))))
@@ -229,6 +229,6 @@ export interface Bot_Settings {
 export {
     Embed, Debug,
     statusDisplay, command, session, chartImage, commandCategories, utils, obfuscatorStats, userPluginSaves,
-    client, config, env, cache, file_cache,
+    client, config, env, cache, file_cache, cacheValues,
     start_tick
 }
