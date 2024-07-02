@@ -7,7 +7,6 @@ import express from "express"
 import dotenv from "dotenv"
 import fs from "fs"
 import cors from "cors"
-import path from "path"
 import Config from "./config"
 import Utils from "./modules/Utils"
 import Command, { cmdStructure, command } from "./modules/Command"
@@ -148,22 +147,10 @@ client.on("messageCreate", async (message) => {
 
 app.listen(process.env.PORT, async () => {
     cache = await caching("memory")
-    //await cache.set("debug", [])
     await cache.set("stats_session_ids", [])
-    //await cache.set("command_log", [])
     file_cache = new Cache({
         basePath: "./.cache",
         ttl: Infinity,
-    })
-    if (!fs.existsSync(process_path + "/.cache")) fs.mkdirSync(process_path + "/.cache")
-    if (!fs.existsSync(process_path + "/.cache/charts")) fs.mkdirSync(process_path + "/.cache/charts")
-    fs.readdir(process_path + "/.cache/charts", (err, files) => {
-        if (err) throw err
-        files.forEach(f => {
-            fs.unlink(path.join(process_path + "/.cache/charts", f), (err) => {
-                if (err) throw err
-            })
-        })
     })
 
     file_cache.fileExists(obfuscatorStats.file_cache_name).then(async file => {
@@ -171,24 +158,9 @@ app.listen(process.env.PORT, async () => {
     })
 
     console.log(`> express server listening on port ${process.env.PORT}\n> logging in...`)
-    DISABLE_DISCORDLOGIN && console.log("> discord login blocked")
-    !DISABLE_DISCORDLOGIN && await client.login(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]).then(async () => {
+    !DISABLE_DISCORDLOGIN ? await client.login(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]).then(async () => {
         console.log(`> logged in as ${client.user.username}`)
-    })
-    console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
-
-    /*if (!file_cache.getSync("last_outage")) file_cache.setSync("last_outage", { time: "N/A", affected_services: [] })
-    if (!file_cache.getSync("outage_log")) file_cache.setSync("outage_log", { outages: [] })
-    if (!file_cache.getSync("bot_stats")) file_cache.setSync("bot_stats", { obfuscations: 0, total_commands_executed: 0 })
-    if (!file_cache.getSync("cmd_stats")) file_cache.setSync("cmd_stats", {})
-    if (!file_cache.getSync("bot_settings")) file_cache.setSync("bot_settings", { alerts: true })
-    if (!file_cache.getSync("error_logs")) file_cache.setSync("error_logs", [])
-
-    const _tempFileCache = file_cache.getSync("outage_log")
-    if (_tempFileCache && !base64regex.test(_tempFileCache)) {
-        //@ts-ignore
-        file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_tempFileCache))))
-    }*/
+    }) : console.log("> discord login blocked")
     Object.keys(cacheValues).forEach(async (n, i) => {
         const _cacheValue = await file_cache.get(n).catch(console.error)
         if (!_cacheValue) file_cache.setSync(n, Object.values(cacheValues)[i] || {})
@@ -196,6 +168,8 @@ app.listen(process.env.PORT, async () => {
             file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_cacheValue))))
         }
     })
+
+    console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
 })
 
 app.use(cors())
@@ -205,7 +179,15 @@ app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
     total_obfuscations: await obfuscatorStats.ParseCurrentStat("total_obfuscations", true),
     total_file_uploads: await obfuscatorStats.ParseCurrentStat("total_file_uploads", true),
 }))
+
 app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplay))
+app.get("/api/v1/commands/:cmdname", (req, res) => {
+    const _command: any = command.commands.get(req.params.cmdname)
+    if (_command.permissions) _command.permissions.forEach((v: any, i: number) => _command.permissions[i] = utils.getPermissionsName(v))
+    if (_command.callback) _command.callback = typeof (_command.callback)
+    res.json(_command)
+})
+
 app.get("/api/v1/cache/:name", async (req, res) => {
     const session_ids: Array<any> = await cache.get("stats_session_ids")
     if (session_ids && session_ids.includes(req.query.session) || env === "dev") {
