@@ -15,6 +15,7 @@ class Command {
         self.command.commands.forEach(_command => {
             if (!validcommand) {
                 validcommand = cmd.arguments[0] && typeof (cmd.arguments[0]) === "string" && _command.name.includes(cmd.arguments[0].replace(/\!/, ""))
+                if (cmd.public_command === false && !self.config.allowed_guild_ids.includes(cmd.message.guildId)) validcommand = false
                 fullcommand_name = _command.name[0]
             }
         })
