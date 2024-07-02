@@ -5,6 +5,8 @@ import GetEmoji from "../modules/GetEmoji";
 import fastFolderSize from "fast-folder-size";
 import FormatBytes from "../modules/FormatBytes";
 import { gzipSync } from "zlib";
+import { CloudflareKVResponse } from "./getcachebackup";
+import CacheBackup from "../modules/CacheBackup";
 
 class Command {
     name = ["cachebackup"]
@@ -42,12 +44,7 @@ class Command {
                         let _timeUploadCache = new Date().getTime()
 
                         try {
-                            //@ts-ignore
-                            const compressed_backup = self.utils.ToBase64(gzipSync(JSON.stringify(_cacheValues)))
-                            await fetch(process.env.CLOUDFLARE_KV_WRITEAPIURL + process.env.CLOUDFLARE_KV_BACKUP_KEY, {
-                                method: "POST",
-                                body: JSON.stringify({ value: compressed_backup, metadata: { time: new Date().getTime(), saved_keys: Object.keys(self.cacheValues) } })
-                            }).then(res => res.json()).then((res: CloudflareKVResponse) => {
+                            CacheBackup.CreateBackup().then((res: CloudflareKVResponse) => {
                                 if (res.success) {
                                     embed.setDescription(`${GetEmoji("yes")} Cache values fetched. (took ${inlineCode(_timeGetCacheDone)})\n${GetEmoji("yes")} Cache data uploaded! (took ${inlineCode(`${new Date().getTime() - _timeUploadCache}ms`)})\n\nBackup Size: ${inlineCode(FormatBytes(bytes))}`)
                                     embed.setColor(Colors.Green)
@@ -79,13 +76,6 @@ class Command {
 
         return true
     }
-}
-
-export interface CloudflareKVResponse {
-    "errors": Array<any>,
-    "messages": Array<any>,
-    "success": boolean,
-    "result": Object
 }
 
 module.exports = Command

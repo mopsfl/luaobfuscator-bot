@@ -41,10 +41,15 @@ class Command {
                     embed.setColor(Colors.Red)
                     return msg.edit({ embeds: [embed] })
                 } else {
-                    embed.setDescription(`${GetEmoji("yes")} Backup fetched! (took ${inlineCode(_timeGetBackupDone)})\n${GetEmoji("yes")} File attachment created!`)
+                    embed.setDescription(`${GetEmoji("yes")} Backup fetched! (took ${inlineCode(_timeGetBackupDone)})\n${GetEmoji("yes")} File attachment created!\n${GetEmoji("yes")} Sending backup to your dm's!`)
                     embed.setColor(Colors.Green)
-                    await msg.edit({ embeds: [embed] })
-                    await cmd.message.reply({ files: [file_attachment] })
+                    msg.edit({ embeds: [embed] })
+                    await cmd.message.author.send({ files: [file_attachment] }).catch(async err => {
+                        embed.setColor(Colors.Red)
+                            .setDescription(`${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`)
+                        await msg.edit({ embeds: [embed] })
+                        console.error(err)
+                    })
                 }
 
             }).catch(async error => {
