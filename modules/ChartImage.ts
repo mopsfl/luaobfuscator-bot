@@ -1,8 +1,6 @@
 import ChartJSImage from "chart.js-image"
 
-export default class ChartImage {
-    constructor() { }
-
+export default {
     GetLocalizedDateStrings(length: number = 7, includeYear: boolean = false): Array<string> {
         const dateStrings = [];
         const today = new Date();
@@ -14,7 +12,7 @@ export default class ChartImage {
             dateStrings.push(localizedDateString);
         }
         return dateStrings.reverse();
-    }
+    },
 
     Create(data: ChartOptions): ChartJSImage {
         const chart = new ChartJSImage().chart(data)

@@ -2,10 +2,12 @@ import { Colors, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["geterror", "gerr", "ge"]
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Returns the information of the given error id."
     permissions = [PermissionFlagsBits.Administrator]
     syntax_usage = "<error_id>"
@@ -34,7 +36,7 @@ class Command {
 
         try {
             cmd.message.reply({
-                embeds: [self.Embed({
+                embeds: [Embed({
                     description: `${GetEmoji("loading")} Getting error information... Please wait...`,
                     color: Colors.Yellow,
                     footer: { text: cmd.arguments[0].toString() },
@@ -42,7 +44,7 @@ class Command {
                 })]
             }).then(msg => {
                 cmd.message.author.send({
-                    embeds: [self.Embed({
+                    embeds: [Embed({
                         title: `${GetEmoji("no")} Error Information`,
                         fields: _fields,
                         color: Colors.Yellow,
@@ -51,7 +53,7 @@ class Command {
                     })]
                 }).catch(async err => {
                     msg.edit({
-                        embeds: [self.Embed({
+                        embeds: [Embed({
                             title: `${GetEmoji("no")} Reply Error`,
                             description: `${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`,
                             color: Colors.Red,
@@ -62,7 +64,7 @@ class Command {
                     console.error(err)
                 })
                 msg.edit({
-                    embeds: [self.Embed({
+                    embeds: [Embed({
                         description: `${GetEmoji("yes")} I've sent you the error information via dms!`,
                         color: Colors.Green,
                         footer: { text: cmd.arguments[0].toString() },

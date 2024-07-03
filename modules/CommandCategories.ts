@@ -1,5 +1,5 @@
-export default class {
-    LuaObfuscator = "Lua Obfuscator"
-    Bot = "Bot"
-    Misc = "Misc"
+export default {
+    LuaObfuscator: "Lua Obfuscator",
+    Bot: "Bot",
+    Misc: "Misc"
 }

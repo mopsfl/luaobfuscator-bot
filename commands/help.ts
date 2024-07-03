@@ -1,10 +1,12 @@
 import { Colors, EmbedBuilder, EmbedField, PermissionFlagsBits, PermissionsBitField, bold, inlineCode, underscore } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["help"]
-    category = self.commandCategories.Bot
+    category = CommandCategories.Bot
     description = "Returns a list of all commands and other useful informations for the bot."
 
     callback = async (cmd: cmdStructure) => {
@@ -27,7 +29,7 @@ class Command {
                     required_perms += bold(underscore(inlineCode(self.utils.GetPermissionsName(perm).toUpperCase())))
                 })
             }
-            embed = self.Embed({
+            embed = Embed({
                 title: "Lua Obfuscator Bot - Help",
                 fields: [{
                     name: "Description:",
@@ -64,7 +66,7 @@ class Command {
                 inline: false
             })
 
-            embed = self.Embed({
+            embed = Embed({
                 title: "Lua Obfuscator Bot - Help",
                 fields: commands_field,
                 timestamp: true,

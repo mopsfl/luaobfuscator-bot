@@ -2,17 +2,19 @@ import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["apitest"]
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Makes a test request to the luaobfuscator bot api."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {
-        const embed = self.Embed({
+        const embed = Embed({
             description: `${GetEmoji("loading")} API test going on... Results will be sent to your dm's.`,
             color: Colors.Yellow,
             timestamp: true,

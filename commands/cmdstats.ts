@@ -1,10 +1,12 @@
 import { Colors, bold, inlineCode, underscore } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["cmdstats", "cs", "cstats"]
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Shows the statistics of all commands aka wich command is being used the most."
 
     callback = async (cmd: cmdStructure) => {
@@ -13,7 +15,7 @@ class Command {
         self.command.getAllCommands().forEach(cmd => {
             commands_value += `${inlineCode(cmd.name[0] + ":")} ${bold(underscore(inlineCode(cmd_stats[cmd.name[0]] || "0")))}\n`
         })
-        const embed = self.Embed({
+        const embed = Embed({
             title: "Lua Obfuscator - Command Statistics",
             color: Colors.Green,
             thumbnail: self.config.icon_url,

@@ -3,17 +3,19 @@ import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import { Bot_Settings } from "../index";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["alert"]
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Toggles the api outage alert pings."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {
-        const embed = self.Embed({
+        const embed = Embed({
             title: "Bot Settings",
             description: `${GetEmoji("loading")} Changing setting, please wait.`,
             color: Colors.Yellow,

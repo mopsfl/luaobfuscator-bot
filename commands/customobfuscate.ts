@@ -6,6 +6,8 @@ import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonCompone
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 const _plugins = [
     { label: "MinifyAll", description: `This results the code on a single line, no comments, etc...`, value: "MinifiyAll" },
@@ -52,7 +54,7 @@ const _plugins = [
 
 class Command {
     name = ["customobfuscate", "co", "cobf"]
-    category = self.commandCategories.LuaObfuscator
+    category = CommandCategories.LuaObfuscator
     description = "Obfuscates your given input using the REST API with your selected options."
     syntax_usage = "<file | codeblock>"
 
@@ -138,7 +140,7 @@ class Command {
                 .setCustomId("saveplugins")
                 .setStyle(ButtonStyle.Primary)
 
-        const embed_main = self.Embed({
+        const embed_main = Embed({
             color: Colors.Green,
             timestamp: true,
             title: "Custom Obfuscation (BETA)",
@@ -152,7 +154,7 @@ class Command {
                 text: `Lua Obfuscator Bot - This is still in work and might have bugs!`,
                 iconURL: self.config.icon_url,
             }
-        }), embed_loading = self.Embed({
+        }), embed_loading = Embed({
             color: Colors.Yellow,
             timestamp: true,
             title: "Custom Obfuscation (BETA)",
@@ -331,7 +333,7 @@ class Command {
 
                                 if (Object.keys(_userSaves).length <= 0) {
                                     i.reply({
-                                        embeds: [self.Embed({
+                                        embeds: [Embed({
                                             color: Colors.Red,
                                             title: `${GetEmoji("no")} Error`,
                                             description: codeBlock(`You don't have any custom presets saved.`),

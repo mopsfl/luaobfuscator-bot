@@ -1,15 +1,17 @@
 import { Colors, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["botstats", "bs", "bots"]
-    category = self.commandCategories.Bot
+    category = CommandCategories.Bot
     description = "Shows you some bot statistics."
 
     callback = async (cmd: cmdStructure) => {
         const bot_stats: BotStats = await self.file_cache.getSync("bot_stats")
-        const embed = self.Embed({
+        const embed = Embed({
             title: "Lua Obfuscator - Bot Statistics",
             color: Colors.Green,
             thumbnail: self.config.icon_url,

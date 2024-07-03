@@ -7,18 +7,20 @@ import FormatBytes from "../modules/FormatBytes";
 import { gzipSync } from "zlib";
 import { CloudflareKVResponse } from "./getcachebackup";
 import CacheBackup from "../modules/CacheBackup";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["cachebackup"]
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Creates a backup of all cache keys and its values."
 
     callback = async (cmd: cmdStructure) => {
         const _cacheValues = {}
-        const embed = self.Embed({
+        const embed = Embed({
             title: "Cache Backup",
             description: `${GetEmoji("loading")} Fetching all cache values...`,
             color: Colors.Yellow,

@@ -3,15 +3,17 @@ import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import FormatUptime from "../modules/FormatUptime";
 import GithubRepo from "../modules/GithubRepo";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["info"]
-    category = self.commandCategories.Bot
+    category = CommandCategories.Bot
     description = "Shows some informations and statistics about the bot."
 
     callback = async (cmd: cmdStructure) => {
         let lastCommitInfo = await GithubRepo.GetLastCommitData()
-        const embed = self.Embed({
+        const embed = Embed({
             title: `LuaObfuscator Bot`,
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [

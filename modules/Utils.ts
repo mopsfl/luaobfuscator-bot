@@ -3,10 +3,9 @@ import * as self from "../index"
 import { cmdStructure } from "./Command"
 import { randomUUID } from "crypto"
 import GetEmoji from "./GetEmoji"
+import Embed from "./Embed"
 
 export default class Utils {
-    constructor() { }
-
     HasWebhook = function (string: string) { return /.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/.test(string) }
     HasCodeblock = function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) }
     ParseWebhooks = function (string: string) { return string.match(/.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/gm) }
@@ -88,7 +87,7 @@ export default class Utils {
                 ]
                 if (self.env == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
                 await cmd.message.reply({
-                    embeds: [self.Embed({
+                    embeds: [Embed({
                         title: `${GetEmoji("no")} ${title || error instanceof Error && `${error.name}` || "Unknown Internal Error"}`,
                         fields: embed_field,
                         timestamp: true,
@@ -102,7 +101,7 @@ export default class Utils {
             }
             case "syntax": {
                 await cmd.message.reply({
-                    embeds: [self.Embed({
+                    embeds: [Embed({
                         title: `${GetEmoji("no")} ${title || "Syntax Error"}`,
                         description: codeBlock(errorText),
                         fields: syntaxErrorFields,
@@ -117,7 +116,7 @@ export default class Utils {
             }
             case "permission": {
                 await cmd.message.reply({
-                    embeds: [self.Embed({
+                    embeds: [Embed({
                         title: `${GetEmoji("no")} ${title || "Permissions Error"}`,
                         description: codeBlock(errorText),
                         timestamp: true,
@@ -131,7 +130,7 @@ export default class Utils {
             }
             case "ratelimit": {
                 await cmd.message.reply({
-                    embeds: [self.Embed({
+                    embeds: [Embed({
                         title: `${GetEmoji("no")} Ratelimit`,
                         fields: [
                             { inline: false, name: "Message:", value: codeBlock("You are using commands too fast! Calm down...") }

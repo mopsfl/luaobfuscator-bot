@@ -4,18 +4,20 @@ import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import fastFolderSize from "fast-folder-size";
 import FormatBytes from "../modules/FormatBytes";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["getcachebackup"]
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Gets the cache backup."
 
     callback = async (cmd: cmdStructure) => {
         const _cacheValues = {}
-        const embed = self.Embed({
+        const embed = Embed({
             title: "Cache Backup",
             description: `${GetEmoji("loading")} Fetching backup...`,
             color: Colors.Yellow,

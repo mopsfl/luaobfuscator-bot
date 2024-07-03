@@ -1,11 +1,13 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
-import { ChartDataset } from "../modules/ChartImage";
+import ChartImage, { ChartDataset } from "../modules/ChartImage";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["chart"]
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Creates a temporary chart image with the given dataset. (this is a testing command)"
     direct_message = false
     syntax_usage = "<chart_type> <number> <number> <number> ..."
@@ -13,16 +15,16 @@ class Command {
 
     callback = async (cmd: cmdStructure) => {
         const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": cmd.arguments.splice(1), "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]
-        const chart_obfuscation_stats = self.chartImage.Create({
+        const chart_obfuscation_stats = ChartImage.Create({
             type: cmd.arguments[0].toString(),
             data: {
-                labels: self.chartImage.GetLocalizedDateStrings(),
+                labels: ChartImage.GetLocalizedDateStrings(),
                 datasets: datasets_obfuscation_stats
             }
         }).height("600").width("1000").bkg("rgb(255,255,255)").toURL()
         cmd.message.reply({
             embeds: [
-                self.Embed({
+                Embed({
                     title: "Lua Obfuscator - Statistics",
                     color: Colors.Green,
                     thumbnail: self.config.icon_url,

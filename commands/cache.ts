@@ -8,6 +8,9 @@ import { readdir, readdirSync, stat, statSync } from "fs";
 import path from "path";
 import fastFolderSize from "fast-folder-size";
 import FormatBytes from "../modules/FormatBytes";
+import CommandCategories from "../modules/CommandCategories";
+import Session from "../modules/Session";
+import Embed from "../modules/Embed";
 
 const cache_names: Array<Array<any>> = [
     ["last_outage", "Last Outage"],
@@ -24,14 +27,14 @@ const cache_names: Array<Array<any>> = [
 
 class Command {
     name = ["cache"]
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Create a temporary link to access some data from the cache."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {
-        const embed = self.Embed({
+        const embed = Embed({
             description: "Creating session id. Please wait...",
             color: Colors.Yellow
         }),
@@ -40,7 +43,7 @@ class Command {
             if (err) console.error(err)
             await cmd.message.reply({ embeds: [embed] }).then(async msg => {
                 let _sessExT = self.env !== "dev" ? cmd.message?.author?.id == "1111257318961709117" ? 600 : _sessionExpireTime : 9e5
-                const session_id = await self.session.Create(_sessExT),
+                const session_id = await Session.Create(_sessExT),
                     cache_links: Array<EmbedField> = []
 
                 cache_names.forEach(_cacheName => {
@@ -59,7 +62,7 @@ class Command {
                 await msg.edit({ embeds: [embed] }).catch(async err => await self.Debug(err, true))
                 await cmd.message.author.send({
                     embeds: [
-                        self.Embed({
+                        Embed({
                             color: Colors.Green,
                             title: "Temporary Cache Link",
                             fields: [{

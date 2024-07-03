@@ -1,4 +1,5 @@
 import * as self from "../index"
+import ChartImage from "./ChartImage"
 
 export default class ObfuscatorStats {
     constructor(
@@ -20,7 +21,7 @@ export default class ObfuscatorStats {
 
             if (!current_stats) return console.log(`unable to update obfuscator stats. (current_stats is undefined)`)
             if (Object.values(current_stats).length <= 0) {
-                const dates = self.chartImage.GetLocalizedDateStrings(8, true)
+                const dates = ChartImage.GetLocalizedDateStrings(8, true)
                 dates.forEach(date => {
                     current_stats[date] = {
                         total_obfuscations: today_stats.total_obfuscations,

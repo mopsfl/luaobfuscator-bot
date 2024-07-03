@@ -11,12 +11,8 @@ import Config from "./config"
 import Utils from "./modules/Utils"
 import Command, { cmdStructure, command } from "./modules/Command"
 import Debug from "./modules/Debug"
-import Embed from "./modules/Embed"
-import Session from "./modules/Session"
 import StatusDisplay from "./modules/StatusDisplay"
-import ChartImage from "./modules/ChartImage"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
-import CommandCategories from "./modules/CommandCategories"
 import UserPluginSaves from "./modules/UserPluginSaves"
 import { Cache, FileSystemCache } from "file-system-cache"
 import NoHello from "./modules/NoHello"
@@ -28,11 +24,8 @@ dotenv.config()
 
 const config = new Config()
 const command = new Command()
-const session = new Session()
 const utils = new Utils()
 const statusDisplay = new StatusDisplay()
-const chartImage = new ChartImage()
-const commandCategories = new CommandCategories()
 const obfuscatorStats = new ObfuscatorStats()
 const userPluginSaves = new UserPluginSaves()
 const env = process.argv[2] || "prod"
@@ -209,8 +202,7 @@ export interface Bot_Settings {
 }
 
 export {
-    Embed, Debug,
-    statusDisplay, command, session, chartImage, commandCategories, utils, obfuscatorStats, userPluginSaves,
+    Debug, statusDisplay, command, utils, obfuscatorStats, userPluginSaves,
     client, config, env, cache, file_cache, cacheValues,
     start_tick
 }

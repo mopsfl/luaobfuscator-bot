@@ -3,12 +3,14 @@ import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import * as self from "../index"
 import { ObfuscationProcess, ObfuscationResult } from "../modules/Utils";
+import CommandCategories from "../modules/CommandCategories";
 import { BotStats } from "./botstats";
 import luamin from "luamin"
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
-    category = self.commandCategories.LuaObfuscator
+    category = CommandCategories.LuaObfuscator
     description = "Obfuscates your given input using the REST API with the default options."
     syntax_usage = "<file | codeblock>"
 
@@ -54,7 +56,7 @@ class Command {
         }
 
         obfuscation_process.processes.push(`${GetEmoji("yes")} Buffer completed! (${inlineCode(chunksAmount.toString())} chunks)`)
-        obfuscation_process.embed = self.Embed({
+        obfuscation_process.embed = Embed({
             color: Colors.Yellow,
             timestamp: true,
             fields: [

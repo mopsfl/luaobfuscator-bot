@@ -2,17 +2,19 @@ import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
+import CommandCategories from "../modules/CommandCategories";
+import Embed from "../modules/Embed";
 
 class Command {
     name = ["updatestats", "us"]
-    category = self.commandCategories.Misc
+    category = CommandCategories.Misc
     description = "Forces to update the status display informations."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {
-        const embed = self.Embed({
+        const embed = Embed({
             description: "Updating status display... Please wait!",
             color: Colors.Yellow,
         })

@@ -2,10 +2,11 @@ import { Colors, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import { BotStats } from "./botstats";
+import CommandCategories from "../modules/CommandCategories";
 
 class Command {
     name = ["deobfuscate", "deobf"]
-    category = self.commandCategories.LuaObfuscator
+    category = CommandCategories.LuaObfuscator
     description = "Deobfuscates a obfuscated script!! real!i!!i!"
     syntax_usage = "<file | codeblock>"
 

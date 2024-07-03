@@ -9,6 +9,8 @@ import http_status from "http-status"
 import FormatNumber from "./FormatNumber";
 import { gunzipSync, gzipSync } from "zlib";
 import { randomUUID } from "crypto";
+import ChartImage from "./ChartImage";
+import Embed from "./Embed";
 
 export default class StatusDisplay {
     constructor(
@@ -43,10 +45,10 @@ export default class StatusDisplay {
 
     async CreateStatusEmbed(ping_responses: PingResponses, server_uptime: number, show_next_update: boolean = false) {
         if (!this.initialized && !self.client) return self.Debug({ message: "Unable to create status embed.", error: "App not successfully initialized." }, true)
-        const stats_chart = self.chartImage.Create({
+        const stats_chart = ChartImage.Create({
             type: "bar",
             data: {
-                labels: self.chartImage.GetLocalizedDateStrings(),
+                labels: ChartImage.GetLocalizedDateStrings(),
                 datasets: [{
                     label: "Total Files Uploaded",
                     data: await self.obfuscatorStats.ParseCurrentStat("total_file_uploads"),
@@ -60,7 +62,7 @@ export default class StatusDisplay {
                 }]
             }
         }).backgroundColor("white").toURL();
-        return [self.Embed({
+        return [Embed({
             title: "Lua Obfuscator - Service Status",
             description: `The status of Lua Obfuscator services displayed.${show_next_update == true ? `
             \n${GetEmoji("update")} **Last Updated:** <t:${(new Date().getTime() / 1000).toFixed()}:R>` : ""}
@@ -108,7 +110,7 @@ export default class StatusDisplay {
             footer: {
                 text: "Lua Obfuscator - Service Status • by mopsfl"
             }
-        }), self.Embed({
+        }), Embed({
             title: "Lua Obfuscator - Statistics",
             description: `Live statistics of Lua Obfuscator.${show_next_update == true ? `
             \n${GetEmoji("update")} **Last Updated:** <t:${(new Date().getTime() / 1000).toFixed()}:R>` : ""}`,
@@ -218,7 +220,7 @@ export default class StatusDisplay {
                                 alert_channel.send({
                                     content: bot_settings.alert_pings === true ? `<@${uid}>` : undefined,
                                     embeds: [
-                                        self.Embed({
+                                        Embed({
                                             title: `${GetEmoji("no")} Service Outage - Alert`,
                                             description: "A service outage has been detected.",
                                             color: Colors.Red,
