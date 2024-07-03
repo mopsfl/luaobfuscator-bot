@@ -35,7 +35,7 @@ class Command {
                 embed.setDescription(`${GetEmoji("yes")} Backup fetched! (took ${inlineCode(_timeGetBackupDone)})\n${GetEmoji("loading")} Creating file attachment...`)
                 msg.edit({ embeds: [embed] })
 
-                const file_attachment = self.utils.createFileAttachment(Buffer.from(res), `backup.txt`)
+                const file_attachment = self.utils.CreateFileAttachment(Buffer.from(res), `backup.txt`)
                 if (typeof file_attachment != "object") {
                     embed.setDescription(`${GetEmoji("yes")} Backup fetched! (took ${inlineCode(_timeGetBackupDone)})\n${GetEmoji("no")} Creating file attachment failed!`)
                     embed.setColor(Colors.Red)

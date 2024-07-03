@@ -1,5 +1,6 @@
 // todo: when selecting to custom plugins, use default obfuscation. only create session when using customize plugins.
 //       fix crash (unknown interaction) after continuing obfuscation
+//       make it more organized, bc now its messy as fuck
 
 import { ActionRowBuilder, AttachmentBuilder, bold, ButtonBuilder, ButtonComponent, ButtonInteraction, ButtonStyle, CacheType, codeBlock, Colors, ComponentType, hyperlink, inlineCode, InteractionCollector, Message, quote, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder } from "discord.js";
 import * as self from "../index"
@@ -38,6 +39,8 @@ const _plugins = [
     "WriteLuaBit32": true,
     "Virtualize": true,
     "MinifiyAll": true,
+    "Minifier": true,
+    "Minifier2": true,
 }, _presets = [
     { label: "Chaotic Evil", value: "Chaotic Evil" },
     { label: "Chaotic Good", value: "Chaotic Good" },
@@ -69,19 +72,19 @@ class Command {
             session = "",
             chunksAmount = 0,
             hasWebhook = false,
-            hasCodeBlock = self.utils.hasCodeblock(cmd.raw_arguments),
+            hasCodeBlock = self.utils.HasCodeblock(cmd.raw_arguments),
             file_attachment: AttachmentBuilder
 
         // Get Script Content
         if (hasCodeBlock) {
-            hasWebhook = self.utils.hasWebhook(cmd.raw_arguments)
-            script_content = self.utils.parseCodeblock(cmd.raw_arguments)
+            hasWebhook = self.utils.HasWebhook(cmd.raw_arguments)
+            script_content = self.utils.ParseCodeblock(cmd.raw_arguments)
         } else if ([...cmd.message.attachments].length > 0) {
             const attachment = cmd.message.attachments.first()
             const url = attachment?.url
             if (!url) self.utils.SendErrorMessage("error", cmd, "Unable to get url from attachment.")
             await fetch(url).then(async res => {
-                const chunks = await self.utils.readAllChunks(res.body)
+                const chunks = await self.utils.ReadAllChunks(res.body)
                 chunksAmount = chunks.length
                 chunks.forEach(chunk => {
                     script_content += Buffer.from(chunk).toString() || ""
@@ -171,7 +174,7 @@ class Command {
                 collector_mainButtons = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 })
 
             self.utils.NewPromise(60000, async (resolve: Function, reject: Function) => {
-                await self.utils.createSession(script_content).then(async _response => {
+                await self.utils.CreateSession(script_content).then(async _response => {
                     if (!_response || !_response.sessionId) return self.utils.SendErrorMessage("error", cmd, "Unable to create sessionId!", "API Error")
                     console.log(`created new script session ${_response.sessionId}`);
 
@@ -200,7 +203,7 @@ class Command {
                                 await response.edit({ components: [row_buttons], embeds: [embed_main] })
                                 // todo: make this smaller
                                 if (embed_main.data.fields[1].value === "`Default Preset`") {
-                                    await self.utils.obfuscateScript(script_content, cmd.message).then(async res => {
+                                    await self.utils.ObfuscateScript(script_content, cmd.message).then(async res => {
                                         if (!res?.code) {
                                             embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
                                             self.utils.SendErrorMessage("error", cmd, res?.message, "Obfuscation Error")
@@ -211,8 +214,7 @@ class Command {
 
                                         script_content = res?.code
                                         session = res?.sessionId
-                                        file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${session}.lua`)
-
+                                        file_attachment = self.utils.CreateFileAttachment(Buffer.from(res?.code), `${session}.lua`)
                                         if (_loaded_userpluginsave === true || embed_main.data.fields[1].value === "`Default Preset`") {
                                             row_buttons2.components.splice(1, 1)
                                         }
@@ -224,7 +226,7 @@ class Command {
                                         _isObfuscating[cmd.message.author.id] = false
                                     })
                                 } else {
-                                    await self.utils.manualObfuscateScript(session, selected_plugins).then(async res => {
+                                    await self.utils.ManualObfuscateScript(session, selected_plugins).then(async res => {
                                         if (!res?.code) {
                                             embed_main.setColor(Colors.Red).setDescription(`${GetEmoji("yes")} Script session created!\n${GetEmoji("no")} Error while obfuscating script!`)
                                             self.utils.SendErrorMessage("error", cmd, res?.message, "Obfuscation Error")
@@ -234,7 +236,7 @@ class Command {
                                         }
 
                                         script_content = res?.code
-                                        file_attachment = self.utils.createFileAttachment(Buffer.from(res?.code), `${session}.lua`)
+                                        file_attachment = self.utils.CreateFileAttachment(Buffer.from(res?.code), `${session}.lua`)
 
                                         if (_loaded_userpluginsave === true || embed_main.data.fields[1].value === "`Default Preset`") {
                                             row_buttons2.components.splice(1, 1)

@@ -16,7 +16,7 @@ export default class ObfuscatorStats {
     async Update(today_stats: Obfuscator_Stats) {
         try {
             let current_stats: Saved_Stats = await this.Get(),
-                current_date = self.utils.getFullDate()
+                current_date = self.utils.GetFullDate()
 
             if (!current_stats) return console.log(`unable to update obfuscator stats. (current_stats is undefined)`)
             if (Object.values(current_stats).length <= 0) {

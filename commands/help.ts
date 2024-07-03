@@ -24,7 +24,7 @@ class Command {
             let required_perms = ""
             if (_command.permissions) {
                 _command.permissions.forEach(perm => {
-                    required_perms += bold(underscore(inlineCode(self.utils.getPermissionsName(perm).toUpperCase())))
+                    required_perms += bold(underscore(inlineCode(self.utils.GetPermissionsName(perm).toUpperCase())))
                 })
             }
             embed = self.Embed({

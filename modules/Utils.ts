@@ -7,16 +7,16 @@ import GetEmoji from "./GetEmoji"
 export default class Utils {
     constructor() { }
 
-    hasWebhook = function (string: string) { return /.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/.test(string) }
-    hasCodeblock = function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) }
-    parseWebhooks = function (string: string) { return string.match(/.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/gm) }
-    parseCodeblock = function (string: string) { return string.replace(/(^`\S*)|`+.*/mg, "").trim() }
-    getFullDate = function () { const date = new Date(); return date.toLocaleDateString("en", { month: "2-digit", day: "numeric", year: "numeric" }) }
-    getPermissionsName = function (bit: bigint) {
-        const _index = Object.values(PermissionFlagsBits).findIndex(n => n === bit)
-        return Object.keys(PermissionFlagsBits)[_index]
-    }
-    createSession = async function (script: string) {
+    HasWebhook = function (string: string) { return /.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/.test(string) }
+    HasCodeblock = function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) }
+    ParseWebhooks = function (string: string) { return string.match(/.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/gm) }
+    ParseCodeblock = function (string: string) { return string.replace(/(^`\S*)|`+.*/mg, "").trim() }
+    GetFullDate = function () { const date = new Date(); return date.toLocaleDateString("en", { month: "2-digit", day: "numeric", year: "numeric" }) }
+    GetPermissionsName = function (bit: bigint) { return Object.keys(PermissionFlagsBits)[Object.values(PermissionFlagsBits).findIndex(n => n === bit)] }
+    ToBase64(str: string) { return Buffer.from(str).toString("base64") }
+    CreateFileAttachment = function (content: Buffer | BufferResolvable, name?: string) { return new AttachmentBuilder(content, { name: name || "obfuscated.lua" }) }
+
+    CreateSession = async function (script: string) {
         try {
             const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } })
             return response.ok && response.json()
@@ -24,7 +24,8 @@ export default class Utils {
             console.error(error)
         }
     }
-    manualObfuscateScript = async function (session: string, config: Object) {
+
+    ManualObfuscateScript = async function (session: string, config: Object) {
         try {
             const response = await fetch(`${self.config.api_url}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
                 throw error
@@ -34,19 +35,17 @@ export default class Utils {
             console.error()
         }
     }
-    obfuscateScript = async function (script: string, message?: Message): Promise<ObfuscationResult> {
+
+    ObfuscateScript = async function (script: string, message?: Message): Promise<ObfuscationResult> {
         const response = await fetch(`${self.config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
             if (message) this.SendErrorMessage(error, message)
             throw error
         })
         if (response.ok) return await response.json()
-        return { message: "Unexpected error occurred while obfuscating your script." }
+        return { message: `Unexpected error occurred while obfuscating your script.\n\nRequest Status: ${response.statusText} - ${response.status}\n\nIf you continue to experience this error, please contact a staff member.` }
     }
-    createFileAttachment = function (content: Buffer | BufferResolvable, name?: string) {
-        const attachment = new AttachmentBuilder(content, { name: name || "obfuscated.lua" })
-        return attachment
-    }
-    readAllChunks = async function (stream: ReadableStream) {
+
+    ReadAllChunks = async function (stream: ReadableStream) {
         const reader = stream.getReader();
         const chunks = [];
         let done: boolean, value: any;
@@ -56,9 +55,6 @@ export default class Utils {
             chunks.push(value)
         }
         return chunks
-    }
-    ToBase64(str: string) {
-        return Buffer.from(str).toString("base64")
     }
 
     async DeleteErrorMessageCallback(msg: Message, deleteMs: number) {

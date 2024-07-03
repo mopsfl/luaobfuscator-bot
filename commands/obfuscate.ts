@@ -22,19 +22,19 @@ class Command {
         let script_content = "",
             chunksAmount = 0,
             hasWebhook = false,
-            hasCodeBlock = self.utils.hasCodeblock(cmd.raw_arguments),
+            hasCodeBlock = self.utils.HasCodeblock(cmd.raw_arguments),
             file_attachment: AttachmentBuilder
 
         // Get Script Content
         if (hasCodeBlock) {
-            hasWebhook = self.utils.hasWebhook(cmd.raw_arguments)
-            script_content = self.utils.parseCodeblock(cmd.raw_arguments)
+            hasWebhook = self.utils.HasWebhook(cmd.raw_arguments)
+            script_content = self.utils.ParseCodeblock(cmd.raw_arguments)
         } else if ([...cmd.message.attachments].length > 0) {
             const attachment = cmd.message.attachments.first()
             const url = attachment?.url
             if (!url) self.utils.SendErrorMessage("error", cmd, "Unable to get url from attachment.")
             await fetch(url).then(async res => {
-                const chunks = await self.utils.readAllChunks(res.body)
+                const chunks = await self.utils.ReadAllChunks(res.body)
                 chunksAmount = chunks.length
                 chunks.forEach(chunk => {
                     script_content += Buffer.from(chunk).toString() || ""
@@ -68,7 +68,7 @@ class Command {
 
         // Parse Webhooks
         if (hasWebhook) {
-            const webhooks = self.utils.parseWebhooks(script_content)
+            const webhooks = self.utils.ParseWebhooks(script_content)
             let webhook_string = ""
             for (let i = 0; i < webhooks.length; i++) {
                 const webhook = webhooks[i].trim();
@@ -94,7 +94,7 @@ class Command {
                 obfuscation_process.processes[process_id] = process_text_finished
             }
             await createProcess(`${GetEmoji("loading")} Obfuscating script...`, `${GetEmoji("yes")} Script obfuscated!`, async (process_id: number) => {
-                obfuscation_process.results = await self.utils.obfuscateScript(script_content, cmd.message)
+                obfuscation_process.results = await self.utils.ObfuscateScript(script_content, cmd.message)
                 if (!obfuscation_process.results?.code) {
                     obfuscation_process.embed.setColor("Red")
                     obfuscation_process.processes[process_id] = `${GetEmoji("no")} Obfuscation failed!`
@@ -108,7 +108,7 @@ class Command {
             })
             await createProcess(`${GetEmoji("loading")} Creating file attachment...`, `${GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
                 if (!process_id) return
-                file_attachment = self.utils.createFileAttachment(Buffer.from(obfuscation_process.results.code))
+                file_attachment = self.utils.CreateFileAttachment(Buffer.from(obfuscation_process.results.code))
                 if (typeof file_attachment != "object") {
                     obfuscation_process.embed.setColor("Red")
                     obfuscation_process.processes[process_id] = `${GetEmoji("no")} Creating file attachment failed!`

@@ -183,7 +183,7 @@ app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
 app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplay))
 app.get("/api/v1/commands/:cmdname", (req, res) => {
     const _command: any = command.commands.get(req.params.cmdname)
-    if (_command.permissions) _command.permissions.forEach((v: any, i: number) => _command.permissions[i] = utils.getPermissionsName(v))
+    if (_command.permissions) _command.permissions.forEach((v: any, i: number) => _command.permissions[i] = utils.GetPermissionsName(v))
     if (_command.callback) _command.callback = typeof (_command.callback)
     res.json(_command)
 })
