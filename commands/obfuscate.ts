@@ -11,7 +11,7 @@ import Embed from "../modules/Embed";
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
     category = CommandCategories.LuaObfuscator
-    description = "Obfuscates your given input using the REST API with the default options."
+    description = "Obfuscates your given input using the REST API with the default preset."
     syntax_usage = "<file | codeblock>"
 
     callback = async (cmd: cmdStructure) => {
@@ -63,7 +63,7 @@ class Command {
                 { name: `Obfuscation Process:`, value: obfuscation_process.processes[0], inline: false }
             ],
             footer: {
-                text: "LuaObfuscator Bot • made by mopsfl#4588",
+                text: "LuaObfuscator Bot • made by mopsfl",
                 iconURL: self.config.icon_url
             }
         })
