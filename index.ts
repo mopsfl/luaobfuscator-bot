@@ -42,7 +42,8 @@ const cacheValues = {
     "cmd_stats": {},
     "bot_settings": { alerts: true },
     "error_logs": [],
-    "customobfuscate_usersaves": {}
+    "customobfuscate_usersaves": {},
+    "obfuscator_stats": {}
 }
 
 const client = new Client({
