@@ -25,7 +25,8 @@ class Command {
             chunksAmount = 0,
             hasWebhook = false,
             hasCodeBlock = self.utils.HasCodeblock(cmd.raw_arguments),
-            file_attachment: AttachmentBuilder
+            file_attachment: AttachmentBuilder,
+            start_time = new Date().getTime()
 
         // Get Script Content
         if (hasCodeBlock) {
@@ -139,6 +140,7 @@ class Command {
                     row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
 
                 await cmd.message.reply({
+                    content: `-# sessionId: ${obfuscation_process.results.sessionId}\n-# took: ${new Date().getTime() - start_time}ms`,
                     files: [file_attachment],
                     components: [row]
                 })
