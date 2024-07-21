@@ -44,104 +44,116 @@ export default class StatusDisplay {
     }
 
     async CreateStatusEmbed(ping_responses: PingResponses, server_uptime: number, show_next_update: boolean = false) {
-        if (!this.initialized && !self.client) return self.Debug({ message: "Unable to create status embed.", error: "App not successfully initialized." }, true)
+        if (!this.initialized && !self.client) {
+            return self.Debug({ message: "Unable to create status embed.", error: "App not successfully initialized." }, true);
+        }
+
         const stats_chart = ChartImage.Create({
             type: "bar",
             data: {
                 labels: ChartImage.GetLocalizedDateStrings(),
-                datasets: [{
-                    label: "Total Files Uploaded",
-                    data: await self.obfuscatorStats.ParseCurrentStat("total_file_uploads"),
-                    fill: true,
-                    backgroundColor: "rgba(54, 235, 169, 0.8)"
-                }, {
-                    label: "Total Files Obfuscated",
-                    data: await self.obfuscatorStats.ParseCurrentStat("total_obfuscations"),
-                    fill: true,
-                    backgroundColor: "rgba(54, 162, 235, 0.8)"
-                }]
-            }
+                datasets: [
+                    {
+                        label: "Total Files Uploaded",
+                        data: await self.obfuscatorStats.ParseCurrentStat("total_file_uploads"),
+                        fill: true,
+                        backgroundColor: "rgba(54, 235, 169, 0.8)",
+                    },
+                    {
+                        label: "Total Files Obfuscated",
+                        data: await self.obfuscatorStats.ParseCurrentStat("total_obfuscations"),
+                        fill: true,
+                        backgroundColor: "rgba(54, 162, 235, 0.8)",
+                    },
+                ],
+            },
         }).backgroundColor("white").toURL();
-        return [Embed({
-            title: "Lua Obfuscator - Service Status",
-            description: `The status of Lua Obfuscator services displayed.${show_next_update == true ? `
-            \n${GetEmoji("update")} **Last Updated:** <t:${(new Date().getTime() / 1000).toFixed()}:R>` : ""}
-            ${GetEmoji("offline")} **Last Outage:** ${this.last_outage.state ? `<t:${Math.round(parseInt(this.last_outage.time.toString()) / 1000)}:R>` : this.last_outage_cache.state ? `<t:${Math.round(parseInt(this.last_outage_cache.time.toString()) / 1000)}:R>` : `${inlineCode("N/A")}`}`,
-            color: this.last_outage.state ? Colors.Red : Colors.Green,
-            thumbnail: self.config.icon_url,
-            timestamp: true,
-            fields: [
-                {
-                    name: `${GetEmoji("website")} **Website:**`,
-                    inline: false,
-                    value: `
-                    > **Homepage**: ${ping_responses.homepage?.status == 200 ? "Online" : "Offline"} ${ping_responses.homepage?.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${ping_responses.homepage?.statusText} - ${ping_responses.homepage?.status} | ${ping_responses.homepage?.ping ? ping_responses.homepage?.ping + "ms" : "N/A"})`)}
-                    > **Forum**: ${ping_responses.forum?.status == 200 ? "Online" : "Offline"} ${ping_responses.forum?.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${ping_responses.forum?.statusText} - ${ping_responses.forum?.status} | ${ping_responses.forum?.ping ? ping_responses.forum?.ping + "ms" : "N/A"})`)}
-                    > **API**: ${ping_responses.api?.status == 200 ? "Online" : "Offline"} ${ping_responses.api?.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${ping_responses.api?.statusText} - ${ping_responses.api?.status} | ${ping_responses.api?.ping ? ping_responses.api?.ping + "ms" : "N/A"})`)}
-                ` },
-                {
-                    name: `${GetEmoji("discord")} **Discord:**`,
-                    inline: false,
-                    value: `
-                    > **Bot Status**: ${self.client.uptime > 0 ? "Online" : "Offline"} ${self.client.uptime > 0 ? GetEmoji("online") : GetEmoji("offline")}
-                    > **Bot Uptime**: ${inlineCode(FormatUptime(self.client.uptime) || "N/A")}
-                    > **Members**: ${inlineCode(CountMembers().toString())}
-                    > **Live Status:** ${hyperlink("Status Page", `https://mopsfl.de/status/luaobfuscator`)}
-                    `
+
+        const lastUpdatedText = show_next_update ? `\n${GetEmoji("update")} **Last Updated:** <t:${(new Date().getTime() / 1000).toFixed()}:R>` : "";
+        return [
+            Embed({
+                title: "Lua Obfuscator - Service Status",
+                description: `The status of Lua Obfuscator services displayed.${lastUpdatedText}
+                ${GetEmoji("offline")} **Last Outage:** ${this.last_outage.state ? `<t:${Math.round(parseInt(this.last_outage.time.toString()) / 1000)}:R>` : this.last_outage_cache.state ? `<t:${Math.round(parseInt(this.last_outage_cache.time.toString()) / 1000)}:R>` : inlineCode("N/A")}`,
+                color: this.last_outage.state ? Colors.Red : Colors.Green,
+                thumbnail: self.config.icon_url,
+                timestamp: true,
+                fields: [
+                    {
+                        name: `${GetEmoji("website")} **Website:**`,
+                        inline: false,
+                        value: `
+                        ${this.CreateServiceStatusField("Homepage", ping_responses.homepage)}
+                        ${this.CreateServiceStatusField("Forum", ping_responses.forum)}
+                        ${this.CreateServiceStatusField("API", ping_responses.api)}
+                        `,
+                    },
+                    {
+                        name: `${GetEmoji("discord")} **Discord:**`,
+                        inline: false,
+                        value: `
+                        > **Bot Status**: ${self.client.uptime > 0 ? "Online" : "Offline"} ${self.client.uptime > 0 ? GetEmoji("online") : GetEmoji("offline")}
+                        > **Bot Uptime**: ${inlineCode(FormatUptime(self.client.uptime) || "N/A")}
+                        > **Members**: ${inlineCode(CountMembers().toString())}
+                        > **Live Status:** ${hyperlink("Status Page", `https://mopsfl.de/status/luaobfuscator`)}
+                        `,
+                    },
+                    {
+                        name: `${GetEmoji("server_luaobf")} **Lua Obfuscator - Server:**`,
+                        inline: false,
+                        value: `
+                        > **Ping**: ${inlineCode(ping_responses.server?.ping?.toString() + "ms" || "N/A")}
+                        > **Uptime**: ${inlineCode(FormatUptime(server_uptime) || "N/A")}
+                        > **Memory Usage**: ${inlineCode(FormatBytes(ping_responses.server?.server_stats.memory_usage) || "N/A")}
+                        `,
+                    },
+                    {
+                        name: `${GetEmoji("server_discord")} **Bot Hosting - Server:**`,
+                        inline: false,
+                        value: `
+                        > **Uptime**: ${inlineCode(FormatUptime(new Date().getTime() - self.start_tick) || "N/A")}
+                        > **Memory Usage**: ${inlineCode(FormatBytes(process.memoryUsage().heapUsed) || "N/A")}
+                        `,
+                    },
+                ],
+                footer: {
+                    text: "Lua Obfuscator - Service Status • by mopsfl",
                 },
-                {
-                    name: `${GetEmoji("server_luaobf")} **Lua Obfuscator - Server:**`,
-                    inline: false,
-                    value: `
-                    > **Ping**: ${inlineCode(ping_responses.server?.ping?.toString() + "ms" || "N/A")}
-                    > **Uptime**: ${inlineCode(FormatUptime(server_uptime) || "N/A")}
-                    > **Memory Usage**: ${inlineCode(FormatBytes(ping_responses.server?.server_stats.memory_usage) || "N/A")}
-                    `
+            }),
+            Embed({
+                title: "Lua Obfuscator - Statistics",
+                description: `Live statistics of Lua Obfuscator.${lastUpdatedText}`,
+                color: Colors.Green,
+                thumbnail: self.config.icon_url,
+                timestamp: true,
+                image: stats_chart,
+                fields: [
+                    {
+                        name: `${GetEmoji("luaobfuscator")} **Obfusactor Statistics:**`,
+                        inline: false,
+                        value: `
+                        > **Total Files Uploaded**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_file) || "N/A")}
+                        > **Total Obfuscations**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_obfuscations) || "N/A")}
+                        > **Obfuscations/last 5 min**: ${inlineCode("~" + FormatNumber(this.last_total_obfuscations != 0 ? ping_responses.server?.server_stats?.total_obfuscations - this.last_total_obfuscations : 0) || "N/A")}
+                        > **Files uploaded/last 5 min**: ${inlineCode("~" + FormatNumber(this.last_total_file != 0 ? ping_responses.server?.server_stats?.total_file - this.last_total_file : 0) || "N/A")}
+                        `,
+                    },
+                    {
+                        name: `${GetEmoji("upload")} **Request Queue:**`,
+                        inline: false,
+                        value: `
+                        > **Current Requests:** ${inlineCode(ping_responses.server?.server_stats?.queue_active?.toString() || "N/A")}
+                        > **Requests In Queue:** ${inlineCode(ping_responses.server?.server_stats?.queue_waiting?.toString() || "N/A")}
+                        `,
+                    },
+                ],
+                footer: {
+                    text: "Lua Obfuscator - Service Status • by mopsfl",
                 },
-                {
-                    name: `${GetEmoji("server_discord")} **Bot Hosting - Server:**`,
-                    inline: false,
-                    value: `
-                    > **Uptime**: ${inlineCode(FormatUptime(new Date().getTime() - self.start_tick) || "N/A")}
-                    > **Memory Usage**: ${inlineCode(FormatBytes(process.memoryUsage().heapUsed) || "N/A")}
-                    `
-                }
-            ],
-            footer: {
-                text: "Lua Obfuscator - Service Status • by mopsfl"
-            }
-        }), Embed({
-            title: "Lua Obfuscator - Statistics",
-            description: `Live statistics of Lua Obfuscator.${show_next_update == true ? `
-            \n${GetEmoji("update")} **Last Updated:** <t:${(new Date().getTime() / 1000).toFixed()}:R>` : ""}`,
-            color: Colors.Green,
-            thumbnail: self.config.icon_url,
-            timestamp: true,
-            image: stats_chart,
-            fields: [
-                {
-                    name: `${GetEmoji("luaobfuscator")} **Obfusactor Statistics:**`,
-                    inline: false,
-                    value: `
-                    > **Total Files Uploaded**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_file) || "N/A")}
-                    > **Total Obfuscations**: ${inlineCode(FormatNumber(ping_responses.server?.server_stats?.total_obfuscations) || "N/A")}
-                    > **Obfuscations/last 5 min**: ${inlineCode("~" + FormatNumber(this.last_total_obfuscations != 0 ? ping_responses.server?.server_stats?.total_obfuscations - this.last_total_obfuscations : 0) || "N/A")}
-                    > **Files uploaded/last 5 min**: ${inlineCode("~" + FormatNumber(this.last_total_file != 0 ? ping_responses.server?.server_stats?.total_file - this.last_total_file : 0) || "N/A")}
-                    `
-                }, {
-                    name: `${GetEmoji("upload")} **Request Queue:**`,
-                    inline: false,
-                    value: `
-                    > **Current Requests:** ${inlineCode(ping_responses.server?.server_stats?.queue_active?.toString() || "N/A")}
-                    > **Requests In Queue:** ${inlineCode(ping_responses.server?.server_stats?.queue_waiting?.toString() || "N/A")}
-                    `
-                },
-            ],
-            footer: {
-                text: "Lua Obfuscator - Service Status • by mopsfl"
-            }
-        })]
+            }),
+        ];
     }
+
 
     async UpdateDisplayStatus() {
         const responses: PingResponses = {
@@ -175,33 +187,13 @@ export default class StatusDisplay {
                     finished_requests++
                 } else {
                     console.error(error);
-                    /*let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
-                        errorId = randomUUID()
-                    alert_channel.isTextBased() && alert_channel.send({
-                        content: `<@1111257318961709117>`,
-                        embeds: [
-                            self.Embed({
-                                title: `${GetEmoji("no")} Status Display - Error`,
-                                description: "An unexpected error occurred while updating the status display.",
-                                color: Colors.Red,
-                                fields: [
-                                    { name: "Stack:", value: codeBlock(error.stack), inline: false }
-                                ],
-                                footer: {
-                                    text: `errorId: ${errorId}`
-                                },
-                                timestamp: true,
-                            })
-                        ]
-                    })
-                    self.utils.SaveErrorToLogs(errorId, error)*/
                 }
             }
             if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
                 if (!all_online) {
-                    const affected_services = Object.values(responses).filter(v => v.status != 200)
+                    const affected_services = Object.values(responses).filter(v => v.status !== 200)
 
                     // Outage Alert
                     if (this.current_outage_time < 1) this.current_outage_time = new Date().getTime()
@@ -213,7 +205,7 @@ export default class StatusDisplay {
                                 affected_services_text = ""
 
                             affected_services.forEach(service => {
-                                affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status == 200 ? "Online" : "Offline"} ${service.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
+                                affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status === 200 ? "Online" : "Offline"} ${service.status === 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
                             const bot_settings: self.Bot_Settings = await self.file_cache.get("bot_settings")
                             if (alert_channel?.isTextBased() && self.env === "prod") {
@@ -287,6 +279,10 @@ export default class StatusDisplay {
             }
         })
     }
+
+    CreateServiceStatusField = (name: string, response: PingResponse) => {
+        return `> **${name}**: ${response.status == 200 ? "Online" : "Offline"} ${response.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${response.statusText} - ${response.status} | ${response.ping ? response.ping + "ms" : "N/A"})`)}`;
+    };
 }
 
 export interface PingResponses {
