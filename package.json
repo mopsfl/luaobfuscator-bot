@@ -14,6 +14,7 @@
     "luamin": "^1.0.4",
     "node-fetch": "^3.3.2",
     "node-gzip": "^1.1.2",
+    "redis": "^4.6.15",
     "url-status-code": "^2.0.0"
   },
   "scripts": {

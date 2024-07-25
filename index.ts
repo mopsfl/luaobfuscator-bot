@@ -17,7 +17,9 @@ import UserPluginSaves from "./modules/UserPluginSaves"
 import { Cache, FileSystemCache } from "file-system-cache"
 import NoHello from "./modules/NoHello"
 import DeobfLaugh from "./modules/DeobfLaugh"
+import { createClient, RedisClientType } from "redis"
 import { gzipSync } from "zlib";
+import RedisClient from "./modules/RedisClient"
 
 const app = express()
 dotenv.config()
@@ -46,6 +48,7 @@ const cacheValues = {
     "obfuscator_stats": {}
 }
 
+let redisClient: RedisClient = null
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
@@ -82,12 +85,18 @@ client.on("ready", async () => {
     fs.readdir(`${process_path}/commands`, (err, files) => {
         if (err) return Debug(err, true)
         files.forEach(file => {
-            file = file.replace(/\.\w+/gm, ".js")
-            const cmd_node = require(`${process_path}/dist/commands/${file}`)
-            const cmd: command = new cmd_node()
-            commands.set(cmd.name[0], cmd)
+            try {
+                file = file.replace(/\.\w+/gm, ".js")
+                const cmd_node = require(`${process_path}/dist/commands/${file}`)
+                const cmd: command = new cmd_node()
+                commands.set(cmd.name[0], cmd)
+            } catch (error) {
+                console.error(`[Command Loader]: Unable to initialize ${file} | ${error}`)
+            }
         })
     })
+
+
     // statusDisplay recursion
     const actionRecursion = async () => {
         await action_updateStats().then((res) => {
@@ -162,6 +171,8 @@ app.listen(process.env.PORT, async () => {
             file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_cacheValue))))
         }
     })
+    redisClient = new RedisClient()
+    await redisClient.Init()
 
     console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
 })
@@ -175,7 +186,10 @@ app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
 }))
 
 app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplay))
-app.get("/api/v1/statusdisplay/status/:name", (req, res) => res.json(statusDisplay.last_responses[req.params.name]))
+app.get("/api/v1/statusdisplay/status/:name", (req, res) => {
+    if (!statusDisplay.last_responses[req.params.name]) return res.status(404).json({ code: 404, message: `Service status '${req.params.name}' not found.` })
+    res.json(statusDisplay.last_responses[req.params.name])
+})
 app.get("/api/v1/commands/:cmdname", (req, res) => {
     const _command: any = command.commands.get(req.params.cmdname)
     if (_command.permissions) _command.permissions.forEach((v: any, i: number) => _command.permissions[i] = utils.GetPermissionsName(v))
@@ -205,6 +219,6 @@ export interface Bot_Settings {
 
 export {
     Debug, statusDisplay, command, utils, obfuscatorStats, userPluginSaves,
-    client, config, env, cache, file_cache, cacheValues,
+    client, config, env, cache, file_cache, cacheValues, redisClient,
     start_tick
 }
