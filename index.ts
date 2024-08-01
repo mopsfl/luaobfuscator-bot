@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false //does not login the discord client
 
-import { ActivityType, Client, Collection, IntentsBitField, Partials } from "discord.js"
+import { ActivityType, ChannelType, Client, Collection, Events, IntentsBitField, Message, MessageMentions, Partials, ThreadOnlyChannel } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -20,6 +20,7 @@ import DeobfLaugh from "./modules/DeobfLaugh"
 import { createClient, RedisClientType } from "redis"
 import { gzipSync } from "zlib";
 import RedisClient from "./modules/RedisClient"
+import ForumSyncTest, { ForumThread } from "./modules/ForumSyncTest"
 
 const app = express()
 dotenv.config()
@@ -105,7 +106,7 @@ client.on("ready", async () => {
     }; actionRecursion()
 })
 
-client.on("messageCreate", async (message) => {
+client.on(Events.MessageCreate, async (message) => {
     try {
         if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
         if (NoHello(message) || DeobfLaugh(message)) return
@@ -171,8 +172,8 @@ app.listen(process.env.PORT, async () => {
             file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_cacheValue))))
         }
     })
-    redisClient = new RedisClient()
-    await redisClient.Init()
+    //redisClient = new RedisClient()
+    //await redisClient.Init().catch(console.error)
 
     console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
 })
@@ -211,6 +212,176 @@ app.get("/api/v1/cache/:name", async (req, res) => {
         }
     }
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
+})
+
+client.on(Events.ThreadCreate, async (thread, newlyCreated) => await ForumSyncTest.HandleNewThread(thread, newlyCreated))
+client.on(Events.ThreadDelete, async (thread) => await ForumSyncTest.HandleDeletedThread(thread))
+client.on(Events.MessageCreate, async (message) => await ForumSyncTest.HandleNewThreadMessage(message))
+client.on(Events.MessageDelete, async (message) => await ForumSyncTest.HandleDeletedThreadMessage(message))
+
+app.get("/api/dev/forum/threads/:channelId", async (req, res) => {
+    const [data, success, cached] = await ForumSyncTest.FetchForumData(req.params.channelId)
+    if (!success) return res.status(400).json(data)
+
+    // just do all the html rendering stuff and shit
+    if (!(data instanceof Array)) return res.status(400).json({ message: "Invalid thread." })
+
+    let htmlStuff = ``
+    data.forEach((thread: ForumThread) => {
+        htmlStuff += `<a class="threaditem" href="/api/dev/forum/threads/${req.params.channelId}/${thread.id}">
+        <img src="${thread.author.avatarURL}"></img>
+        <div>
+            <h3>${thread.name}</h3>
+            <p><span>${thread.author.username}</span> <span>${new Date(thread.createdTimestamp).toLocaleTimeString()}</span></p>
+        </div>
+        </a>`
+    })
+
+    res.setHeader("X-Cached-Threads", cached ? "1" : "0").setHeader("content-type", "text/html; charset=utf-8")
+    return res.send(`<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum Sync Test</title>
+    <style>
+        body { background: #1c1c1c }
+
+        .container {
+            margin: 1em 20%;
+            display: grid;
+            gap: 5px
+        }
+
+        .threaditem {
+            background: #444;
+            color: white;
+            padding: 10px;
+            font-family: Arial;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        img { width: 50px; height: 50px; margin-right: 10px }
+
+        .threaditem > div > h3 { margin: 0; }
+        .threaditem > div > p { margin: 0; margin-top: 10px }
+        .threaditem > div > p > span {
+            background: #2d2d2d;
+            padding: 3px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+${htmlStuff}
+</div>
+</body>
+
+</html>`)
+});
+
+app.get("/api/dev/forum/threads/:channelId/:threadId", async (req, res) => {
+    const [data, success, cached] = await ForumSyncTest.FetchForumData(req.params.channelId)
+    if (!success) return res.status(400).json(data)
+
+    // just do all the html rendering stuff and shit
+    if (!(data instanceof Array)) return
+
+    let htmlStuff = ``
+    const thread: ForumThread = data.find((thread: ForumThread) => thread.id === req.params.threadId)
+    if (!thread) return res.status(404).json({ message: "Thread not found." })
+
+    thread.messages.forEach(msg => {
+        if (msg.id === thread.firstMessage?.id) return // dont use first message as a reply since its the thread init message
+        htmlStuff += `<div class="threaditem grid">
+            <div class="threaditem-author">
+                <img src="${msg.author.avatarURL}"></img>
+                <div>
+                    <p><span>${msg.author.username}</span> <span>${new Date(msg.createdTimestamp).toLocaleTimeString()}</span></p>
+                </div>
+            </div>
+            <span>${msg.content.replaceAll(/\n/g, "<br>")}</span>
+        </div>`
+    })
+    res.setHeader("X-Cached-Threads", cached ? "1" : "0").setHeader("content-type", "text/html; charset=utf-8")
+    return res.send(`<!DOCTYPE html>
+        <html lang="en">
+        
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Forum Sync Test</title>
+            <style>
+                body { background: #1c1c1c }
+
+                .grid { display: grid !important }
+        
+                .container {
+                    margin: 1em 20%;
+                    display: grid;
+                    gap: 5px
+                }
+
+                .threaditem {
+                    background: #444;
+                    color: white;
+                    padding: 10px;
+                    font-family: Arial;
+                    text-decoration: none;
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                }
+
+                .threaditem.grid > span {
+                    margin-top: 10px
+                }
+
+                .break {
+                    flex-basis: 100%;
+                    height: 0;
+                    margin-top: 20px;
+                }
+
+                img { width: 50px; height: 50px; margin-right: 10px }
+
+                .threaditem > div > p, .threaditem > div > h3 { margin: 0 }
+                .threaditem > div > h3 { margin: 0; }
+                .threaditem > div > p { margin: 0; margin-top: 10px }
+                .threaditem > div > p > span, 
+                .threaditem-author > div > p > span{
+                    background: #2d2d2d;
+                    padding: 3px;
+                    border-radius: 3px;
+                }
+
+                .threaditem-author {
+                    display: flex;
+                }
+            </style>
+        </head>
+        
+        <body>
+        <div class="container">
+        <a class="threaditem">
+            <img src="${thread.author.avatarURL}"></img>
+            <div class="threaditem-author grid">
+                <h3>${thread.name}</h3>
+                <p><span>${thread.author.username}</span> <span>${new Date(thread.createdTimestamp).toLocaleTimeString()}</span></p>
+            </div>
+            <div class="break"></div>
+            <span>${thread.firstMessage.content}</span>
+        </a>
+        ${htmlStuff}
+        </div>
+        </body>
+        
+        </html>`)
 })
 
 export interface Bot_Settings {

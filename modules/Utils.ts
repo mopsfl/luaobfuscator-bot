@@ -40,8 +40,9 @@ export default class Utils {
             if (message) this.SendErrorMessage(error, message)
             throw error
         })
-        if (response.ok) return await response.json()
-        return { message: `Unexpected error occurred while obfuscating your script.\n\nRequest Status: ${response.statusText} - ${response.status}\n\nIf you continue to experience this error, please contact a staff member.` }
+        return await response.json().catch(async err => {
+            return { message: `Unexpected error occurred while obfuscating your script.\n\nRequest Status: ${response.statusText} - ${response.status}\n\nError: ${err}` }
+        })
     }
 
     ReadAllChunks = async function (stream: ReadableStream) {

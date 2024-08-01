@@ -9,3 +9,4 @@ package-lock.json
 .vscode
 dist.zip
 update.bat
+*.zip
