@@ -6,5 +6,10 @@ export default function (ms: number): string {
     totalSeconds %= 3600;
     let minutes = Math.floor(totalSeconds / 60);
     let seconds = Math.floor(totalSeconds % 60);
-    return `${days > 0 ? days + " day(s), " : ""}${hours > 0 ? hours + " hr(s), " : ""}${minutes > 0 ? minutes + " min(s), " : ""}${seconds} sec(s)`
+
+    const formatUnit = (value: number, singular: string, plural: string) => {
+        return value > 0 ? `${value} ${value > 1 ? plural : singular}, ` : "";
+    }
+
+    return `${formatUnit(days, "day", "days")}${formatUnit(hours, "hr", "hrs")}${formatUnit(minutes, "min", "mins")}${seconds} ${seconds > 1 ? "secs" : "sec"}`;
 }
