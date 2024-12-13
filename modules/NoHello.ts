@@ -6,7 +6,7 @@ const nohello_words = [
     "greetings", "bonjour", "ciao", "aloha",
     "hiyah", "heya", "holla", "hihi", "hail",
     "whatsup", "hiyah", "hi-dee-ho", "hi-ya",
-    "hi-ho"
+    "hi-ho", "helo", "wsp", "wsg"
 ]
 
 export default function (message: Message) {
@@ -20,7 +20,7 @@ export default function (message: Message) {
         msg.length <= 4
 
     if (nohello && message.mentions.repliedUser == null) return message.reply(`https://nohello.net`)
-    if (nohello_words.includes(msg)) {
+    if (nohello_words.includes(msg.toLowerCase())) {
         message.channel.awaitMessages({ filter: (m) => m.author.id === message.author.id, time: 10000 }).then(msg => {
             if (msg.size <= 0) {
                 message.reply(`https://nohello.net`)
