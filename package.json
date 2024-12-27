@@ -12,6 +12,7 @@
     "fs": "^0.0.1-security",
     "http-status": "^1.6.2",
     "luamin": "^1.0.4",
+    "mariadb": "^3.4.0",
     "node-fetch": "^3.3.2",
     "node-gzip": "^1.1.2",
     "redis": "^4.6.15",

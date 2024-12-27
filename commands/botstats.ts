@@ -3,6 +3,7 @@ import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
+import Database from "../modules/Database";
 
 class Command {
     name = ["botstats", "bs", "bots"]
@@ -10,7 +11,15 @@ class Command {
     description = "Shows you some bot statistics."
 
     callback = async (cmd: cmdStructure) => {
-        const bot_stats: BotStats = await self.file_cache.getSync("bot_stats")
+        //const bot_stats: BotStats = await self.file_cache.getSync("bot_stats")
+        const [bot_stats, errorCode, errorMessage] = await Database.GetTable("bot_statistics")
+
+        if (errorCode || errorMessage) {
+            console.error(errorMessage)
+            return self.utils.SendErrorMessage("error", cmd, errorCode)
+        }
+
+        const _bot_stats: BotStats = bot_stats[0]
         const embed = Embed({
             title: "Lua Obfuscator - Bot Statistics",
             color: Colors.Green,
@@ -23,9 +32,9 @@ class Command {
                 {
                     name: "Statistics:",
                     value: `
-                        ${inlineCode("Obfuscations:")} ${inlineCode(bot_stats.obfuscations.toString())}
-                        ${inlineCode("Executed Commands:")} ${inlineCode(bot_stats.total_commands_executed.toString())}
-                        ${inlineCode("Retards that tried deobf:")} ${inlineCode(bot_stats.total_monkey_deobfuscations.toString())}
+                        ${inlineCode("Obfuscations:")} ${inlineCode(_bot_stats.obfuscations.toString())}
+                        ${inlineCode("Executed Commands:")} ${inlineCode(_bot_stats.total_commands_executed.toString())}
+                        ${inlineCode("Retards that tried deobf:")} ${inlineCode(_bot_stats.deobf_tries.toString())}
                     `,
                     inline: false
                 }
@@ -40,7 +49,7 @@ class Command {
 export interface BotStats {
     obfuscations: number,
     total_commands_executed: number,
-    total_monkey_deobfuscations: number,
+    deobf_tries: number,
 }
 
 module.exports = Command

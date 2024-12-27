@@ -7,6 +7,7 @@ import express from "express"
 import dotenv from "dotenv"
 import fs from "fs"
 import cors from "cors"
+import mariadb from "mariadb"
 import Config from "./config"
 import Utils from "./modules/Utils"
 import Command, { cmdStructure, command } from "./modules/Command"
@@ -21,6 +22,7 @@ import { createClient, RedisClientType } from "redis"
 import { gzipSync } from "zlib";
 import RedisClient from "./modules/RedisClient"
 import ForumSyncTest, { ForumThread } from "./modules/ForumSyncTest"
+//import GPTKeywordDetectorThing from "./modules/GPTKeywordDetectorThing"
 
 const app = express()
 dotenv.config()
@@ -34,6 +36,14 @@ const userPluginSaves = new UserPluginSaves()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
+
+const pool = mariadb.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    connectionLimit: 5
+});
 
 const process_path = process.cwd()
 var base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
@@ -97,7 +107,6 @@ client.on("ready", async () => {
         })
     })
 
-
     // statusDisplay recursion
     const actionRecursion = async () => {
         await action_updateStats().then((res) => {
@@ -109,11 +118,10 @@ client.on("ready", async () => {
 client.on(Events.MessageCreate, async (message) => {
     try {
         if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
-        if (NoHello(message) || DeobfLaugh(message)) return
+        //if (NoHello(message) || DeobfLaugh(message) || GPTKeywordDetectorThing(message)) return
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)
-
 
         command.commands.forEach(async c => {
             if (typeof (c.name) == "object" && !c.name.includes(_command) || typeof (c.name) == "string" && c.name != _command) return
@@ -172,8 +180,6 @@ app.listen(process.env.PORT, async () => {
             file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_cacheValue))))
         }
     })
-    //redisClient = new RedisClient()
-    //await redisClient.Init().catch(console.error)
 
     console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
 })
@@ -198,6 +204,7 @@ app.get("/api/v1/commands/:cmdname", (req, res) => {
     res.json(_command)
 })
 
+// TODO: get botstats and cmdstats from database since its not saved in file cache anymore (why not do it now? too lazy)
 app.get("/api/v1/cache/:name", async (req, res) => {
     const session_ids: Array<any> = await cache.get("stats_session_ids")
     if (session_ids && session_ids.includes(req.query.session) || env === "dev") {
@@ -214,6 +221,7 @@ app.get("/api/v1/cache/:name", async (req, res) => {
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 })
 
+/*
 client.on(Events.ThreadCreate, async (thread, newlyCreated) => await ForumSyncTest.HandleNewThread(thread, newlyCreated))
 client.on(Events.ThreadDelete, async (thread) => await ForumSyncTest.HandleDeletedThread(thread))
 client.on(Events.MessageCreate, async (message) => await ForumSyncTest.HandleNewThreadMessage(message))
@@ -368,21 +376,21 @@ app.get("/api/dev/forum/threads/:channelId/:threadId", async (req, res) => {
         
         <body>
         <div class="container">
-        <a class="threaditem">
-            <img src="${thread.author.avatarURL}"></img>
-            <div class="threaditem-author grid">
-                <h3>${thread.name}</h3>
-                <p><span>${thread.author.username}</span> <span>${new Date(thread.createdTimestamp).toLocaleTimeString()}</span></p>
-            </div>
-            <div class="break"></div>
-            <span>${thread.firstMessage.content}</span>
-        </a>
-        ${htmlStuff}
+            <a class="threaditem">
+                <img src="${thread.author.avatarURL}"></img>
+                <div class="threaditem-author grid">
+                    <h3>${thread.name}</h3>
+                    <p><span>${thread.author.username}</span> <span>${new Date(thread.createdTimestamp).toLocaleTimeString()}</span></p>
+                </div>
+                <div class="break"></div>
+                <span>${thread.firstMessage.content}</span>
+            </a>
+            ${htmlStuff}
         </div>
         </body>
         
         </html>`)
-})
+})*/
 
 export interface Bot_Settings {
     alert_pings: boolean
@@ -390,6 +398,6 @@ export interface Bot_Settings {
 
 export {
     Debug, statusDisplay, command, utils, obfuscatorStats, userPluginSaves,
-    client, config, env, cache, file_cache, cacheValues, redisClient,
+    client, config, env, cache, file_cache, cacheValues, redisClient, pool,
     start_tick
 }

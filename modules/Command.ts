@@ -3,6 +3,7 @@ import * as self from "../index"
 import { randomUUID } from "crypto"
 import NoHello from "./NoHello"
 import { BotStats } from "../commands/botstats"
+import Database from "./Database"
 
 export default class Command {
     constructor(
@@ -40,27 +41,25 @@ export default class Command {
         if (!cmd.allowed) return self.utils.SendErrorMessage("permission", cmd, "Missing required permissions.")
         if (cmd.public_command === false && !self.config.allowed_guild_ids.includes(cmd.message.guildId)) return self.utils.SendErrorMessage("permission", cmd, "This command is disabled for this guild.")
         if (this.ratelimits.get(cmd.message.author.id) === true) return await self.utils.SendErrorMessage("ratelimit", cmd, null, null, null, 5000);
+
         try {
-            const bot_stats: BotStats = await self.file_cache.get("bot_stats"),
-                cmd_stats: BotStats = await self.file_cache.getSync("cmd_stats")
-            if (bot_stats) {
-                if (!bot_stats.total_commands_executed) bot_stats.total_commands_executed = 0
-                bot_stats.total_commands_executed++;
-                self.file_cache.set("bot_stats", bot_stats)
-            }
             this.ratelimits.set(cmd.message.author.id, true);
 
             const success = await cmd.callback(cmd)
             cmd.success = success
-            if (cmd_stats) {
-                if (!cmd_stats[cmd.name[0]]) cmd_stats[cmd.name[0]] = 0
-                cmd_stats[cmd.name[0]]++;
-                self.file_cache.set("cmd_stats", cmd_stats)
+
+            const [existsInCmdStats] = await Database.RowExists("cmd_stats", { command_name: cmd.name[0] })
+            if (!existsInCmdStats) {
+                console.log(`${cmd.name[0]} cmd not registered in database yet. inserting...`);
+                await Database.Insert("cmd_stats", { command_name: cmd.name[0], call_count: 1 })
+            } else {
+                const [db_success, db_errorCode, db_errorMessage] = await Database.Increment("cmd_stats", "call_count", { command_name: cmd.name[0] })
+                if (!db_success) console.error(db_errorMessage)
             }
-            //let command_log: Array<cmdStructure> = await self.cache.get("command_log")
-            //if (!command_log) { await self.cache.set("command_log", []); command_log = [] }
-            //command_log.push(cmd)
-            //await self.cache.set(JSON.stringify(command_log), cmd)
+
+            const [db_success, db_errorCode, db_errorMessage] = await Database.Increment("bot_statistics", "total_commands_executed")
+            if (!db_success) console.error(db_errorMessage)
+
             this.ratelimits.set(cmd.message.author.id, false);
             console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
         } catch (error) {
