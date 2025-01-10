@@ -12,6 +12,8 @@ import { randomUUID } from "crypto";
 import ChartImage from "./ChartImage";
 import Embed from "./Embed";
 
+const _http_status = { ...http_status, ...http_status.extra.cloudflare, ...http_status.extra.nginx }
+
 export default class StatusDisplay {
     constructor(
         public status_channel?: Channel,
@@ -175,15 +177,15 @@ export default class StatusDisplay {
                 if (value == "server") { responses[value].server_stats = await fetch(endpoint).then(res => res.ok && res.json()) }
                 responses[value].ping = new Date().getTime() - start_tick
                 responses[value].status = (code == 405 && value == "api" ? 200 : code)
-                responses[value].statusText = (code == 405 && value == "api" ? http_status[200] : http_status[code])
+                responses[value].statusText = (code == 405 && value == "api" ? _http_status[200] : _http_status[code])
                 finished_requests++
             } catch (error) {
                 const isAbortError = error.name === "AbortError"
                 if (isAbortError) {
-                    const status = http_status.REQUEST_TIMEOUT
+                    const status = _http_status.REQUEST_TIMEOUT
                     responses[value].ping = self.config.STATUS_DISPLAY.fetch_timeout
                     responses[value].status = status
-                    responses[value].statusText = http_status[status]
+                    responses[value].statusText = _http_status[status]
                     finished_requests++
                 } else {
                     console.error(error);
