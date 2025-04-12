@@ -94,7 +94,7 @@ async function RegisterSlashCommands(path: string, files: string[]) {
 
     try {
         await discordREST.put(
-            Routes.applicationCommands("1129884495844220979"),
+            Routes.applicationCommands(process.env.CLIENT_ID),
             { body: _commands }
         );
         console.log('> slash commands registered');
