@@ -4,9 +4,8 @@ import GetEmoji from "../modules/GetEmoji";
 import * as self from "../index"
 import { ObfuscationProcess, ObfuscationResult } from "../modules/Utils";
 import CommandCategories from "../modules/CommandCategories";
-import { BotStats } from "./botstats";
-import luamin from "luamin"
 import Embed from "../modules/Embed";
+import Database from "../modules/Database";
 
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
@@ -124,12 +123,7 @@ class Command {
 
             if (!obfuscation_process.error) {
                 console.log(`Script by ${cmd.message.author.username} successfully obfuscated: ${obfuscation_process.results.sessionId}`)
-                const bot_stats: BotStats = await self.file_cache.get("bot_stats")
-                if (bot_stats) {
-                    if (!bot_stats.obfuscations) bot_stats.obfuscations = 0
-                    bot_stats.obfuscations++;
-                    await self.file_cache.set("bot_stats", bot_stats)
-                }
+                Database.Increment("bot_statistics", "obfuscations")
 
                 const discord_buttons = [
                     new ButtonBuilder()
@@ -140,7 +134,7 @@ class Command {
                     row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
 
                 await cmd.message.reply({
-                    content: `-# sessionId: ${obfuscation_process.results.sessionId}\n-# took: ${new Date().getTime() - start_time}ms`,
+                    content: `-# sessionId: \`${obfuscation_process.results.sessionId}\`\n-# took: \`${new Date().getTime() - start_time}ms\``,
                     files: [file_attachment],
                     components: [row]
                 })

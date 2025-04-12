@@ -79,7 +79,8 @@ export interface command {
     direct_message: boolean,
     description: string,
     syntax_usage: string,
-    public_command: boolean
+    public_command: boolean,
+    slash_command: boolean
 }
 
 export interface cmdStructure {
@@ -94,5 +95,6 @@ export interface cmdStructure {
     timestamp: number,
     allowed: boolean,
     success: boolean,
-    public_command: boolean
+    public_command: boolean,
+    slash_command?: boolean,
 }

@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false //does not login the discord client
 
-import { ActivityType, ChannelType, Client, Collection, Events, IntentsBitField, Message, MessageMentions, Partials, ThreadOnlyChannel } from "discord.js"
+import { ActivityType, Client, Collection, Events, IntentsBitField, Partials, REST, Routes, SlashCommandBuilder } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -16,12 +16,9 @@ import StatusDisplay from "./modules/StatusDisplay"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
 import UserPluginSaves from "./modules/UserPluginSaves"
 import { Cache, FileSystemCache } from "file-system-cache"
-import NoHello from "./modules/NoHello"
-import DeobfLaugh from "./modules/DeobfLaugh"
-import { createClient, RedisClientType } from "redis"
 import { gzipSync } from "zlib";
 import RedisClient from "./modules/RedisClient"
-import ForumSyncTest, { ForumThread } from "./modules/ForumSyncTest"
+
 //import GPTKeywordDetectorThing from "./modules/GPTKeywordDetectorThing"
 
 const app = express()
@@ -37,6 +34,9 @@ const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
 
+const slashCommands = new Collection()
+
+const discordREST = new REST({ version: '10' }).setToken(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]);
 const pool = mariadb.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -78,7 +78,32 @@ const client = new Client({
     }
 })
 
-client.on("ready", async () => {
+async function RegisterSlashCommands(path: string, files: string[]) {
+    const _commands = [];
+
+    for (const file of files) {
+        try {
+            const command_data = require(`${path}/${file}`).command;
+            _commands.push(command_data.data.toJSON());
+
+            slashCommands.set(command_data.data.name, command_data)
+        } catch (error) {
+            console.error(`[Command Loader]: Error loading ${file} | ${error}`);
+        }
+    }
+
+    try {
+        await discordREST.put(
+            Routes.applicationCommands("1129884495844220979"),
+            { body: _commands }
+        );
+        console.log('> slash commands registered');
+    } catch (error) {
+        console.error('Failed to register commands:', error);
+    }
+}
+
+client.once(Events.ClientReady, async () => {
     await statusDisplay.init()
     await statusDisplay.UpdateDisplayStatus()
 
@@ -93,14 +118,22 @@ client.on("ready", async () => {
     // register commands
     const commands: any = new Collection()
     command.commands = commands
+
     fs.readdir(`${process_path}/commands`, (err, files) => {
         if (err) return Debug(err, true)
         files.forEach(file => {
             try {
                 file = file.replace(/\.\w+/gm, ".js")
-                const cmd_node = require(`${process_path}/dist/commands/${file}`)
-                const cmd: command = new cmd_node()
-                commands.set(cmd.name[0], cmd)
+                const command_path = `${process_path}/dist/commands/${file}`
+
+                if (fs.lstatSync(command_path).isDirectory()) {
+                    RegisterSlashCommands(command_path, fs.readdirSync(command_path))
+                } else {
+                    const cmd_node = require(command_path)
+                    const cmd: command = new cmd_node()
+
+                    commands.set(cmd.name[0], cmd)
+                }
             } catch (error) {
                 console.error(`[Command Loader]: Unable to initialize ${file} | ${error}`)
             }
@@ -154,6 +187,20 @@ client.on(Events.MessageCreate, async (message) => {
         })
     } catch (error) {
         console.error(error)
+    }
+})
+
+client.on(Events.InteractionCreate, async (interaction) => {
+    if (!interaction.isChatInputCommand()) return
+
+    const _command: any = slashCommands.get(interaction.commandName)
+    if (_command) {
+        try {
+            await _command.callback(interaction)
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ content: 'Error executing command!', ephemeral: true });
+        }
     }
 })
 
@@ -219,7 +266,7 @@ app.get("/api/v1/cache/:name", async (req, res) => {
         }
     }
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
-})
+});
 
 /*
 client.on(Events.ThreadCreate, async (thread, newlyCreated) => await ForumSyncTest.HandleNewThread(thread, newlyCreated))

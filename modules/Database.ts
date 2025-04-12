@@ -4,7 +4,7 @@ import { PoolConnection } from "mariadb";
 import { pool } from "..";
 import self from "./Database"
 
-export type DatabaseTable = "bot_statistics" | "cmd_stats"
+export type DatabaseTable = "bot_statistics" | "cmd_stats" | "obfuscator_stats" | "customplugin_saves"
 
 export default {
     async GetTable(table: DatabaseTable, reqQuery?: any): Promise<[any, string?, number?]> {
@@ -21,6 +21,54 @@ export default {
         } catch (err) {
             console.error(err)
             return [null, err.code, err.message]
+        } finally {
+            if (connection) connection.release();
+        }
+    },
+
+    async SetTable(table: DatabaseTable, key: string, value: any, reqQuery?: any): Promise<[any, string?, number?]> {
+        let connection: PoolConnection;
+
+        try {
+            connection = await pool.getConnection();
+
+            if (!reqQuery || typeof reqQuery !== 'object' || Object.keys(reqQuery).length === 0) {
+                return [null, "invalidQuery", 400];
+            }
+
+            const [conditionColumn, conditionValue] = Object.entries(reqQuery)[0];
+
+            const query = `UPDATE \`${table}\` SET \`${key}\` = ? WHERE \`${conditionColumn}\` = ?`;
+            const [result]: any = await connection.query(query, [value, conditionValue]);
+
+            return result.affectedRows > 0 ? [result] : [null, "databaseNotFound", 404];
+        } catch (err) {
+            console.error(err);
+            return [null, err.code, err.message];
+        } finally {
+            if (connection) connection.release();
+        }
+    },
+
+    async SetTableRowValue(table: DatabaseTable, column: string, value: any, reqQuery?: any): Promise<[any, string?, number?]> {
+        let connection: PoolConnection;
+
+        try {
+            connection = await pool.getConnection();
+
+            if (!reqQuery || typeof reqQuery !== 'object' || Object.keys(reqQuery).length === 0) {
+                return [null, "invalidQuery", 400];
+            }
+
+            const [conditionColumn, conditionValue] = Object.entries(reqQuery)[0];
+
+            const query = `UPDATE \`${table}\` SET \`${column}\` = ? WHERE \`${conditionColumn}\` = ?`;
+            const [result]: any = await connection.query(query, [value, conditionValue]);
+
+            return result.affectedRows > 0 ? [result] : [null, "databaseNotFound", 404];
+        } catch (err) {
+            console.error(err);
+            return [null, err.code, err.message];
         } finally {
             if (connection) connection.release();
         }
