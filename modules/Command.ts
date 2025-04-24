@@ -51,14 +51,12 @@ export default class Command {
             const [existsInCmdStats] = await Database.RowExists("cmd_stats", { command_name: cmd.name[0] })
             if (!existsInCmdStats) {
                 console.log(`${cmd.name[0]} cmd not registered in database yet. inserting...`);
-                await Database.Insert("cmd_stats", { command_name: cmd.name[0], call_count: 1 })
+                Database.Insert("cmd_stats", { command_name: cmd.name[0], call_count: 1 })
             } else {
-                const [db_success, db_errorCode, db_errorMessage] = await Database.Increment("cmd_stats", "call_count", { command_name: cmd.name[0] })
-                if (!db_success) console.error(db_errorMessage)
+                Database.Increment("cmd_stats", "call_count", { command_name: cmd.name[0] })
             }
 
-            const [db_success, db_errorCode, db_errorMessage] = await Database.Increment("bot_statistics", "total_commands_executed")
-            if (!db_success) console.error(db_errorMessage)
+            Database.Increment("bot_statistics", "total_commands_executed")
 
             this.ratelimits.set(cmd.message.author.id, false);
             console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
