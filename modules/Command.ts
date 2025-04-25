@@ -48,15 +48,16 @@ export default class Command {
             const success = await cmd.callback(cmd)
             cmd.success = success
 
-            const [existsInCmdStats] = await Database.RowExists("cmd_stats", { command_name: cmd.name[0] })
-            if (!existsInCmdStats) {
-                console.log(`${cmd.name[0]} cmd not registered in database yet. inserting...`);
-                Database.Insert("cmd_stats", { command_name: cmd.name[0], call_count: 1 })
-            } else {
-                Database.Increment("cmd_stats", "call_count", { command_name: cmd.name[0] })
-            }
+            Database.RowExists("cmd_stats", { command_name: cmd.name[0] }).then(([existsInCmdStats]) => {
+                if (!existsInCmdStats) {
+                    console.log(`${cmd.name[0]} cmd not registered in database yet. inserting...`);
+                    Database.Insert("cmd_stats", { command_name: cmd.name[0], call_count: 1 }).catch(console.error)
+                } else {
+                    Database.Increment("cmd_stats", "call_count", { command_name: cmd.name[0] }).catch(console.error)
+                }
+            })
 
-            Database.Increment("bot_statistics", "total_commands_executed")
+            Database.Increment("bot_statistics", "total_commands_executed").catch(console.error)
 
             this.ratelimits.set(cmd.message.author.id, false);
             console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);

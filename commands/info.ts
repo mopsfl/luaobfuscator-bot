@@ -17,11 +17,10 @@ class Command {
             title: `LuaObfuscator Bot`,
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
-                { name: "• Uptime", value: inlineCode(FormatUptime(self.client?.uptime)), inline: true },
-                { name: "• Status Page", value: hyperlink("Lua Obfuscator Bot - Status Page", `https://mopsfl.de/status/luaobfuscator`), inline: false },
-                { name: "• Support Server", value: `${self.config.support_url}`, inline: false },
-                { name: "• discordjs version:", value: `${inlineCode("^14.15.3")}`, inline: true },
-                { name: "• Last Repo Update:", value: `<t:${lastCommitInfo.last_commit / 1000}:R> [[open]](${lastCommitInfo.commit_url})`, inline: true },
+                { name: "Links:", value: `${hyperlink("Status Page", 'https://mopsfl.de/status/luaobfuscator')}\n ${hyperlink("Support Server", self.config.support_url)}`, inline: false },
+                { name: "Uptime:", value: `-# ${FormatUptime(self.client?.uptime)}`, inline: true },
+                { name: "discord.js version:", value: `-# ^14.15.3`, inline: true },
+                { name: "Last Updated:", value: `-# <t:${lastCommitInfo.last_commit / 1000}:R> [[open]](${lastCommitInfo.commit_url})`, inline: true },
             ],
             color: Colors.Green,
             footer: {

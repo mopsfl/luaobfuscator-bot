@@ -29,15 +29,9 @@ class Command {
                 text: "Lua Obfuscator - Bot Statistics"
             },
             fields: [
-                {
-                    name: "Statistics:",
-                    value: `
-                        ${inlineCode("Obfuscations:")} ${inlineCode(_bot_stats.obfuscations.toString())}
-                        ${inlineCode("Executed Commands:")} ${inlineCode(_bot_stats.total_commands_executed.toString())}
-                        ${inlineCode("Retards that tried deobf:")} ${inlineCode(_bot_stats.deobf_tries.toString())}
-                    `,
-                    inline: false
-                }
+                { name: "Obfuscations:", value: `-# ${_bot_stats.obfuscations}`, inline: true },
+                { name: "Executed Commands:", value: `-# ${_bot_stats.total_commands_executed}`, inline: true },
+                { name: "Retards that tried deobf:", value: `-# ${_bot_stats.deobf_tries}`, inline: true }
             ]
         })
 

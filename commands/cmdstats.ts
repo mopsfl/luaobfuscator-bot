@@ -1,4 +1,4 @@
-import { Colors, bold, inlineCode, underscore } from "discord.js";
+import { Colors, bold, inlineCode, underline } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
@@ -21,8 +21,8 @@ class Command {
 
         let commands_value = ``
         self.command.getAllCommands().forEach(cmd => {
-            const stat = cmd_stats.find(s => s.command_name === cmd.name[0])
-            commands_value += `${inlineCode(cmd.name[0] + ":")} ${bold(underscore(inlineCode(stat.call_count || "0")))}\n`
+            const stat = cmd_stats.find((s: any) => s.command_name === cmd.name[0])
+            commands_value += `-# ${cmd.name[0] + ":"} ${bold(underline((stat.call_count || "0")))}\n`
         })
         const embed = Embed({
             title: "Lua Obfuscator - Command Statistics",

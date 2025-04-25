@@ -44,7 +44,7 @@ class Command {
             })
         } else return self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
             { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
-            { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
+            { name: "Reminder:", value: `-# If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
         ])
 
         // Obfuscation Process
@@ -117,6 +117,7 @@ class Command {
                     return await updateProcess()
                 }
                 obfuscation_process.processes[process_id] = `${GetEmoji("yes")} File attachment created!`
+                obfuscation_process.processes["note"] = `-# To customize your obfuscation result, use the ${bold(inlineCode("!customobfuscate"))} command!`
                 await updateProcess()
                 return obfuscation_process.results
             })
