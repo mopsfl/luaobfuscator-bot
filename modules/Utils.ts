@@ -31,8 +31,64 @@ export default class Utils {
             })
             return response.json()
         } catch (error) {
-            console.error()
+            console.error(error)
         }
+    }
+
+    ManualObfuscateScriptV2 = async function (script: string, config: Object): Promise<ObfuscationResult> {
+        try {
+            let response = await fetch(`https://luaobfuscator.com/v2/obfuscator/obfuscate`, {
+                method: "POST",
+                body: JSON.stringify({ data: script, config: config }),
+                headers: {
+                    "Content-Type": "application/json",
+                    apiKey: process.env.LUAOBF_APIKEY
+                }
+            }).catch(error => { throw error })
+
+            return await response.json()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    async GetV2ObfuscationStatus(sessionId: string): Promise<ObfuscationResult> {
+        try {
+            return await fetch(`https://luaobfuscator.com/v2/obfuscator/status`, {
+                method: "POST",
+                headers: {
+                    sessionId: sessionId,
+                    apiKey: process.env.LUAOBF_APIKEY
+                }
+            }).then(res => res.json())
+        } catch (error) {
+            console.log(error)
+            return
+        }
+    }
+
+    async ParseScriptFromMessage(cmd: cmdStructure): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            if (self.utils.HasCodeblock(cmd.raw_arguments)) {
+                return resolve(self.utils.ParseCodeblock(cmd.raw_arguments))
+            } else if ([...cmd.message.attachments].length > 0) {
+                const attachment = cmd.message.attachments.first(),
+                    attachmentURL = attachment?.url
+
+                if (!attachmentURL) return self.utils.SendErrorMessage("error", cmd, "Unable to get attachment URL.")
+                await fetch(attachmentURL).then(async res => { resolve(await res.text()) }).catch(error => {
+                    self.utils.SendErrorMessage("error", cmd, error)
+                    reject(error)
+                })
+            } else {
+                self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
+                    { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
+                    { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
+                ])
+
+                return reject("invalid script input")
+            }
+        })
     }
 
     ObfuscateScript = async function (script: string, message?: Message): Promise<ObfuscationResult> {
@@ -163,7 +219,7 @@ export default class Utils {
         });
     }
 
-    ObjectKeysToString(obj: {}, ignoredValues = []) {
+    ObjectKeysToString(obj: Object, ignoredValues = []) {
         let str = "";
         function traverse(_obj: {}) {
             Object.keys(_obj).forEach(key => {
@@ -179,6 +235,31 @@ export default class Utils {
         traverse(obj);
         return str.replace(/,\s$/g, "");
     }
+
+    ObjectToFormattedString(obj: Object, indent = 0, hideFalseValues = false) {
+        const indentation = "    ".repeat(indent);
+        let str = "{\n";
+
+        for (const [key, value] of Object.entries(obj)) {
+            if (value === false) continue
+            str += indentation + "    " + key + ": ";
+            if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+                str += this.ObjectToFormattedString(value, indent + 1);
+            } else {
+                str += JSON.stringify(value);
+            }
+            str += "\n";
+        }
+
+        str += indentation + "}";
+        return str;
+    }
+
+    async Sleep(ms: number) {
+        return new Promise((resolve) => {
+            setTimeout(resolve, ms);
+        });
+    }
 }
 
 export interface ObfuscationProcess {
@@ -191,5 +272,6 @@ export interface ObfuscationProcess {
 export interface ObfuscationResult {
     message?: string,
     code?: string,
-    sessionId?: string
+    sessionId?: string,
+    status?: "FINISHED" | "INITIATED" | "FAILED"
 }
