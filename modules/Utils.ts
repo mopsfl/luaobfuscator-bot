@@ -219,29 +219,34 @@ export default class Utils {
         });
     }
 
-    ObjectKeysToString(obj: Object, ignoredValues = []) {
-        let str = "";
-        function traverse(_obj: {}) {
-            Object.keys(_obj).forEach(key => {
-                if (Array.isArray(_obj[key]) && !ignoredValues.includes(_obj[key])) {
-                    str += `${key}, `;
-                } else if (typeof _obj[key] === "object") {
-                    traverse(_obj[key]);
-                } else {
-                    if (!ignoredValues.includes(_obj[key])) str += `${key}, `;
+    ObjectKeysToString(obj: Object, toArray = false, hideFalseValues = true): any {
+        let keys = [];
+
+        function traverse(current: Object) {
+            for (let key in current) {
+                if (current.hasOwnProperty(key)) {
+                    const value = current[key];
+
+                    if (hideFalseValues && !value) continue;
+                    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                        traverse(value);
+                    } else keys.push(key);
                 }
-            });
+            }
         }
+
         traverse(obj);
-        return str.replace(/,\s$/g, "");
+        return !toArray ? keys.join(', ') : keys;
     }
 
+
     ObjectToFormattedString(obj: Object, indent = 0, hideFalseValues = false) {
+        if (Object.keys(obj).length === 0) return "{}";
         const indentation = "    ".repeat(indent);
         let str = "{\n";
 
         for (const [key, value] of Object.entries(obj)) {
-            if (value === false) continue
+            if (value === false && hideFalseValues) continue
             str += indentation + "    " + key + ": ";
             if (typeof value === "object" && value !== null && !Array.isArray(value)) {
                 str += this.ObjectToFormattedString(value, indent + 1);

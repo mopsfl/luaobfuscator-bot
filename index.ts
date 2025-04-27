@@ -14,7 +14,6 @@ import Command, { cmdStructure, command } from "./modules/Command"
 import Debug from "./modules/Debug"
 import StatusDisplay from "./modules/StatusDisplay"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
-import UserPluginSaves from "./modules/UserPluginSaves"
 import { Cache, FileSystemCache } from "file-system-cache"
 import { gzipSync } from "zlib";
 import RedisClient from "./modules/RedisClient"
@@ -27,7 +26,6 @@ const command = new Command()
 const utils = new Utils()
 const statusDisplay = new StatusDisplay()
 const obfuscatorStats = new ObfuscatorStats()
-const userPluginSaves = new UserPluginSaves()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
@@ -149,7 +147,6 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.MessageCreate, async (message) => {
     try {
         if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
-        //if (NoHello(message) || DeobfLaugh(message) || GPTKeywordDetectorThing(message)) return
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)
@@ -271,7 +268,7 @@ export interface Bot_Settings {
 }
 
 export {
-    Debug, statusDisplay, command, utils, obfuscatorStats, userPluginSaves,
+    Debug, statusDisplay, command, utils, obfuscatorStats,
     client, config, env, cache, file_cache, cacheValues, redisClient, pool,
     start_tick
 }

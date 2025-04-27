@@ -1,7 +1,7 @@
 export = {
     list: [
         { label: "MinifyAll", description: `This results the code on a single line, no comments, etc...`, value: "MinifiyAll" },
-        { label: "Virtualize", description: `Makes the final code virtualized.`, value: "Virtualize" },
+        { label: "Virtualize (VM)", description: `Makes the code harder to reverse-engineer by virtualizing it.`, value: "Virtualize" },
         { label: "EncryptStrings", description: `Encrypts strings into something like local foo = v8('\\x42..')`, value: "EncryptStrings" },
         { label: "MutateAllLiterals", description: `Mutates all numeric literals into basic +/- binary nodes.`, value: "MutateAllLiterals" },
         { label: "MixedBooleanArithmetic", description: `Mutates literals into mixed boolean arithmerics.`, value: "MixedBooleanArithmetic" },
@@ -24,10 +24,10 @@ export = {
         "JunkifyAllIfStatements": [100],
         "JunkifyBlockToIf": [100],
         "ControlFlowFlattenV1AllBlocks": [100],
-        "EncryptFuncDeclaration": true,
         "SwizzleLookups": [100],
         "TableIndirection": [100],
         "RevertAllIfStatements": [100],
+        "EncryptFuncDeclaration": true,
         "MakeGlobalsLookups": true,
         "BasicIntegrity": true,
         "WriteLuaBit32": true,
