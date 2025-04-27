@@ -1,9 +1,9 @@
-import { Colors, hyperlink, inlineCode, SlashCommandBuilder } from 'discord.js';
+import { Colors, hyperlink, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 import GithubRepo from '../../modules/GithubRepo';
 import FormatUptime from '../../modules/FormatUptime';
-import { config, client } from '../..';
+import { config, client } from '../../index';
 
 const command = {
     name: ["info"],

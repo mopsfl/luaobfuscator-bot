@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false //does not login the discord client
 
-import { ActivityType, Client, Collection, Events, IntentsBitField, Partials, REST, Routes, SlashCommandBuilder } from "discord.js"
+import { ActivityType, Client, Collection, Events, IntentsBitField, Partials, REST, Routes } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -11,12 +11,10 @@ import mariadb from "mariadb"
 import Config from "./config"
 import Utils from "./modules/Utils"
 import Command, { cmdStructure, command } from "./modules/Command"
-import Debug from "./modules/Debug"
-import StatusDisplay from "./modules/StatusDisplay"
+import StatusDisplayController from "./modules/StatusDisplay/Controller"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
 import { Cache, FileSystemCache } from "file-system-cache"
 import { gzipSync } from "zlib";
-import RedisClient from "./modules/RedisClient"
 
 const app = express()
 dotenv.config()
@@ -24,7 +22,7 @@ dotenv.config()
 const config = new Config()
 const command = new Command()
 const utils = new Utils()
-const statusDisplay = new StatusDisplay()
+const statusDisplayController = new StatusDisplayController()
 const obfuscatorStats = new ObfuscatorStats()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
@@ -55,7 +53,6 @@ const cacheValues = {
     "obfuscator_stats": {}
 }
 
-let redisClient: RedisClient = null
 const client = new Client({
     intents: [
         IntentsBitField.Flags.Guilds,
@@ -100,13 +97,13 @@ async function RegisterSlashCommands(path: string, files: string[]) {
 }
 
 client.once(Events.ClientReady, async () => {
-    await statusDisplay.init()
-    await statusDisplay.UpdateDisplayStatus()
+    await statusDisplayController.init()
+    await statusDisplayController.UpdateDisplayStatus()
 
     const action_updateStats = () => new Promise((resolve, reject) => {
         return setTimeout(async () => {
-            console.log(`> updating status display... (last update: ${Math.round((new Date().getTime() - statusDisplay.last_statusupdate) / 1000)} seconds ago)`)
-            await statusDisplay.UpdateDisplayStatus()
+            console.log(`> updating status display... (last update: ${Math.round((new Date().getTime() - statusDisplayController.last_statusupdate) / 1000)} seconds ago)`)
+            await statusDisplayController.UpdateDisplayStatus()
             resolve(true);
         }, config.status_update_interval)
     })
@@ -116,7 +113,7 @@ client.once(Events.ClientReady, async () => {
     command.commands = commands
 
     fs.readdir(`${process_path}/commands`, (err, files) => {
-        if (err) return Debug(err, true)
+        if (err) return console.error(err)
         files.forEach(file => {
             try {
                 file = file.replace(/\.\w+/gm, ".js")
@@ -146,7 +143,7 @@ client.once(Events.ClientReady, async () => {
 
 client.on(Events.MessageCreate, async (message) => {
     try {
-        if (message.channelId == statusDisplay.status_message.channelId) { await message.delete(); return }
+        if (message.channelId == statusDisplayController.status_message.channelId) { await message.delete(); return }
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)
@@ -234,10 +231,10 @@ app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
     total_file_uploads: await obfuscatorStats.ParseCurrentStat("total_file_uploads", true),
 }))
 
-app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplay))
+app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplayController))
 app.get("/api/v1/statusdisplay/status/:name", (req, res) => {
-    if (!statusDisplay.last_responses[req.params.name]) return res.status(404).json({ code: 404, message: `Service status '${req.params.name}' not found.` })
-    res.json(statusDisplay.last_responses[req.params.name])
+    if (!statusDisplayController.last_responses[req.params.name]) return res.status(404).json({ code: 404, message: `Service status '${req.params.name}' not found.` })
+    res.json(statusDisplayController.last_responses[req.params.name])
 })
 app.get("/api/v1/commands/:cmdname", (req, res) => {
     const _command: any = command.commands.get(req.params.cmdname)
@@ -252,7 +249,7 @@ app.get("/api/v1/cache/:name", async (req, res) => {
     if (session_ids && session_ids.includes(req.query.session) || env === "dev") {
         const cacheValue = await file_cache.getSync(req.params.name)
         try {
-            if (req.params.name === "status_display") return res.json(statusDisplay);
+            if (req.params.name === "status_display") return res.json(statusDisplayController);
             if (!cacheValue) return res.sendStatus(404)
             return res.setHeader("content-encoding", "gzip").send(Buffer.from(cacheValue, "base64"))
         } catch (error) {
@@ -268,7 +265,7 @@ export interface Bot_Settings {
 }
 
 export {
-    Debug, statusDisplay, command, utils, obfuscatorStats,
-    client, config, env, cache, file_cache, cacheValues, redisClient, pool,
+    statusDisplayController, command, utils, obfuscatorStats,
+    client, config, env, cache, file_cache, cacheValues, pool,
     start_tick
 }

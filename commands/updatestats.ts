@@ -1,5 +1,5 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
-import * as self from "../index"
+import { statusDisplayController } from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import CommandCategories from "../modules/CommandCategories";
@@ -19,7 +19,7 @@ class Command {
             color: Colors.Yellow,
         })
         await cmd.message.reply({ embeds: [embed] }).then(async msg => {
-            await self.statusDisplay.UpdateDisplayStatus()
+            await statusDisplayController.UpdateDisplayStatus()
             embed.setDescription(`${GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(new Date().getTime() - cmd.timestamp)}ms`)})`)
                 .setColor(Colors.Green)
                 .setTimestamp()

@@ -1,11 +1,15 @@
+// TODO: remake
+
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Colors, bold, codeBlock, inlineCode } from "discord.js";
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
-import * as self from "../index"
-import { ObfuscationProcess, ObfuscationResult } from "../modules/Utils";
+import { utils, config } from "../index"
+import { ObfuscationProcess } from "../modules/Utils";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
 import Database from "../modules/Database";
+import LuaObfuscator from "../modules/LuaObfuscator/API";
+import { ObfuscationResult } from "../modules/LuaObfuscator/Types";
 
 class Command {
     name = ["obfuscate", "obf", "obfsc"]
@@ -16,34 +20,34 @@ class Command {
     callback = async (cmd: cmdStructure) => {
         if (!cmd.message.channel.isDMBased()) {
             const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
-            await cmd.message.reply(`no, use website: ${bold(self.config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
+            await cmd.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
             return true
         }
 
         let script_content = "",
             chunksAmount = 0,
             hasWebhook = false,
-            hasCodeBlock = self.utils.HasCodeblock(cmd.raw_arguments),
+            hasCodeBlock = utils.HasCodeblock(cmd.raw_arguments),
             file_attachment: AttachmentBuilder,
             start_time = new Date().getTime()
 
         // Get Script Content
         if (hasCodeBlock) {
-            hasWebhook = self.utils.HasWebhook(cmd.raw_arguments)
-            script_content = self.utils.ParseCodeblock(cmd.raw_arguments)
+            hasWebhook = utils.HasWebhook(cmd.raw_arguments)
+            script_content = utils.ParseCodeblock(cmd.raw_arguments)
         } else if ([...cmd.message.attachments].length > 0) {
             const attachment = cmd.message.attachments.first()
             const url = attachment?.url
-            if (!url) self.utils.SendErrorMessage("error", cmd, "Unable to get url from attachment.")
+            if (!url) utils.SendErrorMessage("error", cmd, "Unable to get url from attachment.")
             await fetch(url).then(async res => {
-                const chunks = await self.utils.ReadAllChunks(res.body)
+                const chunks = await utils.ReadAllChunks(res.body)
                 chunksAmount = chunks.length
                 chunks.forEach(chunk => {
                     script_content += Buffer.from(chunk).toString() || ""
                 })
             })
-        } else return self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
-            { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
+        } else return utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
+            { name: "Syntax:", value: inlineCode(`${config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
             { name: "Reminder:", value: `-# If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
         ])
 
@@ -64,13 +68,13 @@ class Command {
             ],
             footer: {
                 text: "LuaObfuscator Bot • made by mopsfl",
-                iconURL: self.config.icon_url
+                iconURL: config.icon_url
             }
         })
 
         // Parse Webhooks
         if (hasWebhook) {
-            const webhooks = self.utils.ParseWebhooks(script_content)
+            const webhooks = utils.ParseWebhooks(script_content)
             let webhook_string = ""
             for (let i = 0; i < webhooks.length; i++) {
                 const webhook = webhooks[i].trim();
@@ -96,12 +100,12 @@ class Command {
                 obfuscation_process.processes[process_id] = process_text_finished
             }
             await createProcess(`${GetEmoji("loading")} Obfuscating script...`, `${GetEmoji("yes")} Script obfuscated!`, async (process_id: number) => {
-                obfuscation_process.results = await self.utils.ObfuscateScript(script_content, cmd.message)
+                obfuscation_process.results = await LuaObfuscator.v1.Obfuscate(script_content, cmd.message)
                 if (!obfuscation_process.results?.code) {
                     obfuscation_process.embed.setColor("Red")
                     obfuscation_process.processes[process_id] = `${GetEmoji("no")} Obfuscation failed!`
                     obfuscation_process.error = obfuscation_process.results.message
-                    self.utils.SendErrorMessage("error", cmd, obfuscation_process.error, "Obfuscation Error")
+                    utils.SendErrorMessage("error", cmd, obfuscation_process.error, "Obfuscation Error")
                     return await updateProcess()
                 }
                 obfuscation_process.processes[process_id] = `${GetEmoji("yes")} Script obfuscated!`
@@ -110,7 +114,7 @@ class Command {
             })
             await createProcess(`${GetEmoji("loading")} Creating file attachment...`, `${GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
                 if (!process_id) return
-                file_attachment = self.utils.CreateFileAttachment(Buffer.from(obfuscation_process.results.code))
+                file_attachment = utils.CreateFileAttachment(Buffer.from(obfuscation_process.results.code))
                 if (typeof file_attachment != "object") {
                     obfuscation_process.embed.setColor("Red")
                     obfuscation_process.processes[process_id] = `${GetEmoji("no")} Creating file attachment failed!`
@@ -130,7 +134,7 @@ class Command {
                     new ButtonBuilder()
                         .setStyle(ButtonStyle.Link)
                         .setLabel("Open on Website")
-                        .setURL(`${self.config.session_url}${obfuscation_process.results.sessionId}`)
+                        .setURL(`${config.session_url}${obfuscation_process.results.sessionId}`)
                 ],
                     row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
 

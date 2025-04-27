@@ -1,5 +1,5 @@
-import { codeBlock, Colors, inlineCode, PermissionFlagsBits } from "discord.js";
-import * as self from "../index"
+import { Colors, inlineCode, PermissionFlagsBits } from "discord.js";
+import { pool, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
@@ -41,19 +41,19 @@ class Command {
 
         try {
             const _t = new Date().getTime()
-            connection = await self.pool.getConnection()
+            connection = await pool.getConnection()
 
             const query = cmd.raw_arguments
             const res = await connection.query(query)
 
             if (res) {
-                const attachment = self.utils.CreateFileAttachment(Buffer.from(JSON.stringify(res, null, 2)), `mariadb_result_${connection.threadId}.json`)
+                const attachment = utils.CreateFileAttachment(Buffer.from(JSON.stringify(res, null, 2)), `mariadb_result_${connection.threadId}.json`)
                 cmd.message.reply({
                     files: [attachment], content: `-# query: ${inlineCode(query)}\n-# took: \`${new Date().getTime() - _t}ms\`\n-# threadId: ${inlineCode(connection.threadId.toString())}`
                 })
             }
         } catch (error) {
-            self.utils.SendErrorMessage("error", cmd, error.message)
+            utils.SendErrorMessage("error", cmd, error.message)
             console.error(error)
         } finally {
             if (connection) connection.release()

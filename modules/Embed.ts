@@ -1,5 +1,5 @@
 import { Colors, EmbedAuthorData, EmbedBuilder, EmbedField, EmbedFooterData, codeBlock } from "discord.js"
-import * as self from "../index"
+import { utils } from "../index"
 import { randomUUID } from "crypto"
 
 export default function (args: { title?: string, description?: string, color?: any, timestamp?: boolean, author?: EmbedAuthorData, thumbnail?: string, image?: string, footer?: EmbedFooterData, fields?: Array<EmbedField> }) {
@@ -19,7 +19,7 @@ export default function (args: { title?: string, description?: string, color?: a
         const errorId = randomUUID()
         embed.setDescription(`If you read this, something probably went wrong while creating this embed!\nIf this keeps occurring, please send the **Error ID** to an Administrator!\n\n**Error ID:** ${codeBlock(errorId)}`)
         embed.setColor(Colors.Red)
-        self.utils.SaveErrorToLogs(errorId, error)
+        utils.SaveErrorToLogs(errorId, error)
         console.error(error)
     }
     return embed

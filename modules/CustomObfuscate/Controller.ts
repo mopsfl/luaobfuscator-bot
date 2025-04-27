@@ -1,7 +1,7 @@
 // CustomObfuscate V2
 // prob the coolest discord bot thing ive ever made
 
-// TODO: not related to this but use the same process embed for the !obfuscate commmand (looks cooler)
+// TODO: handle when no saved configs yet (crashes right now)
 
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, Colors, EmbedBuilder, inlineCode, InteractionCollector, Message, SelectMenuComponentOptionData, StringSelectMenuBuilder, StringSelectMenuInteraction, User } from "discord.js"
 import { utils } from "../../index";
@@ -12,10 +12,12 @@ import Main from "./Embeds/Main";
 import Cancel from "./Embeds/Cancel";
 import Processing from "./Embeds/Processing";
 import FormatBytes from "../FormatBytes";
-import { ObfuscationResult } from "../Utils";
 import Plugins from "./Plugins";
 import Buttons from "./Buttons";
 import Database from "../Database";
+import LuaObfuscator from "../LuaObfuscator/API";
+import { ObfuscationResult } from "../LuaObfuscator/Types";
+import { ObfuscationPlugins, CustomObfuscateComponents } from "./Types";
 
 export class CustomObfuscateController {
     constructor(
@@ -192,7 +194,7 @@ export class CustomObfuscateController {
             this.process_begin = new Date().getTime()
             if (!this.plugins) {
                 await this.UpdateProcessField("obfuscating script...")
-                await utils.ObfuscateScript(this.script_content).then(async result => {
+                await LuaObfuscator.v1.Obfuscate(this.script_content).then(async result => {
                     this.result = result
                     if (result.code) {
                         this.session = result.sessionId
@@ -214,7 +216,7 @@ export class CustomObfuscateController {
                 })
             } else {
                 await this.UpdateProcessField("initiating obfuscation...")
-                await utils.ManualObfuscateScriptV2(this.script_content, this.plugins).then(async result => {
+                await LuaObfuscator.v2.Obfuscate(this.script_content, this.plugins).then(async result => {
                     if (result?.status === "FAILED") {
                         this.session = "N/A"
                         this.process_state = "FAILED"
@@ -226,7 +228,7 @@ export class CustomObfuscateController {
 
                         await this.UpdateProcessField("obfuscation initiated!\n+ awaiting obfuscation status...")
                         await utils.Sleep(1000)
-                        await utils.GetV2ObfuscationStatus(result.sessionId).then(async status_result => {
+                        await LuaObfuscator.v2.GetStatus(result.sessionId).then(async status_result => {
                             if (status_result.status === "FINISHED") {
                                 this.result = status_result
                                 await this.UpdateProcessField("obfuscation completed!\n+ creating file attachment...")
@@ -386,27 +388,3 @@ export class CustomObfuscateController {
         }
     }
 }
-
-export type CustomObfuscateComponents = {
-    buttons?: {
-        main?: { obfuscate: ButtonBuilder, configure_plugins: ButtonBuilder, cancel: ButtonBuilder },
-    },
-    rows: CustomObfuscateRows,
-    embeds: CustomObfuscateEmbeds,
-    select_menu?: StringSelectMenuBuilder,
-    load_menu?: StringSelectMenuBuilder
-}
-
-export type CustomObfuscateRows = {
-    main?: ActionRowBuilder<any>,
-    configure_plugins_select_menu?: ActionRowBuilder<any>,
-    configure_plugins_buttons?: ActionRowBuilder<any>,
-    load_save_select_menu?: ActionRowBuilder<any>,
-}
-export type CustomObfuscateEmbeds = {
-    main?: EmbedBuilder,
-    cancelled?: EmbedBuilder,
-    processing?: EmbedBuilder
-}
-
-export type ObfuscationPlugins = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} }

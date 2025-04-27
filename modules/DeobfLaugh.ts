@@ -1,7 +1,6 @@
 // todo: make it more cleaner xd
 
 import { Message, PermissionFlagsBits } from "discord.js";
-import * as self from "../index";
 
 const reference = [
     ["i", "me", "my", "own", "can"],

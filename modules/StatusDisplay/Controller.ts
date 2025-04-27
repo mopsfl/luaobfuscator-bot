@@ -1,20 +1,20 @@
-import * as self from "../index"
-import { Message, TextChannel, inlineCode, Colors, Channel, codeBlock, hyperlink } from "discord.js";
-import GetEmoji from "./GetEmoji"
-import FormatUptime from "./FormatUptime";
-import FormatBytes from "./FormatBytes";
-import CountMembers from "./CountMembers";
+import { client, config, utils, obfuscatorStats, env, Bot_Settings, file_cache, start_tick } from "../../index"
+import { Message, inlineCode, Colors, Channel, hyperlink } from "discord.js";
+import GetEmoji from "../GetEmoji"
+import FormatUptime from "../FormatUptime";
+import FormatBytes from "../FormatBytes";
+import CountMembers from "../CountMembers";
 import getStatusCode from "url-status-code"
 import http_status from "http-status"
-import FormatNumber from "./FormatNumber";
+import FormatNumber from "../FormatNumber";
 import { gunzipSync, gzipSync } from "zlib";
-import { randomUUID } from "crypto";
-import ChartImage from "./ChartImage";
-import Embed from "./Embed";
+import ChartImage from "../ChartImage";
+import Embed from "../Embed";
+import { PingResponses, Outage, PingResponse } from "./Types";
 
 const _http_status = { ...http_status, ...http_status.extra.cloudflare, ...http_status.extra.nginx }
 
-export default class StatusDisplay {
+export default class StatusDisplayController {
     constructor(
         public status_channel?: Channel,
         public status_message?: Message,
@@ -35,19 +35,19 @@ export default class StatusDisplay {
     ) { }
 
     async init() {
-        await self.client.channels.fetch(self.config[self.env].STATUS_CHANNEL_ID).then(async channel => {
+        await client.channels.fetch(config[env].STATUS_CHANNEL_ID).then(async channel => {
             this.status_channel = channel
             if (!this.status_channel.isTextBased()) return console.error(`channel ${this.status_channel} must be textBased.`)
             await this.status_channel.messages.fetch().then(messages => {
                 this.status_message = messages.first()
                 this.initialized = true
             })
-        }).catch(async err => await self.Debug(err))
+        }).catch(async err => console.error(err))
     }
 
     async CreateStatusEmbed(ping_responses: PingResponses, server_uptime: number, show_next_update: boolean = false) {
-        if (!this.initialized && !self.client) {
-            return self.Debug({ message: "Unable to create status embed.", error: "App not successfully initialized." }, true);
+        if (!this.initialized && !client) {
+            return console.error({ message: "Unable to create status embed.", error: "App not successfully initialized." }, true);
         }
 
         const stats_chart = ChartImage.Create({
@@ -57,13 +57,13 @@ export default class StatusDisplay {
                 datasets: [
                     {
                         label: "Total Files Uploaded",
-                        data: await self.obfuscatorStats.ParseCurrentStat("total_file_uploads"),
+                        data: await obfuscatorStats.ParseCurrentStat("total_file_uploads"),
                         fill: true,
                         backgroundColor: "rgba(54, 235, 169, 0.8)",
                     },
                     {
                         label: "Total Files Obfuscated",
-                        data: await self.obfuscatorStats.ParseCurrentStat("total_obfuscations"),
+                        data: await obfuscatorStats.ParseCurrentStat("total_obfuscations"),
                         fill: true,
                         backgroundColor: "rgba(54, 162, 235, 0.8)",
                     },
@@ -78,7 +78,7 @@ export default class StatusDisplay {
                 description: `The status of Lua Obfuscator services displayed.${lastUpdatedText}
                 ${GetEmoji("offline")} **Last Outage:** ${this.last_outage.state ? `<t:${Math.round(parseInt(this.last_outage.time.toString()) / 1000)}:R>` : this.last_outage_cache.state ? `<t:${Math.round(parseInt(this.last_outage_cache.time.toString()) / 1000)}:R>` : inlineCode("N/A")}`,
                 color: this.last_outage.state ? Colors.Red : Colors.Green,
-                thumbnail: self.config.icon_url,
+                thumbnail: config.icon_url,
                 timestamp: true,
                 fields: [
                     {
@@ -94,8 +94,8 @@ export default class StatusDisplay {
                         name: `${GetEmoji("discord")} **Discord:**`,
                         inline: false,
                         value: `
-                        > **Bot Status**: ${self.client.uptime > 0 ? "Online" : "Offline"} ${self.client.uptime > 0 ? GetEmoji("online") : GetEmoji("offline")}
-                        > **Bot Uptime**: ${inlineCode(FormatUptime(self.client.uptime) || "N/A")}
+                        > **Bot Status**: ${client.uptime > 0 ? "Online" : "Offline"} ${client.uptime > 0 ? GetEmoji("online") : GetEmoji("offline")}
+                        > **Bot Uptime**: ${inlineCode(FormatUptime(client.uptime) || "N/A")}
                         > **Members**: ${inlineCode(CountMembers().toString())}
                         > **Live Status:** ${hyperlink("Status Page", `https://mopsfl.de/status/luaobfuscator`)}
                         `,
@@ -113,7 +113,7 @@ export default class StatusDisplay {
                         name: `${GetEmoji("server_discord")} **Bot Hosting - Server:**`,
                         inline: false,
                         value: `
-                        > **Uptime**: ${inlineCode(FormatUptime(new Date().getTime() - self.start_tick) || "N/A")}
+                        > **Uptime**: ${inlineCode(FormatUptime(new Date().getTime() - start_tick) || "N/A")}
                         > **Memory Usage**: ${inlineCode(FormatBytes(process.memoryUsage().heapUsed) || "N/A")}
                         `,
                     },
@@ -126,7 +126,7 @@ export default class StatusDisplay {
                 title: "Lua Obfuscator - Statistics",
                 description: `Live statistics of Lua Obfuscator.${lastUpdatedText}`,
                 color: Colors.Green,
-                thumbnail: self.config.icon_url,
+                thumbnail: config.icon_url,
                 timestamp: true,
                 image: stats_chart,
                 fields: [
@@ -166,10 +166,10 @@ export default class StatusDisplay {
         }
         let finished_requests = 0
 
-        Object.values(self.config.STATUS_DISPLAY.endpoints).forEach(async endpoint => {
+        Object.values(config.STATUS_DISPLAY.endpoints).forEach(async endpoint => {
             const update_start_tick = new Date().getTime()
-            const index = Object.values(self.config.STATUS_DISPLAY.endpoints).indexOf(endpoint)
-            const value = Object.keys(self.config.STATUS_DISPLAY.endpoints)[index]
+            const index = Object.values(config.STATUS_DISPLAY.endpoints).indexOf(endpoint)
+            const value = Object.keys(config.STATUS_DISPLAY.endpoints)[index]
 
             try {
                 const start_tick = new Date().getTime()
@@ -183,7 +183,7 @@ export default class StatusDisplay {
                 const isAbortError = error.name === "AbortError"
                 if (isAbortError) {
                     const status = _http_status.REQUEST_TIMEOUT
-                    responses[value].ping = self.config.STATUS_DISPLAY.fetch_timeout
+                    responses[value].ping = config.STATUS_DISPLAY.fetch_timeout
                     responses[value].status = status
                     responses[value].statusText = _http_status[status]
                     finished_requests++
@@ -191,7 +191,7 @@ export default class StatusDisplay {
                     console.error(error);
                 }
             }
-            if (finished_requests >= Object.keys(self.config.STATUS_DISPLAY.endpoints).length) {
+            if (finished_requests >= Object.keys(config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
                 if (!all_online) {
@@ -200,17 +200,17 @@ export default class StatusDisplay {
                     // Outage Alert
                     if (this.current_outage_time < 1) this.current_outage_time = new Date().getTime()
                     this.current_outage_length++;
-                    if (self.config.STATUS_DISPLAY.alerts && this.current_outage_length >= 5 && this.current_outage_state == false) {
+                    if (config.STATUS_DISPLAY.alerts && this.current_outage_length >= 5 && this.current_outage_state == false) {
                         this.current_outage_state = true
-                        self.config.STATUS_DISPLAY.ids_to_alert.forEach(async uid => {
-                            let alert_channel = self.client.channels.cache.get(self.config.STATUS_DISPLAY.alert_channel),
+                        config.STATUS_DISPLAY.ids_to_alert.forEach(async uid => {
+                            let alert_channel = client.channels.cache.get(config.STATUS_DISPLAY.alert_channel),
                                 affected_services_text = ""
 
                             affected_services.forEach(service => {
                                 affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status === 200 ? "Online" : "Offline"} ${service.status === 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
-                            const bot_settings: self.Bot_Settings = await self.file_cache.get("bot_settings")
-                            if (alert_channel?.isTextBased() && self.env === "prod") {
+                            const bot_settings: Bot_Settings = await file_cache.get("bot_settings")
+                            if (alert_channel?.isTextBased() && env === "prod") {
                                 alert_channel.send({
                                     content: bot_settings.alert_pings === true ? `<@${uid}>` : undefined,
                                     embeds: [
@@ -237,16 +237,16 @@ export default class StatusDisplay {
                     }
                     try {
                         //@ts-ignore
-                        const outage_log: OutageLog = JSON.parse(gunzipSync(Buffer.from(await self.file_cache.getSync("outage_log"), "base64")))
+                        const outage_log: OutageLog = JSON.parse(gunzipSync(Buffer.from(await file_cache.getSync("outage_log"), "base64")))
                         outage_log.outages.push(this.last_outage)
 
-                        self.file_cache.setSync("last_outage", this.last_outage) //@ts-ignore
-                        self.file_cache.setSync("outage_log", self.utils.ToBase64(gzipSync(JSON.stringify(outage_log))))
+                        file_cache.setSync("last_outage", this.last_outage) //@ts-ignore
+                        file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(outage_log))))
                     } catch (error) {
                         console.error(error)
                     }
                 } else {
-                    const last_outage: Outage = await self.file_cache.getSync("last_outage")
+                    const last_outage: Outage = await file_cache.getSync("last_outage")
                     this.last_outage.state = false
                     this.current_outage_state = false
                     this.current_outage_length = 0
@@ -271,7 +271,7 @@ export default class StatusDisplay {
                 this.last_responses = responses
                 this.last_statusupdate = new Date().getTime()
 
-                self.obfuscatorStats.Update({
+                obfuscatorStats.Update({
                     total_file_uploads: responses.server.server_stats.total_file,
                     total_obfuscations: responses.server.server_stats.total_obfuscations,
                     time: new Date().getTime()
@@ -285,48 +285,4 @@ export default class StatusDisplay {
     CreateServiceStatusField = (name: string, response: PingResponse) => {
         return `> **${name}**: ${response.status == 200 ? "Online" : "Offline"} ${response.status == 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${response.statusText} - ${response.status} | ${response.ping ? response.ping + "ms" : "N/A"})`)}`;
     };
-}
-
-export interface PingResponses {
-    homepage?: PingResponse,
-    forum?: PingResponse,
-    api?: PingResponse,
-    server?: ServerStatsResponse
-}
-
-export interface PingResponse {
-    name?: string,
-    ping?: number | string,
-    status?: number | string,
-    statusText?: string,
-    server_stats?: ServerStats
-}
-
-export interface ServerStatsResponse {
-    name?: string,
-    ping: number | string,
-    status?: number | string,
-    statusText?: string,
-    server_stats: ServerStats
-}
-
-export interface ServerStats {
-    start_time?: string
-    memory_usage?: number
-    queue_waiting?: number
-    queue_active?: number
-    queue_total?: number
-    total_file?: number
-    total_obfuscations?: number
-}
-
-export interface Outage {
-    state?: boolean,
-    time?: string | number,
-    status?: string,
-    affected_services: Array<any>
-}
-
-export interface OutageLog {
-    outages: Outage[]
 }

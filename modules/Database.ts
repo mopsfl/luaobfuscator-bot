@@ -1,7 +1,7 @@
 // my goofy ahh database module thing. works so dont blame me -.-
 
 import { PoolConnection } from "mariadb";
-import { pool } from "..";
+import { pool } from "../index";
 import self from "./Database"
 
 export type DatabaseTable = "bot_statistics" | "cmd_stats" | "obfuscator_stats" | "customplugin_saves"

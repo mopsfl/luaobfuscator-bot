@@ -1,7 +1,4 @@
-import { Colors, inlineCode } from "discord.js";
-import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
-import { BotStats } from "./botstats";
 import CommandCategories from "../modules/CommandCategories";
 import Database from "../modules/Database";
 

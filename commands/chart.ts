@@ -1,5 +1,5 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
-import * as self from "../index"
+import { config } from "../index"
 import { cmdStructure } from "../modules/Command";
 import ChartImage, { ChartDataset } from "../modules/ChartImage";
 import CommandCategories from "../modules/CommandCategories";
@@ -28,7 +28,7 @@ class Command {
                 Embed({
                     title: "Lua Obfuscator - Statistics",
                     color: Colors.Green,
-                    thumbnail: self.config.icon_url,
+                    thumbnail: config.icon_url,
                     description: `Live statistics of Lua Obfuscator.`,
                     timestamp: true
                 }).setImage(chart_obfuscation_stats).setURL(chart_obfuscation_stats),

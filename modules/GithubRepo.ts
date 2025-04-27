@@ -1,5 +1,4 @@
-import { config } from "..";
-import DateToTimestamp from "./DateToTimestamp";
+import { config } from "../index";
 
 export default {
     async GetLastCommitData(): Promise<LastCommitData> {

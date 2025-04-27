@@ -1,5 +1,5 @@
-import * as self from "../index"
+import { statusDisplayController } from "../index"
 
 export default function () {
-    return self.statusDisplay?.status_message?.guild?.memberCount || "N/A"
+    return statusDisplayController?.status_message?.guild?.memberCount || "N/A"
 }

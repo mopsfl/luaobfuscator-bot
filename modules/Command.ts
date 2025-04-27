@@ -64,7 +64,7 @@ export default class Command {
         } catch (error) {
             this.ratelimits.set(cmd.message.author.id, false);
             self.utils.SendErrorMessage("error", cmd, error)
-            self.Debug(error, true)
+            console.error(error)
         }
     }
 }

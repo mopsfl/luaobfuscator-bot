@@ -1,9 +1,8 @@
 import { codeBlock, Colors, inlineCode, PermissionFlagsBits } from "discord.js";
-import * as self from "../index"
+import { pool, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
-import GetEmoji from "../modules/GetEmoji";
 import { PoolConnection } from "mariadb";
 
 const block = [
@@ -26,7 +25,7 @@ class Command {
 
         try {
             const _t1 = new Date().getTime()
-            connection = await self.pool.getConnection()
+            connection = await pool.getConnection()
 
             const _t2 = new Date().getTime()
             await connection.ping()
@@ -46,7 +45,7 @@ class Command {
 
             cmd.message.reply({ embeds: [embed] })
         } catch (error) {
-            self.utils.SendErrorMessage("error", cmd, error.message)
+            utils.SendErrorMessage("error", cmd, error.message)
             console.error(error)
         } finally {
             if (connection) connection.release()

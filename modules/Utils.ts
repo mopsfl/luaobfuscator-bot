@@ -1,9 +1,10 @@
 import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js"
-import * as self from "../index"
+import { config, utils, env, file_cache } from "../index"
 import { cmdStructure } from "./Command"
 import { randomUUID } from "crypto"
 import GetEmoji from "./GetEmoji"
 import Embed from "./Embed"
+import { ObfuscationResult } from "./LuaObfuscator/Types"
 
 export default class Utils {
     HasWebhook = function (string: string) { return /.*\/(api\/(webhooks|webhook)|(webhooks|webhook))\/[0-9]+\/.*/.test(string) }
@@ -15,89 +16,27 @@ export default class Utils {
     ToBase64(str: string) { return Buffer.from(str).toString("base64") }
     CreateFileAttachment = function (content: Buffer | BufferResolvable, name?: string) { return new AttachmentBuilder(content, { name: name || "obfuscated.lua" }) }
 
-    CreateSession = async function (script: string) {
-        try {
-            const response = await fetch(`${self.config.api_url}newscript`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } })
-            return response.ok && response.json()
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    ManualObfuscateScript = async function (session: string, config: Object) {
-        try {
-            const response = await fetch(`${self.config.api_url}obfuscate`, { method: "POST", body: JSON.stringify(config), headers: { sessionId: session, apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
-                throw error
-            })
-            return response.json()
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    ManualObfuscateScriptV2 = async function (script: string, config: Object): Promise<ObfuscationResult> {
-        try {
-            let response = await fetch(`https://luaobfuscator.com/v2/obfuscator/obfuscate`, {
-                method: "POST",
-                body: JSON.stringify({ data: script, config: config }),
-                headers: {
-                    "Content-Type": "application/json",
-                    apiKey: process.env.LUAOBF_APIKEY
-                }
-            }).catch(error => { throw error })
-
-            return await response.json()
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    async GetV2ObfuscationStatus(sessionId: string): Promise<ObfuscationResult> {
-        try {
-            return await fetch(`https://luaobfuscator.com/v2/obfuscator/status`, {
-                method: "POST",
-                headers: {
-                    sessionId: sessionId,
-                    apiKey: process.env.LUAOBF_APIKEY
-                }
-            }).then(res => res.json())
-        } catch (error) {
-            console.log(error)
-            return
-        }
-    }
-
     async ParseScriptFromMessage(cmd: cmdStructure): Promise<string> {
         return new Promise(async (resolve, reject) => {
-            if (self.utils.HasCodeblock(cmd.raw_arguments)) {
-                return resolve(self.utils.ParseCodeblock(cmd.raw_arguments))
+            if (utils.HasCodeblock(cmd.raw_arguments)) {
+                return resolve(utils.ParseCodeblock(cmd.raw_arguments))
             } else if ([...cmd.message.attachments].length > 0) {
                 const attachment = cmd.message.attachments.first(),
                     attachmentURL = attachment?.url
 
-                if (!attachmentURL) return self.utils.SendErrorMessage("error", cmd, "Unable to get attachment URL.")
+                if (!attachmentURL) return utils.SendErrorMessage("error", cmd, "Unable to get attachment URL.")
                 await fetch(attachmentURL).then(async res => { resolve(await res.text()) }).catch(error => {
-                    self.utils.SendErrorMessage("error", cmd, error)
+                    utils.SendErrorMessage("error", cmd, error)
                     reject(error)
                 })
             } else {
-                self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
-                    { name: "Syntax:", value: inlineCode(`${cmd.slash_command ? "/" : self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
+                utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
+                    { name: "Syntax:", value: inlineCode(`${cmd.slash_command ? "/" : config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
                     { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
                 ])
 
                 return reject("invalid script input")
             }
-        })
-    }
-
-    ObfuscateScript = async function (script: string, message?: Message): Promise<ObfuscationResult> {
-        const response = await fetch(`${self.config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
-            if (message) this.SendErrorMessage(error, message)
-            throw error
-        })
-        return await response.json().catch(async err => {
-            return { message: `Unexpected error occurred while obfuscating your script.\n\nRequest Status: ${response.statusText} - ${response.status}\n\nError: ${err}` }
         })
     }
 
@@ -122,7 +61,7 @@ export default class Utils {
     }
 
     async SaveErrorToLogs(errorId: string, error: Error | string, cmd?: cmdStructure) {
-        const error_logs: Array<any> = await self.file_cache.getSync("error_logs")
+        const error_logs: Array<any> = await file_cache.getSync("error_logs")
         error_logs.push({
             errorId: errorId,
             error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack, cause: error.cause } : error,
@@ -130,7 +69,7 @@ export default class Utils {
             user: cmd?.message?.author.id || inlineCode("N/A"),
             arguments: cmd?.raw_arguments || "N/A"
         })
-        self.file_cache.setSync("error_logs", error_logs)
+        file_cache.setSync("error_logs", error_logs)
     }
 
     async SendErrorMessage(type: "error" | "syntax" | "permission" | "ratelimit", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>, deleteMs?: number) {
@@ -142,7 +81,7 @@ export default class Utils {
                 const embed_field = [
                     { name: "Error:", value: codeBlock(errorText), inline: false },
                 ]
-                if (self.env == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
+                if (env == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
                 await cmd.message.reply({
                     embeds: [Embed({
                         title: `${GetEmoji("no")} ${title || error instanceof Error && `${error.name}` || "Unknown Internal Error"}`,
@@ -239,7 +178,6 @@ export default class Utils {
         return !toArray ? keys.join(', ') : keys;
     }
 
-
     ObjectToFormattedString(obj: Object, indent = 0, hideFalseValues = false) {
         if (Object.keys(obj).length === 0) return "{}";
         const indentation = "    ".repeat(indent);
@@ -272,11 +210,4 @@ export interface ObfuscationProcess {
     error?: Error | string,
     processes: Array<string>,
     results: ObfuscationResult,
-}
-
-export interface ObfuscationResult {
-    message?: string,
-    code?: string,
-    sessionId?: string,
-    status?: "FINISHED" | "INITIATED" | "FAILED"
 }

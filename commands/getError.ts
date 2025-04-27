@@ -1,5 +1,5 @@
 import { Colors, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js";
-import * as self from "../index"
+import { config, utils, file_cache } from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import CommandCategories from "../modules/CommandCategories";
@@ -15,13 +15,13 @@ class Command {
     direct_message = false
 
     callback = async (cmd: cmdStructure) => {
-        if (cmd.arguments.length < 1) return self.utils.SendErrorMessage("syntax", cmd, "Please provide the error id.", null, [
-            { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} ${this.syntax_usage}`), inline: false },
+        if (cmd.arguments.length < 1) return utils.SendErrorMessage("syntax", cmd, "Please provide the error id.", null, [
+            { name: "Syntax:", value: inlineCode(`${config.prefix}${cmd.used_command_name} ${this.syntax_usage}`), inline: false },
         ])
 
-        const error_logs: Array<any> = await self.file_cache.getSync("error_logs"),
+        const error_logs: Array<any> = await file_cache.getSync("error_logs"),
             _error: any = error_logs.find(_err => _err.errorId === cmd.arguments[0])
-        if (!_error) return self.utils.SendErrorMessage("error", cmd, "Given error id was not found.")
+        if (!_error) return utils.SendErrorMessage("error", cmd, "Given error id was not found.")
 
         const _fields = [
             { name: "Name:", value: codeBlock(_error.error.name || "N/A"), inline: false },
@@ -74,7 +74,7 @@ class Command {
             })
         } catch (error) {
             console.error(error)
-            self.utils.SendErrorMessage("error", cmd, error)
+            utils.SendErrorMessage("error", cmd, error)
         }
     }
 }

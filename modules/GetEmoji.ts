@@ -1,8 +1,8 @@
-import * as self from "../index";
+import { client } from "../index";
 
 export default function (name: DefaultEmojiNames) {
-    if (!self.client) return self.Debug({ message: "Unable to get emoji.", error: "App not successfully initialized." }, true)
-    return self.client.emojis.cache.find(emoji => emoji.name === name)
+    if (!client) return console.error("Unable to get emoji! App not successfully initialized.")
+    return client.emojis.cache.find(emoji => emoji.name === name)
 }
 
 export type DefaultEmojiNames = "loading" | "yes" | "no" | string

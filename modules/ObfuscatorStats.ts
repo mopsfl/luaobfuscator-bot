@@ -1,4 +1,4 @@
-import * as self from "../index"
+import { file_cache, utils } from "../index"
 import ChartImage from "./ChartImage"
 
 export default class ObfuscatorStats {
@@ -7,17 +7,17 @@ export default class ObfuscatorStats {
     ) { }
 
     async Get(): Promise<Saved_Stats> {
-        return await self.file_cache.get(this.file_cache_name)
+        return await file_cache.get(this.file_cache_name)
     }
 
     async Set(stats: Saved_Stats) {
-        return await self.file_cache.set(this.file_cache_name, stats)
+        return await file_cache.set(this.file_cache_name, stats)
     }
 
     async Update(today_stats: Obfuscator_Stats) {
         try {
             let current_stats: Saved_Stats = await this.Get(),
-                current_date = self.utils.GetFullDate()
+                current_date = utils.GetFullDate()
 
             if (!current_stats) return console.log(`unable to update obfuscator stats. (current_stats is undefined)`)
             if (Object.values(current_stats).length <= 0) {

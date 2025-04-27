@@ -59,7 +59,7 @@ class Command {
                     .setColor(Colors.Green)
                     .setFooter({ text: `${cmd.id}` })
                     .setTimestamp()
-                await msg.edit({ embeds: [embed] }).catch(async err => await self.Debug(err, true))
+                await msg.edit({ embeds: [embed] }).catch(async err => console.error(err))
                 await cmd.message.author.send({
                     embeds: [
                         Embed({

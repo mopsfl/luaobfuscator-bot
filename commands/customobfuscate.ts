@@ -1,7 +1,5 @@
-// TODO: plugin / config saving
-
 import { bold, ComponentType } from "discord.js";
-import * as self from "../index"
+import { config, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
 import CommandCategories from "../modules/CommandCategories";
@@ -16,13 +14,13 @@ class Command {
     callback = async (cmd: cmdStructure) => {
         if (!cmd.message.channel.isDMBased()) {
             const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
-            await cmd.message.reply(`no, use website: ${bold(self.config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
+            await cmd.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
             return true
         }
 
         const Controller = new CustomObfuscateController(cmd.message.author)
 
-        await self.utils.ParseScriptFromMessage(cmd).then(async script => {
+        await utils.ParseScriptFromMessage(cmd).then(async script => {
             Controller.script_content = script
             Controller.response = await cmd.message.reply({ components: [Controller.components.rows.main], embeds: [Controller.components.embeds.main] })
             Controller.main_collector = Controller.response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 })

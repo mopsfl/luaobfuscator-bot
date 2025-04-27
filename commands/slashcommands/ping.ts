@@ -1,4 +1,4 @@
-import { Colors, inlineCode, SlashCommandBuilder } from 'discord.js';
+import { Colors, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 

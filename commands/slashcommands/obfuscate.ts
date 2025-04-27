@@ -1,12 +1,10 @@
 // buggy as fuck ;-;
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, codeBlock, Colors, inlineCode, ModalBuilder, SlashCommandBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { AttachmentBuilder, codeBlock, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
-import { utils, command as _command, config, file_cache } from '../../index';
-import { BotStats } from '../botstats';
+import { utils, command as _command } from '../../index';
 import GetEmoji from '../../modules/GetEmoji';
-import { ObfuscationProcess, ObfuscationResult } from '../../modules/Utils';
-import Embed from '../../modules/Embed';
 import Database from '../../modules/Database';
+import LuaObfuscator from '../../modules/LuaObfuscator/API';
 
 const command = {
     name: ["obfuscate"],
@@ -86,7 +84,7 @@ const command = {
 
                 interaction.followUp({ content: `${GetEmoji("loading")} Obfuscation in progress! This should only take a few seconds...`, ephemeral: true }).then(async processReply => {
                     interactionReply.delete()
-                    await utils.ObfuscateScript(script_content, message).then(async res => {
+                    await LuaObfuscator.v1.Obfuscate(script_content, message).then(async res => {
                         if (res.message) return utils.SendErrorMessage("error", ({ message: message } as any), res.message, "Obfuscation Error")
                         console.log(`Script by ${message.author.username} successfully obfuscated: ${res.sessionId} (slash command)`)
                         Database.Increment("bot_statistics", "obfuscations")

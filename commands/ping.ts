@@ -1,5 +1,4 @@
-import { bold, Colors, inlineCode } from "discord.js";
-import * as self from "../index"
+import { Colors } from "discord.js";
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";

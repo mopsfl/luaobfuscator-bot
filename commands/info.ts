@@ -1,5 +1,5 @@
 import { Colors, hyperlink, inlineCode } from "discord.js";
-import * as self from "../index"
+import { config, client } from "../index"
 import { cmdStructure } from "../modules/Command";
 import FormatUptime from "../modules/FormatUptime";
 import GithubRepo from "../modules/GithubRepo";
@@ -17,17 +17,17 @@ class Command {
             title: `LuaObfuscator Bot`,
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
-                { name: "Links:", value: `${hyperlink("Status Page", 'https://mopsfl.de/status/luaobfuscator')}\n ${hyperlink("Support Server", self.config.support_url)}`, inline: false },
-                { name: "Uptime:", value: `-# ${FormatUptime(self.client?.uptime)}`, inline: true },
+                { name: "Links:", value: `${hyperlink("Status Page", 'https://mopsfl.de/status/luaobfuscator')}\n ${hyperlink("Support Server", config.support_url)}`, inline: false },
+                { name: "Uptime:", value: `-# ${FormatUptime(client?.uptime)}`, inline: true },
                 { name: "discord.js version:", value: `-# ^14.15.3`, inline: true },
                 { name: "Last Updated:", value: `-# <t:${lastCommitInfo.last_commit / 1000}:R> [[open]](${lastCommitInfo.commit_url})`, inline: true },
             ],
             color: Colors.Green,
             footer: {
                 text: "LuaObfuscator Bot • made by mopsfl",
-                iconURL: self.config.icon_url
+                iconURL: config.icon_url
             },
-            thumbnail: self.config.icon_url
+            thumbnail: config.icon_url
         })
         await cmd.message.reply({ embeds: [embed] })
         return true

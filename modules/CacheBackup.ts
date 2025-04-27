@@ -1,20 +1,20 @@
 import { gzipSync } from "zlib"
-import * as self from "../index"
+import { file_cache, utils, cacheValues } from "../index"
 
 export default {
     async CreateBackup() {
-        return self.utils.NewPromise(10000, (resolve, reject) => {
+        return utils.NewPromise(10000, (resolve, reject) => {
             const _cacheValues = {}
-            Object.keys(self.cacheValues).forEach(async (ckey, idx) => {
-                _cacheValues[ckey] = await self.file_cache.get(ckey).catch(console.error)
+            Object.keys(cacheValues).forEach(async (ckey, idx) => {
+                _cacheValues[ckey] = await file_cache.get(ckey).catch(console.error)
 
-                if ((idx + 1) === Object.keys(self.cacheValues).length) {
+                if ((idx + 1) === Object.keys(cacheValues).length) {
                     try {
                         //@ts-ignore
-                        const compressed_backup = self.utils.ToBase64(gzipSync(JSON.stringify(_cacheValues)))
+                        const compressed_backup = utils.ToBase64(gzipSync(JSON.stringify(_cacheValues)))
                         await fetch(process.env.CLOUDFLARE_KV_WRITEAPIURL + process.env.CLOUDFLARE_KV_BACKUP_KEY, {
                             method: "POST",
-                            body: JSON.stringify({ value: compressed_backup, metadata: { time: new Date().getTime(), saved_keys: Object.keys(self.cacheValues) } })
+                            body: JSON.stringify({ value: compressed_backup, metadata: { time: new Date().getTime(), saved_keys: Object.keys(cacheValues) } })
                         }).then(res => res.json()).then((res: CloudflareKVResponse) => {
                             resolve(res)
                         }).catch(async error => {
