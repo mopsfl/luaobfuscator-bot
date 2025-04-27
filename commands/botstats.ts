@@ -7,7 +7,7 @@ import Database from "../modules/Database";
 
 class Command {
     name = ["botstats", "bs", "bots"]
-    category = CommandCategories.Bot
+    category = CommandCategories.Misc
     description = "Shows you some bot statistics."
 
     callback = async (cmd: cmdStructure) => {

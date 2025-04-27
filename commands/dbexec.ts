@@ -19,6 +19,7 @@ class Command {
     description = "test command for the db."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
+    hidden = true
 
     callback = async (cmd: cmdStructure) => {
         let connection: PoolConnection,

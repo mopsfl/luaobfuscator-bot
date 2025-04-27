@@ -19,6 +19,7 @@ class Command {
     description = "Returns informations about the LuaObfuscator database."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
+    hidden = true
 
     callback = async (cmd: cmdStructure) => {
         let connection: PoolConnection

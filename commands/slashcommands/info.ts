@@ -12,18 +12,17 @@ const command = {
     data: new SlashCommandBuilder()
         .setName('info')
         .setDMPermission(true)
-        .setDescription("Returns the bot's current ping in milliseconds, measuring its responsiveness to the Discord server."),
+        .setDescription("Shows some informations and statistics about the bot."),
     async callback(interaction: CommandInteraction): Promise<void> {
         let lastCommitInfo = await GithubRepo.GetLastCommitData()
         const embed = Embed({
             title: `LuaObfuscator Bot`,
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
-                { name: "• Uptime", value: inlineCode(FormatUptime(client?.uptime)), inline: true },
-                { name: "• Status Page", value: hyperlink("Lua Obfuscator Bot - Status Page", `https://mopsfl.de/status/luaobfuscator`), inline: false },
-                { name: "• Support Server", value: `${config.support_url}`, inline: false },
-                { name: "• discordjs version:", value: `${inlineCode("^14.15.3")}`, inline: true },
-                { name: "• Last Repo Update:", value: `<t:${lastCommitInfo.last_commit / 1000}:R> [[open]](${lastCommitInfo.commit_url})`, inline: true },
+                { name: "Links:", value: `${hyperlink("Status Page", 'https://mopsfl.de/status/luaobfuscator')}\n ${hyperlink("Support Server", config.support_url)}`, inline: false },
+                { name: "Uptime:", value: `-# ${FormatUptime(client?.uptime)}`, inline: true },
+                { name: "discord.js version:", value: `-# ^14.15.3`, inline: true },
+                { name: "Last Updated:", value: `-# <t:${lastCommitInfo.last_commit / 1000}:R> [[open]](${lastCommitInfo.commit_url})`, inline: true },
             ],
             color: Colors.Green,
             footer: {
@@ -32,7 +31,7 @@ const command = {
             },
             thumbnail: config.icon_url
         })
-        await interaction.reply({ embeds: [embed], ephemeral: true })
+        await interaction.reply({ ephemeral: true, embeds: [embed] })
     },
 };
 

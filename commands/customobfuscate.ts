@@ -20,7 +20,7 @@ class Command {
             return true
         }
 
-        const Controller = new CustomObfuscateController(cmd)
+        const Controller = new CustomObfuscateController(cmd.message.author)
 
         await self.utils.ParseScriptFromMessage(cmd).then(async script => {
             Controller.script_content = script

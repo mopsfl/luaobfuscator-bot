@@ -82,7 +82,7 @@ export default class Utils {
                 })
             } else {
                 self.utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
-                    { name: "Syntax:", value: inlineCode(`${self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
+                    { name: "Syntax:", value: inlineCode(`${cmd.slash_command ? "/" : self.config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
                     { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
                 ])
 

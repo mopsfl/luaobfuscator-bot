@@ -79,21 +79,22 @@ export interface command {
     description: string,
     syntax_usage: string,
     public_command: boolean,
-    slash_command: boolean
+    slash_command: boolean,
+    hidden?: boolean
 }
 
 export interface cmdStructure {
-    prefix: string,
-    name: string | Array<string>,
-    used_command_name: string,
-    arguments: Array<string | number>,
-    raw_arguments: string,
-    id: string,
-    callback: Function,
+    prefix?: string,
+    name?: string | Array<string>,
+    used_command_name?: string,
+    arguments?: Array<string | number>,
+    raw_arguments?: string,
+    id?: string,
+    callback?: Function,
     message: Message,
-    timestamp: number,
-    allowed: boolean,
-    success: boolean,
-    public_command: boolean,
+    timestamp?: number,
+    allowed?: boolean,
+    success?: boolean,
+    public_command?: boolean,
     slash_command?: boolean,
 }

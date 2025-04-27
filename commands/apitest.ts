@@ -12,6 +12,7 @@ class Command {
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
+    hidden = true
 
     callback = async (cmd: cmdStructure) => {
         const embed = Embed({

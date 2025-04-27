@@ -16,7 +16,11 @@ const command = {
             color: Colors.Yellow
         })
         await interaction.reply({ embeds: [embed], ephemeral: true }).then(msg => {
-            embed.setDescription(`Ping: ${inlineCode((msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, ""))}`).setColor(Colors.Green)
+            embed.setFields([{ name: "Result:", value: `-# ${(msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, "")}` }])
+                .setDescription(" ")
+                .setTimestamp()
+                .setColor(Colors.Green)
+
             msg.edit({ embeds: [embed] })
         })
     },

@@ -12,6 +12,7 @@ class Command {
     direct_message = false
     syntax_usage = "<chart_type> <number> <number> <number> ..."
     permissions = [PermissionFlagsBits.Administrator]
+    hidden = true
 
     callback = async (cmd: cmdStructure) => {
         const datasets_obfuscation_stats: Array<ChartDataset> = [{ "label": "Daily Obfuscations", "data": cmd.arguments.splice(1), "fill": true, "backgroundColor": "rgba(54, 162, 235, 0.8)" }]

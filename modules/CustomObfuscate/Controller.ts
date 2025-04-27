@@ -3,8 +3,7 @@
 
 // TODO: not related to this but use the same process embed for the !obfuscate commmand (looks cooler)
 
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, codeBlock, Colors, EmbedBuilder, inlineCode, InteractionCollector, Message, SelectMenuComponentOptionData, StringSelectMenuBuilder, StringSelectMenuInteraction, StringSelectMenuOptionBuilder } from "discord.js"
-import { cmdStructure } from "../../modules/Command";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, Colors, EmbedBuilder, inlineCode, InteractionCollector, Message, SelectMenuComponentOptionData, StringSelectMenuBuilder, StringSelectMenuInteraction, User } from "discord.js"
 import { utils } from "../../index";
 import { randomUUID } from "crypto";
 import Embed from "../Embed";
@@ -20,7 +19,7 @@ import Database from "../Database";
 
 export class CustomObfuscateController {
     constructor(
-        public command: cmdStructure,
+        public user: User,
         public script_content?: string,
         public plugins?: ObfuscationPlugins,
         public used_plugins = [],
@@ -93,7 +92,7 @@ export class CustomObfuscateController {
     }
 
     public OnButtonClick = async (interaction: ButtonInteraction<CacheType>) => {
-        if (interaction.user.id !== this.command.message.author.id) return interaction.deferUpdate();
+        if (interaction.user.id !== this.user.id) return interaction.deferUpdate();
 
         switch (interaction.customId) {
             case Buttons.CANCEL:
@@ -144,7 +143,7 @@ export class CustomObfuscateController {
 
     public OnPluginSelect = async (interaction: StringSelectMenuInteraction<CacheType>) => {
         try {
-            if (interaction.user.id !== this.command.message.author.id) return interaction.deferUpdate();
+            if (interaction.user.id !== this.user.id) return interaction.deferUpdate();
             const interaction_value = interaction.values[0]
 
             if (interaction.customId === "plugins_select_menu") {
@@ -254,9 +253,9 @@ export class CustomObfuscateController {
 
                 setTimeout(async () => {
                     this.UpdateProcessField("file attachment created!")
-                    await this.command.message.author.send({ files: [this.result_attachment] })
+                    await this.user.send({ files: [this.result_attachment] })
 
-                    console.log(`Script by ${this.command.message.author.username} successfully obfuscated: ${this.result.sessionId} (process: ${this.process_id})`)
+                    console.log(`Script by ${this.user.username} successfully obfuscated: ${this.result.sessionId} (process: ${this.process_id})`)
                 }, 1000);
             }
         } catch (error) {
@@ -328,10 +327,10 @@ export class CustomObfuscateController {
                 save_id = randomUUID(),
                 current_config = JSON.stringify(this.plugins);
 
-            if (!await Database.RowExists("customplugin_saves", { userid: this.command.message.author.id })) {
-                await Database.Insert("customplugin_saves", { userid: this.command.message.author.id, plugins: "{}" })
+            if (!await Database.RowExists("customplugin_saves", { userid: this.user.id })) {
+                await Database.Insert("customplugin_saves", { userid: this.user.id, plugins: "{}" })
             } else {
-                const [data, errorCode, httpStatus] = await Database.GetTable("customplugin_saves", { userid: this.command.message.author.id })
+                const [data, errorCode, httpStatus] = await Database.GetTable("customplugin_saves", { userid: this.user.id })
                 if (!data) {
                     console.error(`Failed to get saved plugins. Code: ${errorCode}, HTTP Status: ${httpStatus}`);
                     return interaction.reply({ ephemeral: true, content: `${"Failed to save configuration!"}\n-# Error: get_${errorCode}_${httpStatus}` })
@@ -346,7 +345,7 @@ export class CustomObfuscateController {
                 "customplugin_saves",
                 "plugins",
                 JSON.stringify(user_saves),
-                { userid: this.command.message.author.id }
+                { userid: this.user.id }
             );
 
             if (!data) {
@@ -362,8 +361,8 @@ export class CustomObfuscateController {
 
     private async GetUserConfigSaves(): Promise<Array<SelectMenuComponentOptionData>> {
         try {
-            if (!await Database.RowExists("customplugin_saves", { userid: this.command.message.author.id })) return [];
-            let [data, errorCode, httpStatus] = await Database.GetTable("customplugin_saves", { userid: this.command.message.author.id }),
+            if (!await Database.RowExists("customplugin_saves", { userid: this.user.id })) return [];
+            let [data, errorCode, httpStatus] = await Database.GetTable("customplugin_saves", { userid: this.user.id }),
                 configs: Array<SelectMenuComponentOptionData> = []
 
             if (!data) {
