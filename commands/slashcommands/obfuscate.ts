@@ -24,7 +24,7 @@ const command = {
             }); return
         }
 
-        const [existsInCmdStats] = await Database.RowExists("cmd_stats", { command_name: command.commandId })
+        const existsInCmdStats = await Database.RowExists("cmd_stats", { command_name: command.commandId })
         if (!existsInCmdStats) {
             console.log(`${command.commandId} cmd not registered in database yet. inserting...`);
             await Database.Insert("cmd_stats", { command_name: command.commandId, call_count: 1 })

@@ -48,7 +48,7 @@ export default class Command {
             const success = await cmd.callback(cmd)
             cmd.success = success
 
-            Database.RowExists("cmd_stats", { command_name: cmd.name[0] }).then(([existsInCmdStats]) => {
+            Database.RowExists("cmd_stats", { command_name: cmd.name[0] }).then(existsInCmdStats => {
                 if (!existsInCmdStats) {
                     console.log(`${cmd.name[0]} cmd not registered in database yet. inserting...`);
                     Database.Insert("cmd_stats", { command_name: cmd.name[0], call_count: 1 }).catch(console.error)

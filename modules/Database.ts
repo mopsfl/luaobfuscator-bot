@@ -37,14 +37,13 @@ export default {
             }
 
             const [conditionColumn, conditionValue] = Object.entries(reqQuery)[0];
-
             const query = `UPDATE \`${table}\` SET \`${key}\` = ? WHERE \`${conditionColumn}\` = ?`;
-            const [result]: any = await connection.query(query, [value, conditionValue]);
 
+            const result = await connection.query(query, [value, conditionValue]);
             return result.affectedRows > 0 ? [result] : [null, "databaseNotFound", 404];
         } catch (err) {
             console.error(err);
-            return [null, err.code, err.message];
+            return [null, err?.code ?? "unknownError", err?.message ?? "Unknown error occurred"];
         } finally {
             if (connection) connection.release();
         }
@@ -74,7 +73,7 @@ export default {
         }
     },
 
-    async RowExists(table: DatabaseTable, reqQuery?: any): Promise<[any, string?, number?]> {
+    async RowExists(table: DatabaseTable, reqQuery?: any): Promise<boolean> {
         let connection: PoolConnection
 
         try {
@@ -84,10 +83,10 @@ export default {
             const query = `SELECT * FROM ${table}${queryName ? ` WHERE ${queryName} = ?` : ""}`;
             const rows = await connection.query(query, queryName ? [queryValue] : []);
 
-            return [rows.length > 0]
+            return rows.length > 0
         } catch (err) {
             console.error(err)
-            return [null, err.code, err.message]
+            return false
         } finally {
             if (connection) connection.release();
         }
