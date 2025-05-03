@@ -58,11 +58,12 @@ export default class StatusDisplayController {
                     {
                         label: "Daily Obfuscated Files",
                         data: await obfuscatorStats.ParseCurrentStat("total_obfuscations"),
-                        fill: true,
-                        backgroundColor: "rgba(54, 162, 235, 0.8)",
+                        fill: false,
+                        backgroundColor: "#36a2eb",
                     },
                 ],
             },
+            options: { scales: { xAxes: [{ barPercentage: 0.5 }] } }
         }).backgroundColor("white").toURL();
         return [
             Embed({
@@ -128,6 +129,7 @@ export default class StatusDisplayController {
                 ],
                 footer: {
                     text: "Lua Obfuscator - Service Status • by mopsfl",
+                    iconURL: config.icon_url
                 },
             }),
             Embed({
@@ -150,6 +152,7 @@ export default class StatusDisplayController {
 
 
     async UpdateDisplayStatus() {
+        const update_start_tick = new Date().getTime()
         const responses: PingResponses = {
             homepage: { name: "homepage", ping: "N/A", status: "N/A", statusText: "N/A" },
             forum: { name: "forum", ping: "N/A", status: "N/A", statusText: "N/A" },
@@ -159,7 +162,6 @@ export default class StatusDisplayController {
         let finished_requests = 0
 
         Object.values(config.STATUS_DISPLAY.endpoints).forEach(async endpoint => {
-            const update_start_tick = new Date().getTime()
             const index = Object.values(config.STATUS_DISPLAY.endpoints).indexOf(endpoint)
             const value = Object.keys(config.STATUS_DISPLAY.endpoints)[index]
 

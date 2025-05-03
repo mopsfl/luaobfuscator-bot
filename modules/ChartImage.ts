@@ -15,7 +15,8 @@ export default {
     },
 
     Create(data: ChartOptions): ChartJSImage {
-        const chart = new ChartJSImage().chart(data)
+        const chart = new ChartJSImage().chart(data).width("400").height("200")
+
         return chart
     }
 }
@@ -26,12 +27,7 @@ export interface ChartOptions {
         labels: Array<String>,
         datasets: Array<ChartDataset>
     },
-    options?: {
-        title: {
-            display: boolean,
-            text: string
-        },
-    }
+    options?: Object
 }
 
 export interface ChartDataset {
