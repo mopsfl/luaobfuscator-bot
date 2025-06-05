@@ -63,7 +63,15 @@ export default class StatusDisplayController {
                     },
                 ],
             },
-            options: { scales: { xAxes: [{ barPercentage: 0.5 }] } }
+            options: {
+                scales: {
+                    xAxes: [{ barPercentage: 0.5 }], yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
         }).backgroundColor("white").toURL();
         return [
             Embed({
