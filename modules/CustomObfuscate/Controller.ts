@@ -258,6 +258,8 @@ export class CustomObfuscateController {
                     await this.user.send({ files: [this.result_attachment] })
 
                     console.log(`Script by ${this.user.username} successfully obfuscated: ${this.result.sessionId} (process: ${this.process_id})`)
+
+                    Database.Increment("bot_statistics", "obfuscations")
                 }, 1000);
             }
         } catch (error) {
