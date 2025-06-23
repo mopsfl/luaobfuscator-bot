@@ -1,4 +1,5 @@
 import { Message } from "discord.js";
+import { client } from "..";
 
 const nohello_words = [
     "hello", "hi", "yo", "ey", "hallo", "hiya",
@@ -19,6 +20,7 @@ export default function (message: Message) {
         new RegExp(/\s/gm).test(msg) != true &&
         msg.length <= 4
 
+    if (message.mentions.members.get(client.user.id.toString())) return message.reply(`stop pinging me dumbass :clown:`)
     if (nohello && message.mentions.repliedUser == null) return message.reply(`https://nohello.net`)
     if (nohello_words.includes(msg.toLowerCase())) {
         message.channel.awaitMessages({ filter: (m) => m.author.id === message.author.id, time: 10000 }).then(msg => {
@@ -27,5 +29,6 @@ export default function (message: Message) {
             }
         })
     }
+
     return nohello
 }

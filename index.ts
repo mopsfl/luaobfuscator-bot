@@ -15,6 +15,7 @@ import StatusDisplayController from "./modules/StatusDisplay/Controller"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
 import { Cache, FileSystemCache } from "file-system-cache"
 import { gzipSync } from "zlib";
+import NoHello from "./modules/NoHello"
 
 const app = express()
 dotenv.config()
@@ -144,7 +145,9 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.MessageCreate, async (message) => {
     try {
         if (message.channelId == statusDisplayController.status_message.channelId) { await message.delete(); return }
+        if (NoHello(message)) return;
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
+
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),
             _args: Array<number | string> = command.getArgs(message).splice(1)
 
