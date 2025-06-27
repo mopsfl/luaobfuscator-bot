@@ -16,7 +16,6 @@ class Command {
         await cmd.message.reply({ embeds: [embed] }).then(msg => {
             embed.setFields([{ name: "Result:", value: `-# ${(msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, "")}` }])
                 .setDescription(" ")
-                .setTimestamp()
                 .setColor(Colors.Green)
 
             msg.edit({ embeds: [embed] })

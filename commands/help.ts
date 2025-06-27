@@ -48,7 +48,7 @@ class Command {
                 thumbnail: config.icon_url,
                 color: Colors.Green,
                 footer: {
-                    text: `Lua Obfuscator Bot`,
+                    text: `Lua Obfuscator`,
                     iconURL: config.icon_url,
                 }
             })

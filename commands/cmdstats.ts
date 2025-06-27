@@ -24,7 +24,7 @@ class Command {
             thumbnail: config.icon_url,
             timestamp: true,
             footer: {
-                text: "Lua Obfuscator - Command Statistics",
+                text: "Lua Obfuscator",
                 iconURL: config.icon_url
             },
             fields: []

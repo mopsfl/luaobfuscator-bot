@@ -4,7 +4,7 @@ import { PoolConnection } from "mariadb";
 import { pool } from "../index";
 import self from "./Database"
 
-export type DatabaseTable = "bot_statistics" | "cmd_stats" | "obfuscator_stats" | "customplugin_saves"
+export type DatabaseTable = "bot_statistics" | "cmd_stats" | "obfuscator_stats" | "customplugin_saves" | "nohello_stats"
 
 export default {
     async GetTable(table: DatabaseTable, reqQuery?: any): Promise<[any, string?, number?]> {
