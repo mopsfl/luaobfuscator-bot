@@ -145,7 +145,7 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.MessageCreate, async (message) => {
     try {
         if (message.channelId == statusDisplayController.status_message.channelId) { await message.delete(); return }
-        if (NoHello(message)) return;
+        //if (NoHello(message)) return;
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
 
         const _command = command.getCommand(message)?.replace(/```[^`]*```/gm, "").trim(),

@@ -193,15 +193,19 @@ export default class StatusDisplayController {
                     console.error(error);
                 }
             }
+
             if (finished_requests >= Object.keys(config.STATUS_DISPLAY.endpoints).length) {
                 const all_online = Object.values(responses).find(_res => _res.status != 200 && !_res.server_stats) ? false : true
                 const server_uptime = new Date().getTime() - new Date(responses.server?.server_stats?.start_time).getTime()
-                if (!all_online) {
+
+                if (all_online === false) {
                     const affected_services = Object.values(responses).filter(v => v.status !== 200)
+                    if (affected_services.length === 1 && affected_services.find(service => service.name === "stats")) return;
 
                     // Outage Alert
                     if (this.current_outage_time < 1) this.current_outage_time = new Date().getTime()
                     this.current_outage_length++;
+
                     if (config.STATUS_DISPLAY.alerts && this.current_outage_length >= 5 && this.current_outage_state == false) {
                         this.current_outage_state = true
                         config.STATUS_DISPLAY.ids_to_alert.forEach(async uid => {
@@ -211,6 +215,7 @@ export default class StatusDisplayController {
                             affected_services.forEach(service => {
                                 affected_services_text = affected_services_text + `${inlineCode(service.name)}: ${service.status === 200 ? "Online" : "Offline"} ${service.status === 200 ? GetEmoji("online") : GetEmoji("offline")} ${inlineCode(`(${service.statusText} - ${service.status} | ${service.ping ? service.ping + "ms" : "N/A"})`)}\n`
                             })
+
                             const bot_settings: Bot_Settings = await file_cache.get("bot_settings")
                             if (alert_channel?.isTextBased() && env === "prod") {
                                 alert_channel.send({
@@ -222,7 +227,7 @@ export default class StatusDisplayController {
                                             color: Colors.Red,
                                             fields: [
                                                 { name: "Affected Services:", value: affected_services_text, inline: false },
-                                                { name: "Outage Info:", value: `Outage since: <t:${Math.round(parseInt(this.current_outage_time.toString()) / 1000)}:R>`, inline: false }
+                                                { name: "Outage Info:", value: `Outage occurred: <t:${Math.round(parseInt(this.current_outage_time.toString()) / 1000)}:R>`, inline: false }
                                             ],
                                             timestamp: true,
                                         })
