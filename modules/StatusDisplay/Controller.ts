@@ -200,7 +200,7 @@ export default class StatusDisplayController {
 
                 if (all_online === false) {
                     const affected_services = Object.values(responses).filter(v => v.status !== 200)
-                    if (affected_services.length === 1 && affected_services.find(service => service.name === "stats")) return;
+                    //if (affected_services.length === 1 && affected_services.find(service => service.name === "stats")) return;
 
                     // Outage Alert
                     if (this.current_outage_time < 1) this.current_outage_time = new Date().getTime()
