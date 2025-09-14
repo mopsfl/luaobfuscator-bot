@@ -1,11 +1,8 @@
-import { ActionRowBuilder, AnyComponentBuilder, ButtonBuilder, ButtonComponent, ButtonStyle, Colors, EmbedField, PermissionFlagsBits, inlineCode } from "discord.js";
+import { Colors, EmbedField, PermissionFlagsBits, inlineCode } from "discord.js";
 import * as self from "../index"
 import { cmdStructure } from "../modules/Command";
 import GetEmoji from "../modules/GetEmoji";
-import FormatNumber from "../modules/FormatNumber";
 import FormatUptime from "../modules/FormatUptime";
-import { readdir, readdirSync, stat, statSync } from "fs";
-import path from "path";
 import fastFolderSize from "fast-folder-size";
 import FormatBytes from "../modules/FormatBytes";
 import CommandCategories from "../modules/CommandCategories";

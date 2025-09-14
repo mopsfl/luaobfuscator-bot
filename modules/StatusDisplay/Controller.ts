@@ -26,7 +26,7 @@ export default class StatusDisplayController {
         public last_total_file: number = 0,
         public last_responses: string | PingResponses = "N/A",
 
-        public default_outage: Outage = { time: "N/A", status: "N/A", affected_services: [], state: false },
+        public default_outage: Outage = { time: 0, status: "N/A", affected_services: [], state: false },
         public last_outage: Outage = default_outage,
         public last_outage_cache: Outage = default_outage,
         public current_outage_length: number = 0,
@@ -153,6 +153,7 @@ export default class StatusDisplayController {
                 ],
                 footer: {
                     text: "Lua Obfuscator - Service Status • by mopsfl",
+                    iconURL: config.icon_url
                 },
             }),
         ];

@@ -15,7 +15,6 @@ import StatusDisplayController from "./modules/StatusDisplay/Controller"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
 import { Cache, FileSystemCache } from "file-system-cache"
 import { gzipSync } from "zlib";
-import NoHello from "./modules/NoHello"
 
 const app = express()
 dotenv.config()
@@ -262,6 +261,31 @@ app.get("/api/v1/cache/:name", async (req, res) => {
     }
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 });
+
+app.get("/outagelog", async (req, res) => {
+    res.sendFile(process_path + "/static/outageLog/index.html")
+})
+
+/*app.get("/outagelog/export", async (req, res) => {
+    const outageLog = JSON.parse(fs.readFileSync(process_path + "/outagelog.json").toString())
+
+    function FilterOutages(outages: Outage[], timeWindowMs = 10 * 60 * 1000) {
+        const seen = [];
+
+        for (const outage of outages) {
+            const currentServices = outage.affected_services.map(s => s.name).sort().join(",");
+            const isDuplicate = seen.some(o => {
+                return Math.abs(o.time - outage.time) < timeWindowMs && o.services === currentServices;
+            });
+
+            if (!isDuplicate) seen.push({ time: outage.time, services: currentServices, original: outage });
+        }
+
+        return seen.map(o => o.original);
+    }
+
+    res.json([FilterOutages(outageLog.outages)])
+})*/
 
 export interface Bot_Settings {
     alert_pings: boolean

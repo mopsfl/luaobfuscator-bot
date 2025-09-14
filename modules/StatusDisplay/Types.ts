@@ -33,7 +33,7 @@ export interface ServerStats {
 
 export interface Outage {
     state?: boolean,
-    time?: string | number,
+    time?: number,
     status?: string,
     affected_services: Array<any>
 }

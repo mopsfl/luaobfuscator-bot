@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lua Obfuscator - Outage Log</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" />
+
+    <script defer>
+        function GetRelativeTime(t) {
+            const r = new Intl.RelativeTimeFormat("en", { numeric: "auto" }),
+                s = Date.now() - t,
+                a = [[1e3, "second"], [6e4, "minute"], [36e5, "hour"], [864e5, "day"], [6048e5, "week"], [2592e6, "month"], [31536e6, "year"]];
+
+            for (let i = a.length - 1; i >= 0; i--)
+                if (Math.abs(s) >= a[i][0])
+                    return r.format(Math.round(s / a[i][0] * -1), a[i][1]);
+            return r.format(0, "second");
+        }
+
+        function ToTime(ms) {
+            const d = new Date(ms);
+            return [d.getHours(), d.getMinutes(), d.getSeconds()]
+                .map(v => String(v).padStart(2, '0'))
+                .join(':');
+        }
+
+        function FilterOutages(outages, timeWindowMs = 600000) {
+            const seen = [];
+            for (const outage of outages) {
+                if (outage.affected_services.some(s => s.status === 403)) continue;
+                const services = outage.affected_services.map(s => s.name).sort().join(",");
+
+                if (!seen.some(o => Math.abs(o.time - outage.time) < timeWindowMs && o.services === services))
+                    seen.push({ time: outage.time, services, original: outage });
+            }
+            return seen.map(o => o.original);
+        }
+
+
+        window.onload = async () => {
+            let list = document.querySelector(".list>.content"),
+                outageLogRequest = await fetch(`/api/v1/cache/outage_log${window.location.search}`),
+                currentRenderLimit = 100
+
+            if (!outageLogRequest.ok) {
+                const error = await outageLogRequest.json()
+
+                list.innerHTML = `<span class="error">
+                    <span>${error.message} (${error.code})</span>
+                    <small>> ${error.error}</small>
+                </span>`
+
+                return console.error(error)
+            }
+
+            let outageLogs = (await outageLogRequest.json())?.outages
+            if (!outageLogs) return console.error("unable to fetch outage logs")
+            list.innerHTML = ""
+
+            function RenderOutages(limit = 100, ascending = true) {
+                list.innerHTML = ""
+                const slicedOutageLogs = outageLogs.filter(o => { return !(o.affected_services.length === 1 && o.affected_services[0].name === "stats"); })
+                    .slice(-limit)
+                    .sort((a, b) => ascending ? a.time - b.time : b.time - a.time);
+
+                FilterOutages(slicedOutageLogs).forEach(outage => {
+                    const element = document.createElement("div")
+
+                    let statusCode = outage.affected_services[0].status,
+                        statusText = outage.affected_services[0].statusText
+
+                    if (!statusText) {
+                        statusText = statusCode == 522 && "Connection Timed Out" || statusCode == 524 && "A Timeout Occurred" || "Unknown Error"
+                    }
+
+                    element.classList.add("outage")
+                    element.setAttribute("id", outage.affected_services.map(o => o.name).join("") + statusText?.toLowerCase().replace(/(\s|\,)/gm, "") + statusCode)
+                    element.setAttribute("time", outage.time)
+                    element.innerHTML = `
+                            <span class="services">${outage.affected_services.map(o => o.name).join(", ")}</span>
+                            <span class="time">${GetRelativeTime(outage.time)} - ${ToTime(outage.time)}</span>
+                            <span class="status">${statusText || "Unknown Error"} <span class="status_code ${statusCode >= 500 ? "red" : "orange"}">${statusCode}</span></span>
+                        `
+
+                    list.appendChild(element)
+                })
+
+                if (currentRenderLimit >= outageLogs.length) load_more.classList.add("hide")
+            }
+
+            const search_bar = document.querySelector(".outage_search")
+            search_bar.addEventListener("input", (input) => {
+                let matches = 0
+                list.querySelectorAll(".outage").forEach(el => {
+                    const id = el.getAttribute("id"),
+                        value = input.target.value.replace(/(\s|\,)/gm, "").toLowerCase().trim()
+
+                    if (id.includes(value)) {
+                        matches += 1
+                        el.classList.remove("hide")
+
+                        if (document.querySelector(".noresult")) {
+                            document.querySelector(".noresult").remove()
+                        }
+                    } else if (value) {
+                        el.classList.add("hide")
+                    }
+                })
+
+                if (matches <= 0 && !document.querySelector(".noresult")) {
+                    const noResult = document.createElement("span")
+                    noResult.classList.add("noresult")
+                    noResult.innerText = "No results found :("
+                    list.appendChild(noResult)
+                }
+            })
+
+            const sort_time = document.querySelector("#sort_time")
+            sort_time.addEventListener("click", () => {
+                sort_time.innerText = sort_time.innerText === "clock_arrow_up" ? "clock_arrow_down" : "clock_arrow_up"
+                RenderOutages(currentRenderLimit, sort_time.innerText === "clock_arrow_up")
+            })
+
+            const load_more = document.querySelector(".load_more")
+            load_more.addEventListener("click", () => {
+                currentRenderLimit += 100
+                RenderOutages(currentRenderLimit, false)
+            })
+
+            const load_all = document.querySelector("#load_all")
+            load_all.addEventListener("click", () => {
+                currentRenderLimit = outageLogs.length
+                RenderOutages(currentRenderLimit, false)
+            })
+
+            RenderOutages(currentRenderLimit, false)
+
+            tippy("#load_all", { content: 'Load All' });
+            tippy("#sort_time", { content: 'Sort Time' })
+        }
+
+    </script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: rgb(27, 27, 27);
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+            padding: 15px;
+            overflow: hidden;
+
+        }
+
+        .hide {
+            display: none !important;
+        }
+
+        .noresult {
+            text-align: center;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background: rgb(27, 27, 27);
+            border-bottom: 1px solid rgb(87, 87, 87);
+            display: flex;
+            padding-bottom: 5px;
+            align-items: center;
+        }
+
+        .buttons {
+            margin-left: auto;
+            user-select: none;
+            display: flex;
+            gap: 5px;
+        }
+
+        .buttons>.button {
+            color: #e7e7e7;
+            cursor: pointer;
+            border-radius: 10em;
+            transition: color .1s;
+        }
+
+        .buttons>.button:hover {
+            color: rgb(172, 172, 172)
+        }
+
+        .outage_search {
+            background: rgb(27, 27, 27);
+            outline: solid 1px #353535;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 5px;
+            font-family: Arial;
+            color: #c8c8c8;
+            margin-left: 5px;
+            margin-bottom: 1px;
+            transition: outline .15s;
+        }
+
+        .outage_search:hover {
+            outline: solid 1px #494949;
+        }
+
+        .title {
+            margin: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .list {
+            overflow: auto;
+            scrollbar-width: thin;
+            margin-top: 10px;
+            max-height: calc(100vh - 75px);
+            display: grid;
+            padding-right: 5px;
+            padding-left: 5px;
+        }
+
+        .list>.content {
+            gap: 5px;
+            display: grid;
+        }
+
+        .error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.1em;
+            color: rgb(224, 0, 0);
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            display: grid;
+            gap: 5px;
+        }
+
+        .error>small {
+            font-size: .75em;
+        }
+
+        .header-inputs {
+            display: flex;
+            margin-left: auto;
+        }
+
+        .outage {
+            position: relative;
+            order: 1;
+            background: rgb(39, 39, 39);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            border-radius: 3px;
+            box-shadow: #0f0f0f 1px 1px 3px 0px;
+            transition: background-color .15s;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .status {
+            position: absolute;
+            top: 35%;
+            right: 10px;
+            font-weight: bold;
+        }
+
+        .status>.status_code {
+            border-radius: 3px;
+            padding: 5px;
+        }
+
+        .status>.status_code.red {
+            background-color: #830000;
+        }
+
+        .status>.status_code.orange {
+            background-color: #a73d00;
+        }
+
+        .outage>.services {
+            font-weight: bold;
+        }
+
+        .outage>.time {
+            margin-top: 2px;
+            font-size: .8em;
+            color: gray;
+        }
+
+        .outage:hover {
+            background-color: #3b3b3b;
+        }
+
+        .load_more {
+            width: 100%;
+            order: 2;
+            background: #2e2e2e;
+            outline: none;
+            border: none;
+            color: white;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-top: 5px;
+            transition: background-color .15s;
+        }
+
+        .load_more:hover {
+            background-color: #3b3b3b;
+        }
+
+        @media only screen and (max-width: 550px) {
+            header {
+                flex-direction: column;
+            }
+
+            .header-inputs {
+                margin-left: 0;
+                margin-top: 15px;
+                width: 100%;
+                flex-direction: row-reverse;
+            }
+
+            .outage_search {
+                width: 100%;
+                margin-left: 0;
+                margin-right: 5px;
+            }
+        }
+    </style>
+
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+</head>
+
+<body>
+    <header>
+        <p class="title">Lua Obfuscator - Outage Log</p>
+
+        <div class="header-inputs">
+            <div class="buttons">
+                <span class="material-symbols-outlined button" id="sort_time">clock_arrow_down</span>
+                <span class="material-symbols-outlined button" id="load_all">expand_all</span>
+            </div>
+
+            <input type="text" placeholder="Search" class="outage_search" autocomplete="off">
+        </div>
+    </header>
+
+    <div class="list">
+        <div class="content"></div>
+        <button class="load_more">Load More</button>
+    </div>
+</body>
+
+</html>
