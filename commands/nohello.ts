@@ -1,4 +1,4 @@
-import { bold, Colors, inlineCode } from "discord.js";
+import { bold, codeBlock, Colors, inlineCode } from "discord.js";
 import { utils, config } from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
@@ -32,6 +32,7 @@ class Command {
             fields: [
                 { name: "No Hello Triggers:", value: `-# ${_noHelloStats.nohello_count}`, inline: true },
                 { name: "Dont Ping Triggers:", value: `-# ${_noHelloStats.noping_count}`, inline: true },
+                { name: "Note:", value: `\`\`\`diff\n- ${"No Hello is currently disabled because it crashes the bot sometimes and I'm to lazy to fix it. :(\n\`\`\`"}`, inline: false },
             ]
         })
 
