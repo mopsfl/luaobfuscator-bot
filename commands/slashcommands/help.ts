@@ -1,43 +1,47 @@
-import { Colors, EmbedBuilder, EmbedField, PermissionFlagsBits, PermissionsBitField, bold, inlineCode, underline, underscore } from "discord.js";
-import { command, config, utils } from "../index"
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
-import Embed from "../modules/Embed";
+import { bold, Colors, EmbedBuilder, EmbedField, hyperlink, inlineCode, SlashCommandBuilder, underline } from 'discord.js';
+import { CommandInteraction } from 'discord.js';
+import Embed from '../../modules/Embed';
+import { config, client, command as _command, utils } from '../../index';
 
-class Command {
-    name = ["help"]
-    category = CommandCategories.Bot
-    description = "Returns a list of all commands and other useful informations for the bot."
+const command = {
+    name: ["help"],
+    commandId: "help_slash",
+    slash_command: true,
 
-    callback = async (cmd: cmdStructure) => {
+    data: new SlashCommandBuilder()
+        .setName('help')
+        .setDMPermission(true)
+        .setDescription("Returns a list of all commands and other useful informations for the bot.")
+        .addStringOption(option => option.setName("command")
+            .setDescription("Select a command to view its details.")
+            .setRequired(false)
+            .addChoices(
+                ...Array.from(_command.commands.values())
+                    .filter(command => !command.hidden)
+                    .map(command => ({
+                        name: command.name[0],
+                        value: command.name[0]
+                    }))
+            )),
+
+    async callback(interaction: CommandInteraction): Promise<void> {
         let embed: EmbedBuilder,
-            validcommand = false,
-            fullcommand_name = ""
+            option = interaction.options.get("command")
 
-        command.commands.forEach(_command => {
-            if (!validcommand) {
-                validcommand = cmd.arguments[0]
-                    && typeof (cmd.arguments[0]) === "string"
-                    && _command.name.includes(cmd.arguments[0].replace(/\!/, ""))
-
-                if (cmd.public_command === false && !config.allowed_guild_ids.includes(cmd.message.guildId)) validcommand = false
-                fullcommand_name = _command.name[0]
-            }
-        })
-        if (validcommand && typeof (cmd.arguments[0]) === "string") {
-            const _command = command.commands.get(fullcommand_name.replace(/\!/, ""))
+        if (option) {
+            const _cmd = _command.commands.get(option.value.toString())
             let required_perms = ""
-            if (_command.permissions) {
-                _command.permissions.forEach(perm => {
+            if (_cmd.permissions) {
+                _cmd.permissions.forEach(perm => {
                     required_perms += `-# ${utils.GetPermissionsName(perm).toUpperCase()}`
                 })
             }
             embed = Embed({
                 title: "Lua Obfuscator Bot - Help",
-                description: `-# ${_command.description}`,
+                description: `-# ${_cmd.description}`,
                 fields: [{
                     name: "Syntax Usage:",
-                    value: `-# ${bold(inlineCode(config.prefix + _command.name[0]))} ${_command.syntax_usage ? bold(inlineCode(_command.syntax_usage)) : ""}`,
+                    value: `-# ${bold(inlineCode(config.prefix + _cmd.name[0]))} ${_cmd.syntax_usage ? bold(inlineCode(_cmd.syntax_usage)) : ""}`,
                     inline: false,
                 }, {
                     name: "Required Permissions:",
@@ -54,7 +58,7 @@ class Command {
             })
         } else {
             let commands_field: Array<EmbedField> = []
-            command.commands.forEach(command => {
+            _command.commands.forEach(command => {
                 if (command.hidden) return
                 if (!commands_field.find(c => c.name == command.category)) commands_field.push({ name: command.category, value: "", inline: false })
                 const index = commands_field.findIndex(c => c.name == command.category)
@@ -63,7 +67,7 @@ class Command {
             commands_field.forEach(f => commands_field[commands_field.indexOf(f)].value = `-# ${f.value.replace(/,\s*$/, "")}`)
             commands_field.push({
                 name: "Note:",
-                value: `-# Use ${bold(underline(`${config.prefix}help`))} ${bold(underline("<command>"))} to get information about a specific command.`,
+                value: `-# Use ${bold(underline(`/help`))} ${bold(underline("<command>"))} to get information about a specific command.`,
                 inline: false
             })
 
@@ -81,9 +85,9 @@ class Command {
             })
         }
 
-        await cmd.message.channel.send({ embeds: [embed] })
-        return true
-    }
-}
+        await interaction.reply({ ephemeral: true, embeds: [embed] })
+    },
+};
 
-module.exports = Command
+
+export { command };
