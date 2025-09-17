@@ -4,6 +4,7 @@ import Embed from '../../modules/Embed';
 import GithubRepo from '../../modules/GithubRepo';
 import FormatUptime from '../../modules/FormatUptime';
 import { config, client } from '../../index';
+import Database from '../../modules/Database';
 
 const command = {
     name: ["info"],
@@ -31,6 +32,8 @@ const command = {
             },
             thumbnail: config.icon_url
         })
+
+        Database.Increment("cmd_stats", "call_count", { command_name: "info" }).catch(console.error)
         await interaction.reply({ ephemeral: true, embeds: [embed] })
     },
 };

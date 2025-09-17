@@ -81,7 +81,7 @@ async function RegisterSlashCommands(path: string, files: string[]) {
 
             slashCommands.set(command_data.data.name, command_data)
         } catch (error) {
-            console.error(`[Command Loader]: Error loading ${file} | ${error}`);
+            console.error(`[Slash Command Loader]: Error loading ${file} | ${error}`);
         }
     }
 

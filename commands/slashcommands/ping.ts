@@ -1,6 +1,7 @@
 import { Colors, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
+import Database from '../../modules/Database';
 
 const command = {
     name: ["ping"],
@@ -15,6 +16,7 @@ const command = {
             description: "Pinging...",
             color: Colors.Yellow
         })
+
         await interaction.reply({ embeds: [embed], ephemeral: true }).then(msg => {
             embed.setFields([{ name: "Result:", value: `-# ${(msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, "")}` }])
                 .setDescription(" ")
@@ -23,6 +25,8 @@ const command = {
 
             msg.edit({ embeds: [embed] })
         })
+
+        Database.Increment("cmd_stats", "call_count", { command_name: "ping" }).catch(console.error)
     },
 };
 

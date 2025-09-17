@@ -2,6 +2,7 @@ import { bold, Colors, EmbedBuilder, EmbedField, hyperlink, inlineCode, SlashCom
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 import { config, client, command as _command, utils } from '../../index';
+import Database from '../../modules/Database';
 
 const command = {
     name: ["help"],
@@ -85,6 +86,7 @@ const command = {
             })
         }
 
+        Database.Increment("cmd_stats", "call_count", { command_name: "help" }).catch(console.error)
         await interaction.reply({ ephemeral: true, embeds: [embed] })
     },
 };
