@@ -5,12 +5,23 @@ import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
 import { PoolConnection } from "mariadb";
 
-const block = [
-    "DELETE",
-    "DROP TABLE",
-    "DROP DATABASE",
-    "TRUNCATE"
-]
+const statusFlags = {
+    2: "SERVER_STATUS_AUTOCOMMIT",
+    4: "SERVER_MORE_RESULTS_EXISTS",
+    8: "SERVER_STATUS_NO_GOOD_INDEX_USED",
+    16: "SERVER_STATUS_NO_INDEX_USED",
+    32: "SERVER_STATUS_CURSOR_EXISTS",
+    64: "SERVER_STATUS_LAST_ROW_SENT",
+    128: "SERVER_STATUS_DB_DROPPED",
+    256: "SERVER_STATUS_NO_BACKSLASH_ESCAPES",
+    512: "SERVER_STATUS_METADATA_CHANGED",
+    1024: "SERVER_QUERY_WAS_SLOW",
+    2048: "SERVER_PS_OUT_PARAMS",
+    4096: "SERVER_STATUS_IN_TRANS",
+    8192: "SERVER_STATUS_AUTOCOMMIT",
+    16384: "SERVER_STATUS_IN_TRANS_READONLY",
+    32768: "SERVER_SESSION_STATE_CHANGED"
+};
 
 class Command {
     name = ["dbinfo", "dbi"]
@@ -38,7 +49,7 @@ class Command {
                 },
                 fields: [
                     { name: "Server Version", value: inlineCode(connection.serverVersion()), inline: true },
-                    { name: "Status", value: inlineCode(connection.info.status.toString()), inline: true },
+                    { name: "Status", value: inlineCode(statusFlags[connection.info.status] || connection.info.status.toString()), inline: true },
                     { name: "Ping", value: `\`${(new Date().getTime() - _t2).toString()}ms\``, inline: false },
                 ]
             })

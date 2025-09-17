@@ -13,6 +13,29 @@ const block = [
     "TRUNCATE"
 ]
 
+const STATUS_FLAGS: Record<number, string> = {
+    1: "IN_TRANS",
+    2: "AUTOCOMMIT",
+    4: "MORE_RESULTS_EXISTS",
+    8: "NO_GOOD_INDEX_USED",
+    16: "NO_INDEX_USED",
+    32: "CURSOR_EXISTS",
+    64: "LAST_ROW_SENT",
+    128: "DB_DROPPED",
+    256: "NO_BACKSLASH_ESCAPES",
+    512: "METADATA_CHANGED",
+    1024: "QUERY_WAS_SLOW",
+    2048: "PS_OUT_PARAMS",
+    4096: "IN_TRANS_READONLY",
+    8192: "SESSION_STATE_CHANGED"
+};
+
+function getReadableStatus(statusNumber: number): string[] {
+    return Object.entries(STATUS_FLAGS)
+        .filter(([bit, _]) => (statusNumber & Number(bit)) !== 0)
+        .map(([_, name]) => name);
+}
+
 class Command {
     name = ["dbexec", "dbex", "dbx"]
     category = CommandCategories.Misc
@@ -45,11 +68,10 @@ class Command {
 
             const query = cmd.raw_arguments
             const res = await connection.query(query)
-
             if (res) {
-                const attachment = utils.CreateFileAttachment(Buffer.from(JSON.stringify(res, null, 2)), `mariadb_result_${connection.threadId}.json`)
-                cmd.message.reply({
-                    files: [attachment], content: `-# query: ${inlineCode(query)}\n-# took: \`${new Date().getTime() - _t}ms\`\n-# threadId: ${inlineCode(connection.threadId.toString())}`
+                const attachment = utils.CreateFileAttachment(Buffer.from(JSON.stringify(res, (key, value) => typeof value === 'bigint' ? value.toString() : value, 2)), `mariadb_result_${connection.threadId}.json`);
+                cmd.message.reply({ //@ts-ignore
+                    files: [attachment], content: `-# query: ${inlineCode(query)}\n-# took: \`${new Date().getTime() - _t}ms\`\n-# threadId: ${inlineCode(connection.threadId.toString())}\n-# status: \`${getReadableStatus(connection.info.status)} (${connection.info.status})\`\n-# seed: \`${connection.info.seed.toString()}\``
                 })
             }
         } catch (error) {
