@@ -30,14 +30,19 @@ class Command {
             fields: []
         })
 
-        command.getAllCommands().forEach(cmd => {
-            const stat = cmd_stats.find((s: any) => s.command_name === cmd.name[0])
-            embed.addFields({
-                name: cmd.name[0],
-                value: `-# ${(stat.call_count || "0")}`,
-                inline: true
-            })
-        })
+        const statsMap = new Map(cmd_stats.map(s => [s.command_name, s.call_count ?? 0]));
+
+        [...command.getAllCommands().values()]
+            .sort((a, b) =>
+                (Number(statsMap.get(b.name[0])) ?? 0) - (Number(statsMap.get(a.name[0])) ?? 0)
+            ).forEach(cmd =>
+                embed.addFields({
+                    name: cmd.name[0],
+                    value: `-# ${statsMap.get(cmd.name[0]) ?? 0}`,
+                    inline: true
+                })
+            );
+
 
         cmd.message.reply({ embeds: [embed] })
         return true
