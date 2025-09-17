@@ -48,7 +48,7 @@ class Command {
         let connection: PoolConnection,
             _block = false
 
-        if (cmd.message.author.id !== "11112573189617091171") return cmd.message.reply("srry baby gurl this is only for mopsfl :p")
+        if (cmd.message.author.id !== "1111257318961709117") return cmd.message.reply("srry baby gurl this is only for mopsfl :p")
         block.forEach(q => {
             if (cmd.raw_arguments.toLowerCase().includes(q.toLowerCase())) {
                 _block = true
