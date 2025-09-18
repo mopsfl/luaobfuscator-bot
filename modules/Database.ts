@@ -4,23 +4,30 @@ import { PoolConnection } from "mariadb";
 import { pool } from "../index";
 import self from "./Database"
 
-export type DatabaseTable = "bot_statistics" | "cmd_stats" | "obfuscator_stats" | "customplugin_saves" | "nohello_stats"
+export type DatabaseTable = "bot_statistics" | "cmd_stats" | "obfuscator_stats" | "customplugin_saves" | "nohello_stats" | "outage_log"
 
 export default {
-    async GetTable(table: DatabaseTable, reqQuery?: any): Promise<[any, string?, number?]> {
-        let connection: PoolConnection
+    async GetTable(table: DatabaseTable, reqQuery?: any, latest: boolean = false): Promise<[any, string?, number?]> {
+        let connection: PoolConnection;
 
         try {
             connection = await pool.getConnection();
-
             const [queryName, queryValue] = reqQuery && self.ParseSearchQuery(reqQuery) || [];
-            const query = `SELECT * FROM ${table}${queryName ? ` WHERE ${queryName} = ?` : ""}`;
+
+            let query = `SELECT * FROM ${table}${queryName ? ` WHERE ${queryName} = ?` : ""}`;
+
+            if (latest) query += " ORDER BY time DESC LIMIT 1";
             const rows = await connection.query(query, queryName ? [queryValue] : []);
 
-            return rows.length ? (queryName ? [rows[0]] : [rows]) : [null, "databaseNotFound", 404];
-        } catch (err) {
-            console.error(err)
-            return [null, err.code, err.message]
+            if (rows.length) {
+                if (latest) return [rows[0]];
+                return queryName ? [rows[0]] : [rows];
+            } else {
+                return [null, "databaseNotFound", 404];
+            }
+        } catch (err: any) {
+            console.error(err);
+            return [null, err.code, err.message];
         } finally {
             if (connection) connection.release();
         }

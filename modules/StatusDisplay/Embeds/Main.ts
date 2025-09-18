@@ -1,0 +1,29 @@
+import { Colors, hyperlink } from "discord.js";
+import GetEmoji from "../../GetEmoji";
+import { config } from "../../../index";
+
+export default function () {
+    return {
+        title: "Lua Obfuscator - Service Status",
+        color: Colors.Grey,
+        timestamp: true,
+        description: "",
+        fields: [
+            { name: `${GetEmoji("update")} Last Updated`, value: `-# N/A`, inline: true },
+            { name: "\u200B", value: "\u200B", inline: true },
+            { name: `${GetEmoji("offline")} Last Outage`, value: `-# N/A`, inline: true },
+            { name: "\u200B", value: "**__Services:__**", inline: false },
+            { name: "Homepage:", value: `-# N/A`, inline: true },
+            { name: "Forum:", value: `-# N/A`, inline: true },
+            { name: "API:", value: `-# N/A`, inline: true },
+            { name: "\u200B", value: "**__Other Statistics:__**", inline: false },
+            { name: "Server Uptime:", value: "-# N/A", inline: true },
+            { name: "Memory Usage:", value: "-# N/A", inline: true },
+            { name: "Bot Uptime", value: "-# N/A", inline: true },
+        ],
+        footer: {
+            text: `Lua Obfuscator - Service Status • by mopsfl`,
+            iconURL: config.icon_url,
+        }
+    }
+}

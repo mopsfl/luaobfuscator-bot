@@ -19,7 +19,7 @@ class Command {
             color: Colors.Yellow,
         })
         await cmd.message.reply({ embeds: [embed] }).then(async msg => {
-            await statusDisplayController.UpdateDisplayStatus()
+            //await statusDisplayController.UpdateDisplayStatus()
             embed.setDescription(`${GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(new Date().getTime() - cmd.timestamp)}ms`)})`)
                 .setColor(Colors.Green)
                 .setTimestamp()

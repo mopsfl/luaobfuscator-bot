@@ -97,7 +97,9 @@ async function RegisterSlashCommands(path: string, files: string[]) {
 }
 
 client.once(Events.ClientReady, async () => {
-    await statusDisplayController.init()
+    statusDisplayController.init()
+
+    /*await statusDisplayController.init()
     await statusDisplayController.UpdateDisplayStatus()
 
     const action_updateStats = () => new Promise((resolve, reject) => {
@@ -106,7 +108,7 @@ client.once(Events.ClientReady, async () => {
             await statusDisplayController.UpdateDisplayStatus()
             resolve(true);
         }, config.status_update_interval)
-    })
+    })*/
 
     // register commands
     const commands: any = new Collection()
@@ -134,16 +136,16 @@ client.once(Events.ClientReady, async () => {
     })
 
     // statusDisplay recursion
-    const actionRecursion = async () => {
+    /*const actionRecursion = async () => {
         await action_updateStats().then((res) => {
             setTimeout(actionRecursion, 100)
         })
-    }; actionRecursion()
+    }; actionRecursion()*/
 })
 
 client.on(Events.MessageCreate, async (message) => {
     try {
-        if (message.channelId == statusDisplayController.status_message.channelId) { await message.delete(); return }
+        //if (message.channelId == statusDisplayController.status_message.channelId) { await message.delete(); return }
         //if (NoHello(message)) return;
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
 
@@ -234,10 +236,10 @@ app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
 }))
 
 app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplayController))
-app.get("/api/v1/statusdisplay/status/:name", (req, res) => {
+/*app.get("/api/v1/statusdisplay/status/:name", (req, res) => {
     if (!statusDisplayController.last_responses[req.params.name]) return res.status(404).json({ code: 404, message: `Service status '${req.params.name}' not found.` })
     res.json(statusDisplayController.last_responses[req.params.name])
-})
+})*/
 app.get("/api/v1/commands/:cmdname", (req, res) => {
     const _command: any = command.commands.get(req.params.cmdname)
     if (_command.permissions) _command.permissions.forEach((v: any, i: number) => _command.permissions[i] = utils.GetPermissionsName(v))
@@ -262,11 +264,12 @@ app.get("/api/v1/cache/:name", async (req, res) => {
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 });
 
+/*
 app.get("/outagelog", async (req, res) => {
     res.sendFile(process_path + "/static/outageLog/index.html")
 })
 
-/*app.get("/outagelog/export", async (req, res) => {
+app.get("/outagelog/export", async (req, res) => {
     const outageLog = JSON.parse(fs.readFileSync(process_path + "/outagelog.json").toString())
 
     function FilterOutages(outages: Outage[], timeWindowMs = 10 * 60 * 1000) {

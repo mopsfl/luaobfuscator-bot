@@ -32,14 +32,12 @@ export default class Config {
         fetch_timeout: 10000,
         alerts: true,
         alert_channel: "1112384996259414110",
-        ids_to_alert: [
-            "792875215243575306",
-        ],
+        ids_to_alert: ["792875215243575306"],
         endpoints: {
             homepage: "https://luaobfuscator.com",
             forum: "https://luaobfuscator.com/forum",
             api: "https://api.luaobfuscator.com/v1/obfuscator/newscript",
-            server: "https://luaobfuscator.com/forum/stats",
-        }
+        },
+        stats_url: "https://luaobfuscator.com/forum/stats",
     }
 }
