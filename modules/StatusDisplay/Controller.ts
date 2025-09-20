@@ -1,27 +1,35 @@
-import { Channel, Colors, Message, TextBasedChannel } from "discord.js";
-import { client, config, env } from "../../index"
+import { Colors, EmbedBuilder, Message, TextBasedChannel } from "discord.js";
+import { client, config, env, obfuscatorStats } from "../../index"
 import Main from "./Embeds/Main";
 import Embed from "../Embed";
 import Fields from "./Fields";
 import Services from "./Services";
 import GetEmoji from "../GetEmoji";
 import { ServiceStatus } from "./Types";
-import Database from "../Database";
+import Database from "../Database/Database";
 import FormatUptime from "../FormatUptime";
 import FormatBytes from "../FormatBytes";
 import Stats from "./Embeds/Stats";
 import FormatNumber from "../FormatNumber";
-
 export default class StatusDisplayController {
     constructor(
         public statusChannel?: TextBasedChannel,
         public statusMessage?: Message,
 
+        public mainEmbed?: EmbedBuilder,
+        public statisticsEmbed?: EmbedBuilder,
+
         public lastUpdate: number = 0,
         public lastOutage: { time: number, services: { [name: string]: ServiceStatus } } = null,
+
+        public _initTime: number = 0
     ) { }
 
     async init() {
+        this._initTime = Date.now()
+        this.mainEmbed = Embed(Main())
+        this.statisticsEmbed = Embed(Stats())
+
         await client.channels.fetch(config[env].STATUS_CHANNEL_ID).then(async channel => {
             if (!channel.isTextBased())
                 return console.error(`[Status Display Error]: channel '${channel.id}' must be textBased.`)
@@ -31,27 +39,40 @@ export default class StatusDisplayController {
             console.error(`[Status Display Error]:`, err)
         })
 
-        const [lastOutage, errorCode, errorMessage] = await Database.GetTable("outage_log", null, true)
-        if (lastOutage) {
+        const result = await Database.GetTable("outage_log", null, true)
+
+        if (result.success) {
             this.lastOutage = {
-                time: lastOutage.time,
-                services: JSON.parse(lastOutage.data) || {}
+                time: result.data.time,
+                services: JSON.parse(result.data.services) || {}
             }
         } else {
-            console.error("[Status Display Database Error]:", errorCode, errorMessage)
+            console.error("[Status Display Database Error]:", result.error.message)
         }
 
-        const RunUpdateLoop = async () => {
-            try { await this.Update() }
-            catch (err) { console.error("[Status Display Update Error]:", err) }
-            finally { setTimeout(RunUpdateLoop, 60_000) }
-        }; RunUpdateLoop()
-        console.log("> status display initialized")
+        (async () => {
+            while (true) {
+                const start = Date.now();
+                try {
+                    await this.Update();
+                } catch (err) {
+                    console.error("[Status Display Update Error]:", err);
+                }
+                await new Promise(resolve =>
+                    setTimeout(resolve, Math.max(config.STATUS_DISPLAY.status_update_interval - (Date.now() - start), 0))
+                );
+            }
+        })();
+
+        console.log(`> status display initialized in ${Date.now() - this._initTime}ms`)
     }
 
     async Update() {
-        const mainEmbed = Embed(Main()),
-            statisticsEmbed = Embed(Stats()),
+        if (!this.mainEmbed) this.mainEmbed = Embed(Main())
+        if (!this.statisticsEmbed) this.statisticsEmbed = Embed(Stats())
+
+        const mainEmbed = this.mainEmbed,
+            statisticsEmbed = this.statisticsEmbed,
             start_tick = new Date().getTime(),
             [serviceStatuses, failedServices] = await Services.GetStatuses(),
             serverStatistics = await Services.GetStatistics()
@@ -85,6 +106,12 @@ export default class StatusDisplayController {
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? FormatUptime(client.uptime, true) : "N/A")
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? FormatNumber(serverStatistics.total_obfuscations) : "N/A")
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.recentObfuscations, "0")
+
+        obfuscatorStats.Update({
+            total_file_uploads: serverStatistics.total_file,
+            total_obfuscations: serverStatistics.total_obfuscations,
+            time: new Date().getTime()
+        })
 
         await this.statusMessage.edit({ embeds: [mainEmbed, statisticsEmbed] })
         console.log(`> updated status display (took ${this.lastUpdate - start_tick}ms)`)

@@ -2,7 +2,7 @@ import { bold, Colors, EmbedBuilder, EmbedField, hyperlink, inlineCode, SlashCom
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 import { config, client, command as _command, utils } from '../../index';
-import Database from '../../modules/Database';
+import Database from '../../modules/Database/Database';
 
 const command = {
     name: ["help"],

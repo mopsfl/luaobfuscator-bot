@@ -14,7 +14,7 @@ import Processing from "./Embeds/Processing";
 import FormatBytes from "../FormatBytes";
 import Plugins from "./Plugins";
 import Buttons from "./Buttons";
-import Database from "../Database";
+import Database from "../Database/Database";
 import LuaObfuscator from "../LuaObfuscator/API";
 import { ObfuscationResult } from "../LuaObfuscator/Types";
 import { ObfuscationPlugins, CustomObfuscateComponents } from "./Types";
@@ -334,27 +334,27 @@ export class CustomObfuscateController {
             if (!await Database.RowExists("customplugin_saves", { userid: this.user.id })) {
                 await Database.Insert("customplugin_saves", { userid: this.user.id, plugins: "{}" })
             } else {
-                const [data, errorCode, httpStatus] = await Database.GetTable("customplugin_saves", { userid: this.user.id })
-                if (!data) {
-                    console.error(`Failed to get saved plugins. Code: ${errorCode}, HTTP Status: ${httpStatus}`);
-                    return interaction.reply({ ephemeral: true, content: `${"Failed to save configuration!"}\n-# Error: get_${errorCode}_${httpStatus}` })
+                const result = await Database.GetTable("customplugin_saves", { userid: this.user.id })
+                if (!result.success) {
+                    console.error(`Failed to get saved plugins. ${result.error.message}`);
+                    return interaction.reply({ ephemeral: true, content: `${"Failed to save configuration!"}\n-# Error: get_${result.error.code}_${result.error.status}` })
                 } else {
-                    user_saves = JSON.parse(data.plugins) || {}
+                    user_saves = JSON.parse(result.data.plugins) || {}
                 }
             }
 
             user_saves[save_id] = current_config
 
-            const [data, errorCode, httpStatus] = await Database.SetTable(
+            const result = await Database.Update(
                 "customplugin_saves",
-                "plugins",
-                JSON.stringify(user_saves),
+                { plugins: JSON.stringify(user_saves) },
                 { userid: this.user.id }
             );
 
-            if (!data) {
-                console.error(`Failed to save plugins. Code: ${errorCode}, HTTP Status: ${httpStatus}`);
-                return interaction.reply({ ephemeral: true, content: `${"Failed to save configuration!"}\n-# Error: set_${errorCode}_${httpStatus}` })
+
+            if (!result.success) {
+                console.error(`Failed to get save configuration. ${result.error.message}`);
+                return interaction.reply({ ephemeral: true, content: `${"Failed to save configuration!"}\n-# Error: get_${result.error.code}_${result.error.status}` })
             } else {
                 return interaction.reply({ ephemeral: true, content: `Plugins saved successfully!\n-# id: ${save_id}` })
             }
@@ -366,15 +366,15 @@ export class CustomObfuscateController {
     private async GetUserConfigSaves(): Promise<Array<SelectMenuComponentOptionData>> {
         try {
             if (!await Database.RowExists("customplugin_saves", { userid: this.user.id })) return [];
-            let [data, errorCode, httpStatus] = await Database.GetTable("customplugin_saves", { userid: this.user.id }),
+            const result = await Database.GetTable("customplugin_saves", { userid: this.user.id }),
                 configs: Array<SelectMenuComponentOptionData> = []
 
-            if (!data) {
-                console.error(`Failed to get saved plugins. Code: ${errorCode}, HTTP Status: ${httpStatus}`);
+            if (!result.success) {
+                console.error(`Failed to get saved plugins. ${result.error.message}`);
                 return []
             }
 
-            this.saved_configs = JSON.parse(data.plugins || "{}")
+            this.saved_configs = JSON.parse(result.data.plugins || "{}")
 
             Object.keys(this.saved_configs).forEach((save_id, index) => {
                 configs.push({

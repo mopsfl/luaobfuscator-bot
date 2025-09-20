@@ -7,7 +7,7 @@ import { utils, config } from "../index"
 import { ObfuscationProcess } from "../modules/Utils";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
-import Database from "../modules/Database";
+import Database from "../modules/Database/Database";
 import LuaObfuscator from "../modules/LuaObfuscator/API";
 import { ObfuscationResult } from "../modules/LuaObfuscator/Types";
 

@@ -1,6 +1,4 @@
-export default function (date: string) {
-    let date_arr: Array<string>
-    date_arr = date.split(".");
-    //@ts-ignore
-    return new Date(date_arr[2], date_arr[1] - 1, date[0]);
-}
+export default (date: string) => {
+    const [d, m, y] = date.split(".").map(n => parseInt(n, 10));
+    return new Date(y, m - 1, d);
+};

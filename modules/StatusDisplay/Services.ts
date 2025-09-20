@@ -28,7 +28,7 @@ export default {
 
     async GetStatistics(): Promise<ServerStatistics> {
         return await fetch(config.STATUS_DISPLAY.stats_url).then(async res => {
-            if (!res.ok) return { "start_time": "9/16/2025 3:31:01 PM", "memory_usage": 581353520, "queue_waiting": 0, "queue_active": 0, "queue_web_active": 0, "queue_total": 0, "total_file": 529530, "total_obfuscations": 529530 }
+            if (!res.ok) return {}
             return await res.json()
         })
     }

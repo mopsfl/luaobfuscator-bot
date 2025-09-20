@@ -3,7 +3,7 @@ import * as self from "../index"
 import { randomUUID } from "crypto"
 import NoHello from "./NoHello"
 import { BotStats } from "../commands/botstats"
-import Database from "./Database"
+import Database from "./Database/Database"
 
 export default class Command {
     constructor(

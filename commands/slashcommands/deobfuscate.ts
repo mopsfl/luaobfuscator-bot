@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
-import Database from '../../modules/Database';
+import Database from '../../modules/Database/Database';
 
 const command = {
     name: ["deobfuscate"],

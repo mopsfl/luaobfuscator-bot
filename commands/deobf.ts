@@ -1,6 +1,6 @@
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
-import Database from "../modules/Database";
+import Database from "../modules/Database/Database";
 
 class Command {
     name = ["deobfuscate", "deobf"]

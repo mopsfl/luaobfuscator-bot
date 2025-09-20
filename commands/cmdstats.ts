@@ -3,7 +3,7 @@ import { command, config, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
-import Database from "../modules/Database";
+import Database from "../modules/Database/Database";
 
 class Command {
     name = ["cmdstats", "cs", "cstats"]
@@ -11,11 +11,11 @@ class Command {
     description = "Shows the statistics of all commands aka wich command is being used the most."
 
     callback = async (cmd: cmdStructure) => {
-        const [cmd_stats, errorCode, errorMessage] = await Database.GetTable("cmd_stats")
+        const result = await Database.GetTable("cmd_stats")
 
-        if (errorCode || errorMessage) {
-            console.error(errorMessage)
-            return utils.SendErrorMessage("error", cmd, errorCode)
+        if (!result.success) {
+            console.error(result.error.message)
+            return utils.SendErrorMessage("error", cmd, result.error.code)
         }
 
         const embed = Embed({
@@ -30,7 +30,7 @@ class Command {
             fields: []
         })
 
-        const statsMap = new Map(cmd_stats.map(s => [s.command_name, s.call_count ?? 0]));
+        const statsMap = new Map(result.data.map(s => [s.command_name, s.call_count ?? 0]));
 
         [...command.getAllCommands().values()]
             .sort((a, b) =>

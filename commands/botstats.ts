@@ -3,7 +3,7 @@ import { utils, config } from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
-import Database from "../modules/Database";
+import Database from "../modules/Database/Database";
 
 class Command {
     name = ["botstats", "bs", "bots"]
@@ -11,14 +11,14 @@ class Command {
     description = "Shows you some bot statistics."
 
     callback = async (cmd: cmdStructure) => {
-        const [bot_stats, errorCode, errorMessage] = await Database.GetTable("bot_statistics")
+        const result = await Database.GetTable("bot_statistics")
 
-        if (errorCode || errorMessage) {
-            console.error(errorMessage)
-            return utils.SendErrorMessage("error", cmd, errorCode)
+        if (!result.success) {
+            console.error(result.error.message)
+            return utils.SendErrorMessage("error", cmd, result.error.code)
         }
 
-        const _bot_stats: BotStats = bot_stats[0]
+        const bot_stats: BotStats = result.data[0]
         const embed = Embed({
             title: "Lua Obfuscator - Bot Statistics",
             color: Colors.Green,
@@ -29,9 +29,9 @@ class Command {
                 iconURL: config.icon_url,
             },
             fields: [
-                { name: "Obfuscations:", value: `-# ${_bot_stats.obfuscations}`, inline: true },
-                { name: "Executed Commands:", value: `-# ${_bot_stats.total_commands_executed}`, inline: true },
-                { name: "Retards that tried deobf:", value: `-# ${_bot_stats.deobf_tries}`, inline: true }
+                { name: "Obfuscations:", value: `-# ${bot_stats?.obfuscations || "N/A"}`, inline: true },
+                { name: "Executed Commands:", value: `-# ${bot_stats?.total_commands_executed || "N/A"}`, inline: true },
+                { name: "Retards that tried deobf:", value: `-# ${bot_stats?.deobf_tries || "N/A"}`, inline: true }
             ]
         })
 

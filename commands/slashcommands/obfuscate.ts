@@ -3,7 +3,7 @@ import { AttachmentBuilder, codeBlock, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import { utils, command as _command } from '../../index';
 import GetEmoji from '../../modules/GetEmoji';
-import Database from '../../modules/Database';
+import Database from '../../modules/Database/Database';
 import LuaObfuscator from '../../modules/LuaObfuscator/API';
 
 const command = {
@@ -27,12 +27,12 @@ const command = {
             console.log(`${command.commandId} cmd not registered in database yet. inserting...`);
             await Database.Insert("cmd_stats", { command_name: command.commandId, call_count: 1 })
         } else {
-            const [db_success, db_errorCode, db_errorMessage] = await Database.Increment("cmd_stats", "call_count", { command_name: command.commandId })
-            if (!db_success) console.error(db_errorMessage)
+            Database.Increment("cmd_stats", "call_count", { command_name: command.commandId })
+                .then(result => { if (!result.success) { console.error(result.error.message) } });
         }
 
-        const [db_success, db_errorCode, db_errorMessage] = await Database.Increment("bot_statistics", "total_commands_executed")
-        if (!db_success) console.error(db_errorMessage)
+        Database.Increment("bot_statistics", "total_commands_executed", { command_name: command.commandId })
+            .then(result => { if (!result.success) { console.error(result.error.message) } });
 
         await interaction.reply({
             content: `Please upload a valid Lua script as a file, or paste it here inside a code block.`,

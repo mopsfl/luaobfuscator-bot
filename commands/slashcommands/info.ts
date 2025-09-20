@@ -4,7 +4,7 @@ import Embed from '../../modules/Embed';
 import GithubRepo from '../../modules/GithubRepo';
 import FormatUptime from '../../modules/FormatUptime';
 import { config, client } from '../../index';
-import Database from '../../modules/Database';
+import Database from '../../modules/Database/Database';
 
 const command = {
     name: ["info"],

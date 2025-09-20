@@ -1,6 +1,6 @@
 import { Message, MessageType } from "discord.js";
 import { client } from "..";
-import Database from "./Database";
+import Database from "./Database/Database";
 
 const nohello_words = [
     "hello", "hi", "yo", "ey", "hallo", "hiya",

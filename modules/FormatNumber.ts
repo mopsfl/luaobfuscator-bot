@@ -13,5 +13,5 @@ export default function (num: number, digits: number = 2) {
     var item = lookup.slice().reverse().find(function (item) {
         return num >= item.value;
     });
-    return item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0" || "N/A";
+    return (item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0") || "N/A";
 }

@@ -99,17 +99,6 @@ async function RegisterSlashCommands(path: string, files: string[]) {
 client.once(Events.ClientReady, async () => {
     statusDisplayController.init()
 
-    /*await statusDisplayController.init()
-    await statusDisplayController.UpdateDisplayStatus()
-
-    const action_updateStats = () => new Promise((resolve, reject) => {
-        return setTimeout(async () => {
-            console.log(`> updating status display... (last update: ${Math.round((new Date().getTime() - statusDisplayController.last_statusupdate) / 1000)} seconds ago)`)
-            await statusDisplayController.UpdateDisplayStatus()
-            resolve(true);
-        }, config.status_update_interval)
-    })*/
-
     // register commands
     const commands: any = new Collection()
     command.commands = commands
@@ -134,18 +123,11 @@ client.once(Events.ClientReady, async () => {
             }
         })
     })
-
-    // statusDisplay recursion
-    /*const actionRecursion = async () => {
-        await action_updateStats().then((res) => {
-            setTimeout(actionRecursion, 100)
-        })
-    }; actionRecursion()*/
 })
 
 client.on(Events.MessageCreate, async (message) => {
     try {
-        //if (message.channelId == statusDisplayController.status_message.channelId) { await message.delete(); return }
+        if (message.channelId == statusDisplayController.statusChannel.id) { return await message.delete().catch(console.error) }
         //if (NoHello(message)) return;
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
 
@@ -164,7 +146,7 @@ client.on(Events.MessageCreate, async (message) => {
                 } else allowed = false
             }
 
-            const cmd: cmdStructure = {
+            await command.handleCommand({
                 prefix: config.prefix,
                 name: c.name,
                 used_command_name: _command,
@@ -177,9 +159,7 @@ client.on(Events.MessageCreate, async (message) => {
                 allowed: allowed,
                 success: false,
                 public_command: c.public_command
-            }
-
-            await command.handleCommand(cmd)
+            })
         })
     } catch (error) {
         console.error(error)
@@ -228,7 +208,6 @@ app.listen(process.env.PORT, async () => {
 })
 
 app.use(cors())
-app.use((req, res, next) => { res.removeHeader("X-Powered-By"); next() })
 app.get("/", async (req, res) => res.sendStatus(200));
 app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
     total_obfuscations: await obfuscatorStats.ParseCurrentStat("total_obfuscations", true),
@@ -236,10 +215,6 @@ app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
 }))
 
 app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplayController))
-/*app.get("/api/v1/statusdisplay/status/:name", (req, res) => {
-    if (!statusDisplayController.last_responses[req.params.name]) return res.status(404).json({ code: 404, message: `Service status '${req.params.name}' not found.` })
-    res.json(statusDisplayController.last_responses[req.params.name])
-})*/
 app.get("/api/v1/commands/:cmdname", (req, res) => {
     const _command: any = command.commands.get(req.params.cmdname)
     if (_command.permissions) _command.permissions.forEach((v: any, i: number) => _command.permissions[i] = utils.GetPermissionsName(v))
@@ -264,35 +239,15 @@ app.get("/api/v1/cache/:name", async (req, res) => {
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 });
 
-/*
-app.get("/outagelog", async (req, res) => {
-    res.sendFile(process_path + "/static/outageLog/index.html")
+app.get("/bruhduhdicklick/do/data/base/thing/pleasebabygurl/:date", async (req, res) => {
+    const date = new Date(parseInt(req.params.date))
+    const formatted = date.toLocaleDateString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric"
+    })
+    res.json(formatted)
 })
-
-app.get("/outagelog/export", async (req, res) => {
-    const outageLog = JSON.parse(fs.readFileSync(process_path + "/outagelog.json").toString())
-
-    function FilterOutages(outages: Outage[], timeWindowMs = 10 * 60 * 1000) {
-        const seen = [];
-
-        for (const outage of outages) {
-            const currentServices = outage.affected_services.map(s => s.name).sort().join(",");
-            const isDuplicate = seen.some(o => {
-                return Math.abs(o.time - outage.time) < timeWindowMs && o.services === currentServices;
-            });
-
-            if (!isDuplicate) seen.push({ time: outage.time, services: currentServices, original: outage });
-        }
-
-        return seen.map(o => o.original);
-    }
-
-    res.json([FilterOutages(outageLog.outages)])
-})*/
-
-export interface Bot_Settings {
-    alert_pings: boolean
-}
 
 export {
     statusDisplayController, command, utils, obfuscatorStats,

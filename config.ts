@@ -28,9 +28,7 @@ export default class Config {
     }
 
     STATUS_DISPLAY = {
-        status_update_interval: 5000,
-        fetch_timeout: 10000,
-        alerts: true,
+        status_update_interval: 60_000,
         alert_channel: "1112384996259414110",
         ids_to_alert: ["792875215243575306"],
         endpoints: {
