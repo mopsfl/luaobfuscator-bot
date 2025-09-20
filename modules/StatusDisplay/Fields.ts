@@ -21,6 +21,11 @@ export default {
         Stats: {
             totalObfuscations: 0,
             recentObfuscations: 2
+        },
+        Alert: {
+            affectedServices: 0,
+            outageTime: 2,
+            outageId: 3
         }
     },
 

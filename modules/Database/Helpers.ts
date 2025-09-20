@@ -10,9 +10,7 @@ export type DBResponse<T> = {
     error?: DBError;
 };
 
-
 export const ok = <T>(data: T): DBResponse<T> => ({ success: true, data });
-
 export const fail = (code: string, message: string, status = 500): DBResponse<any> => ({
     success: false,
     error: { code, message, status },

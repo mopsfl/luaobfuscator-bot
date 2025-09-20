@@ -5,6 +5,13 @@ export type ServiceStatus = {
     statusCode: number,
 }
 
+export type ServiceOutage = {
+    time: number,
+    services: { [name: string]: ServiceStatus },
+    id: string,
+    count?: number,
+}
+
 export type ServerStatistics = {
     start_time: string,
     memory_usage: number,
