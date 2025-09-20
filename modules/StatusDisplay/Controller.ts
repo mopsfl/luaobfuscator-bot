@@ -41,7 +41,7 @@ export default class StatusDisplayController {
             console.error(`[Status Display Error]:`, err)
         })
 
-        await client.channels.fetch("1129884319645712497").then(channel => {
+        await client.channels.fetch(config.STATUS_DISPLAY.alert_channel).then(channel => {
             if (!channel.isTextBased()) return console.error(`[Status Display Error]: alert channel '${channel.id}' must be textBased.`)
             this.alertChannel = channel
         }).catch(err => {
