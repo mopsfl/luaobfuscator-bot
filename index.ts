@@ -1,5 +1,5 @@
 const start_tick = new Date().getTime()
-const DISABLE_DISCORDLOGIN = false //does not login the discord client
+const DISABLE_DISCORDLOGIN = true //does not login the discord client
 
 import { ActivityType, Client, Collection, Events, IntentsBitField, Partials, REST, Routes } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"

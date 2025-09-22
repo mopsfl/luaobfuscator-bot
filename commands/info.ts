@@ -1,7 +1,6 @@
 import { Colors, hyperlink, inlineCode } from "discord.js";
-import { config, client } from "../index"
+import { config, client, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
-import FormatUptime from "../modules/FormatUptime";
 import GithubRepo from "../modules/GithubRepo";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
@@ -18,7 +17,7 @@ class Command {
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
                 { name: "Links:", value: `${hyperlink("Status Page", 'https://mopsfl.de/status/luaobfuscator')}\n ${hyperlink("Support Server", config.support_url)}`, inline: false },
-                { name: "Uptime:", value: `-# ${FormatUptime(client?.uptime)}`, inline: true },
+                { name: "Uptime:", value: `-# ${utils.FormatUptime(client?.uptime)}`, inline: true },
                 { name: "discord.js version:", value: `-# ^14.15.3`, inline: true },
                 { name: "Last Updated:", value: `-# <t:${lastCommitInfo.last_commit / 1000}:R> [[open]](${lastCommitInfo.commit_url})`, inline: true },
             ],

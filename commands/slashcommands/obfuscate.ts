@@ -2,7 +2,6 @@
 import { AttachmentBuilder, codeBlock, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import { utils, command as _command } from '../../index';
-import GetEmoji from '../../modules/GetEmoji';
 import Database from '../../modules/Database/Database';
 import LuaObfuscator from '../../modules/LuaObfuscator/API';
 
@@ -42,7 +41,6 @@ const command = {
                 let message = msg.first()
                 let script_content = "",
                     chunksAmount = 0,
-                    hasWebhook = false,
                     raw_arguments = _command.getRawArgs(message),
                     hasCodeBlock = utils.HasCodeblock(raw_arguments),
                     file_attachment: AttachmentBuilder,
@@ -50,7 +48,6 @@ const command = {
 
                 // Get Script Content
                 if (hasCodeBlock) {
-                    hasWebhook = utils.HasWebhook(raw_arguments)
                     script_content = utils.ParseCodeblock(raw_arguments)
                 } else if ([...message.attachments].length > 0) {
                     const attachment = message.attachments.first()
@@ -70,19 +67,7 @@ const command = {
                     ])
                 }
 
-                // Parse Webhooks
-                if (hasWebhook) {
-                    const webhooks = utils.ParseWebhooks(script_content)
-                    let webhook_string = ""
-                    for (let i = 0; i < webhooks.length; i++) {
-                        const webhook = webhooks[i].trim();
-                        if (!webhook_string.includes(webhook)) {
-                            webhook_string += codeBlock("lua", webhook)
-                        }
-                    }
-                }
-
-                interaction.followUp({ content: `${GetEmoji("loading")} Obfuscation in progress! This should only take a few seconds...`, ephemeral: true }).then(async processReply => {
+                interaction.followUp({ content: `${utils.GetEmoji("loading")} Obfuscation in progress! This should only take a few seconds...`, ephemeral: true }).then(async processReply => {
                     interactionReply.delete()
                     await LuaObfuscator.v1.Obfuscate(script_content, message).then(async res => {
                         if (res.message) return utils.SendErrorMessage("error", ({ message: message } as any), res.message, "Obfuscation Error")

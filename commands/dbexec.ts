@@ -3,7 +3,6 @@ import { pool, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
-import GetEmoji from "../modules/GetEmoji";
 import { PoolConnection } from "mariadb";
 
 const block = [
@@ -58,7 +57,7 @@ class Command {
 
         if (_block) return cmd.message.reply({
             embeds: [Embed({
-                description: `${GetEmoji("no")} This function is blocked :)`,
+                description: `${utils.GetEmoji("no")} This function is blocked :)`,
                 color: Colors.Red
             })]
         })

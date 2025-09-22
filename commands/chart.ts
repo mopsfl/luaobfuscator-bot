@@ -1,7 +1,7 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
 import { config } from "../index"
 import { cmdStructure } from "../modules/Command";
-import ChartImage, { ChartDataset } from "../modules/ChartImage";
+import ChartImage, { ChartDataset } from "../modules/Misc/ChartImage";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
 

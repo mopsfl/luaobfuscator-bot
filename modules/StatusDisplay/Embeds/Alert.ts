@@ -1,6 +1,5 @@
 import { Colors, hyperlink } from "discord.js";
 import { config } from "../../../index";
-import GetEmoji from "../../GetEmoji";
 
 export default function () {
     return {

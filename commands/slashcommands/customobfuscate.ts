@@ -1,7 +1,5 @@
-import { bold, Colors, ComponentType, inlineCode, SlashCommandBuilder } from 'discord.js';
+import { ComponentType, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
-import Embed from '../../modules/Embed';
-import GetEmoji from '../../modules/GetEmoji';
 import { CustomObfuscateController } from '../../modules/CustomObfuscate/Controller';
 import { utils, command as _command } from '../../index';
 

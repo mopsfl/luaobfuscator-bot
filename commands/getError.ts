@@ -1,7 +1,6 @@
 import { Colors, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js";
 import { config, utils, file_cache } from "../index"
 import { cmdStructure } from "../modules/Command";
-import GetEmoji from "../modules/GetEmoji";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
 
@@ -37,7 +36,7 @@ class Command {
         try {
             cmd.message.reply({
                 embeds: [Embed({
-                    description: `${GetEmoji("loading")} Getting error information... Please wait...`,
+                    description: `${utils.GetEmoji("loading")} Getting error information... Please wait...`,
                     color: Colors.Yellow,
                     footer: { text: cmd.arguments[0].toString() },
                     timestamp: true
@@ -45,7 +44,7 @@ class Command {
             }).then(msg => {
                 cmd.message.author.send({
                     embeds: [Embed({
-                        title: `${GetEmoji("no")} Error Information`,
+                        title: `${utils.GetEmoji("no")} Error Information`,
                         fields: _fields,
                         color: Colors.Yellow,
                         timestamp: true,
@@ -54,8 +53,8 @@ class Command {
                 }).catch(async err => {
                     msg.edit({
                         embeds: [Embed({
-                            title: `${GetEmoji("no")} Reply Error`,
-                            description: `${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`,
+                            title: `${utils.GetEmoji("no")} Reply Error`,
+                            description: `${utils.GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`,
                             color: Colors.Red,
                             timestamp: true,
                             footer: { text: cmd.arguments[0].toString() }
@@ -65,7 +64,7 @@ class Command {
                 })
                 msg.edit({
                     embeds: [Embed({
-                        description: `${GetEmoji("yes")} I've sent you the error information via dms!`,
+                        description: `${utils.GetEmoji("yes")} I've sent you the error information via dms!`,
                         color: Colors.Green,
                         footer: { text: cmd.arguments[0].toString() },
                         timestamp: true

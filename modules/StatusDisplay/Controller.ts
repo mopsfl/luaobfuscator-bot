@@ -1,16 +1,12 @@
 import { Colors, EmbedBuilder, Message, TextBasedChannel } from "discord.js";
-import { client, config, env } from "../../index"
+import { client, config, env, utils } from "../../index"
 import Main from "./Embeds/Main";
 import Embed from "../Embed";
 import Fields from "./Fields";
 import Services from "./Services";
-import GetEmoji from "../GetEmoji";
 import { ServiceOutage, ServiceStatus } from "./Types";
 import Database from "../Database/Database";
-import FormatUptime from "../FormatUptime";
-import FormatBytes from "../FormatBytes";
 import Stats from "./Embeds/Stats";
-import FormatNumber from "../FormatNumber";
 import Alert from "./Embeds/Alert";
 import { createHash } from "crypto";
 import Chart from "./Chart";
@@ -117,10 +113,10 @@ export default class StatusDisplayController {
 
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastUpdated, this.lastUpdate ? `<t:${(this.lastUpdate / 1000).toFixed()}:R>` : "N/A")
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastOutage, this.lastOutage ? `<t:${(this.lastOutage.time / 1000).toFixed()}:R>` : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? FormatUptime(Date.now() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.memoryUsage, serverStatistics ? FormatBytes(serverStatistics.memory_usage) : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? FormatUptime(client.uptime, true) : "N/A")
-        Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? FormatNumber(serverStatistics.total_obfuscations) : "N/A")
+        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? utils.FormatUptime(Date.now() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
+        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.memoryUsage, serverStatistics ? utils.FormatBytes(serverStatistics.memory_usage) : "N/A")
+        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? utils.FormatUptime(client.uptime, true) : "N/A")
+        Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? utils.FormatNumber(serverStatistics.total_obfuscations) : "N/A")
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.recentObfuscations, "N/A")
 
         ObfuscatorStats.Update({
@@ -133,7 +129,7 @@ export default class StatusDisplayController {
     }
 
     GetStatusEmoji(statusCode: number | string) {
-        return statusCode == 200 ? GetEmoji("online") : GetEmoji("offline")
+        return statusCode == 200 ? utils.GetEmoji("online") : utils.GetEmoji("offline")
     }
 
     CreateOutageIdentifier(services: Map<string, ServiceStatus>, length = 12) {
@@ -175,7 +171,7 @@ export default class StatusDisplayController {
                 affected_services = []
 
             failedServices.forEach((serviceStatus, serviceName) => {
-                affected_services.push(`${GetEmoji("offline")} **${serviceName}: \`${serviceStatus.statusText} (${serviceStatus.statusCode}) | ${serviceStatus.ping}ms\`**`)
+                affected_services.push(`${utils.GetEmoji("offline")} **${serviceName}: \`${serviceStatus.statusText} (${serviceStatus.statusCode}) | ${serviceStatus.ping}ms\`**`)
             })
 
             Fields.SetValue(alertEmbed.data.fields, Fields.Indexes.Alert.affectedServices, affected_services.join("\n-# "))

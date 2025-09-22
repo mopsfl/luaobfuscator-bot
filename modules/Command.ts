@@ -1,13 +1,11 @@
 import { PermissionFlagsBits, Message, GuildMember } from "discord.js"
-import * as self from "../index"
+import { config, client, command as _command, utils } from "../index"
 import { randomUUID } from "crypto"
-import NoHello from "./NoHello"
-import { BotStats } from "../commands/botstats"
 import Database from "./Database/Database"
 
 export default class Command {
     constructor(
-        readonly prefix = self.config.prefix,
+        readonly prefix = config.prefix,
         public commands?: Map<string, command>,
         public ratelimits: Map<string, boolean> = new Map()
     ) { }
@@ -24,7 +22,7 @@ export default class Command {
         let users = []
 
         mentions.forEach(async (id: any) => {
-            await self.client.users.fetch(id).then(user => {
+            await client.users.fetch(id).then(user => {
                 users[id] = user
             }).catch(console.error)
         })
@@ -32,15 +30,15 @@ export default class Command {
     }
 
     getAllCommands() {
-        return self.command.commands
+        return _command.commands
     }
 
     async handleCommand(cmd: cmdStructure) {
         if (typeof (cmd.callback) != "function") return new Error("callback is not a <Function>")
         if (!(cmd.message instanceof Message)) return new Error("message is not a <Message>")
-        if (!cmd.allowed) return self.utils.SendErrorMessage("permission", cmd, "Missing required permissions.")
-        if (cmd.public_command === false && !self.config.allowed_guild_ids.includes(cmd.message.guildId)) return self.utils.SendErrorMessage("permission", cmd, "This command is disabled for this guild.")
-        if (this.ratelimits.get(cmd.message.author.id) === true) return await self.utils.SendErrorMessage("ratelimit", cmd, null, null, null, 5000);
+        if (!cmd.allowed) return utils.SendErrorMessage("permission", cmd, "Missing required permissions.")
+        if (cmd.public_command === false && !config.allowed_guild_ids.includes(cmd.message.guildId)) return utils.SendErrorMessage("permission", cmd, "This command is disabled for this guild.")
+        if (this.ratelimits.get(cmd.message.author.id) === true) return await utils.SendErrorMessage("ratelimit", cmd, null, null, null, 5000);
 
         try {
             this.ratelimits.set(cmd.message.author.id, true);
@@ -63,7 +61,7 @@ export default class Command {
             console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
         } catch (error) {
             this.ratelimits.set(cmd.message.author.id, false);
-            self.utils.SendErrorMessage("error", cmd, error)
+            utils.SendErrorMessage("error", cmd, error)
             console.error(error)
         }
     }

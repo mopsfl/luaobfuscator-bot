@@ -7,11 +7,9 @@ import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonInteraction, 
 import { utils } from "../../index";
 import { randomUUID } from "crypto";
 import Embed from "../Embed";
-import GetEmoji from "../GetEmoji";
 import Main from "./Embeds/Main";
 import Cancel from "./Embeds/Cancel";
 import Processing from "./Embeds/Processing";
-import FormatBytes from "../FormatBytes";
 import Plugins from "./Plugins";
 import Buttons from "./Buttons";
 import Database from "../Database/Database";
@@ -285,13 +283,13 @@ export class CustomObfuscateController {
             process_value = `\`\`\`diff\n${process_content}\n\`\`\``
 
             this.process_embed.setFields([
-                { name: "Script:", value: `-# ${FormatBytes(new TextEncoder().encode(this.script_content).length)}`, inline: true },
+                { name: "Script:", value: `-# ${utils.FormatBytes(new TextEncoder().encode(this.script_content).length)}`, inline: true },
                 { name: "Obfuscation Type:", value: `-# ${!this.plugins ? "Default" : "Custom"}`, inline: true },
                 { name: "Process ID:", value: `-# ${this.process_id}`, inline: true },
                 { name: "Process State:", value: `-# ${this.process_state}`, inline: true },
                 { name: "Process Time:", value: `-# ${process_time}`, inline: true },
                 { name: "\u200B", value: "\u200B", inline: true },
-                { name: "Session:", value: `-# ${this.session ? inlineCode(this.session) : GetEmoji("loading")}`, inline: false },
+                { name: "Session:", value: `-# ${this.session ? inlineCode(this.session) : utils.GetEmoji("loading")}`, inline: false },
                 { name: `Process:`, value: process_value },
             ])
 

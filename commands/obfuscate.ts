@@ -2,7 +2,6 @@
 
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Colors, bold, codeBlock, inlineCode } from "discord.js";
 import { cmdStructure } from "../modules/Command";
-import GetEmoji from "../modules/GetEmoji";
 import { utils, config } from "../index"
 import { ObfuscationProcess } from "../modules/Utils";
 import CommandCategories from "../modules/CommandCategories";
@@ -20,20 +19,18 @@ class Command {
     callback = async (cmd: cmdStructure) => {
         if (!cmd.message.channel.isDMBased()) {
             const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
-            await cmd.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
+            await cmd.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
             return true
         }
 
         let script_content = "",
             chunksAmount = 0,
-            hasWebhook = false,
             hasCodeBlock = utils.HasCodeblock(cmd.raw_arguments),
             file_attachment: AttachmentBuilder,
             start_time = new Date().getTime()
 
         // Get Script Content
         if (hasCodeBlock) {
-            hasWebhook = utils.HasWebhook(cmd.raw_arguments)
             script_content = utils.ParseCodeblock(cmd.raw_arguments)
         } else if ([...cmd.message.attachments].length > 0) {
             const attachment = cmd.message.attachments.first()
@@ -59,7 +56,7 @@ class Command {
             results: null
         }
 
-        obfuscation_process.processes.push(`${GetEmoji("yes")} Buffer completed! (${inlineCode(chunksAmount.toString())} chunks)`)
+        obfuscation_process.processes.push(`${utils.GetEmoji("yes")} Buffer completed! (${inlineCode(chunksAmount.toString())} chunks)`)
         obfuscation_process.embed = Embed({
             color: Colors.Yellow,
             timestamp: true,
@@ -71,18 +68,6 @@ class Command {
                 iconURL: config.icon_url
             }
         })
-
-        // Parse Webhooks
-        if (hasWebhook) {
-            const webhooks = utils.ParseWebhooks(script_content)
-            let webhook_string = ""
-            for (let i = 0; i < webhooks.length; i++) {
-                const webhook = webhooks[i].trim();
-                if (!webhook_string.includes(webhook)) {
-                    webhook_string += codeBlock("lua", webhook)
-                }
-            }
-        }
 
         await cmd.message.reply({ embeds: [obfuscation_process.embed] }).then(async msg => {
             async function updateProcess() {
@@ -99,28 +84,28 @@ class Command {
                 if (callback_result instanceof Error || callback_result?.message) return callback_result
                 obfuscation_process.processes[process_id] = process_text_finished
             }
-            await createProcess(`${GetEmoji("loading")} Obfuscating script...`, `${GetEmoji("yes")} Script obfuscated!`, async (process_id: number) => {
+            await createProcess(`${utils.GetEmoji("loading")} Obfuscating script...`, `${utils.GetEmoji("yes")} Script obfuscated!`, async (process_id: number) => {
                 obfuscation_process.results = await LuaObfuscator.v1.Obfuscate(script_content, cmd.message)
                 if (!obfuscation_process.results?.code) {
                     obfuscation_process.embed.setColor("Red")
-                    obfuscation_process.processes[process_id] = `${GetEmoji("no")} Obfuscation failed!`
+                    obfuscation_process.processes[process_id] = `${utils.GetEmoji("no")} Obfuscation failed!`
                     obfuscation_process.error = obfuscation_process.results.message
                     utils.SendErrorMessage("error", cmd, obfuscation_process.error, "Obfuscation Error")
                     return await updateProcess()
                 }
-                obfuscation_process.processes[process_id] = `${GetEmoji("yes")} Script obfuscated!`
+                obfuscation_process.processes[process_id] = `${utils.GetEmoji("yes")} Script obfuscated!`
                 await updateProcess()
                 return obfuscation_process.results
             })
-            await createProcess(`${GetEmoji("loading")} Creating file attachment...`, `${GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
+            await createProcess(`${utils.GetEmoji("loading")} Creating file attachment...`, `${utils.GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
                 if (!process_id) return
                 file_attachment = utils.CreateFileAttachment(Buffer.from(obfuscation_process.results.code))
                 if (typeof file_attachment != "object") {
                     obfuscation_process.embed.setColor("Red")
-                    obfuscation_process.processes[process_id] = `${GetEmoji("no")} Creating file attachment failed!`
+                    obfuscation_process.processes[process_id] = `${utils.GetEmoji("no")} Creating file attachment failed!`
                     return await updateProcess()
                 }
-                obfuscation_process.processes[process_id] = `${GetEmoji("yes")} File attachment created!`
+                obfuscation_process.processes[process_id] = `${utils.GetEmoji("yes")} File attachment created!`
                 obfuscation_process.processes["note"] = `-# To customize your obfuscation result, use the ${bold(inlineCode("!customobfuscate"))} command!`
                 await updateProcess()
                 return obfuscation_process.results

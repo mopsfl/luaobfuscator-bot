@@ -1,7 +1,6 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
-import { statusDisplayController } from "../index"
+import { statusDisplayController, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
-import GetEmoji from "../modules/GetEmoji";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";
 
@@ -20,7 +19,7 @@ class Command {
         })
         await cmd.message.reply({ embeds: [embed] }).then(async msg => {
             await statusDisplayController.Update()
-            embed.setDescription(`${GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(new Date().getTime() - cmd.timestamp)}ms`)})`)
+            embed.setDescription(`${utils.GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(new Date().getTime() - cmd.timestamp)}ms`)})`)
                 .setColor(Colors.Green)
                 .setTimestamp()
                 .setFooter({ text: `${cmd.id}` })

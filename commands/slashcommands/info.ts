@@ -2,8 +2,7 @@ import { Colors, hyperlink, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 import GithubRepo from '../../modules/GithubRepo';
-import FormatUptime from '../../modules/FormatUptime';
-import { config, client } from '../../index';
+import { config, client, utils } from '../../index';
 import Database from '../../modules/Database/Database';
 
 const command = {
@@ -21,7 +20,7 @@ const command = {
             description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
                 { name: "Links:", value: `${hyperlink("Status Page", 'https://mopsfl.de/status/luaobfuscator')}\n ${hyperlink("Support Server", config.support_url)}`, inline: false },
-                { name: "Uptime:", value: `-# ${FormatUptime(client?.uptime)}`, inline: true },
+                { name: "Uptime:", value: `-# ${utils.FormatUptime(client?.uptime)}`, inline: true },
                 { name: "discord.js version:", value: `-# ^14.15.3`, inline: true },
                 { name: "Last Updated:", value: `-# <t:${lastCommitInfo.last_commit / 1000}:R> [[open]](${lastCommitInfo.commit_url})`, inline: true },
             ],

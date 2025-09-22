@@ -1,10 +1,7 @@
 import { Colors, EmbedField, PermissionFlagsBits, inlineCode } from "discord.js";
-import * as self from "../index"
+import { utils, env } from "../index"
 import { cmdStructure } from "../modules/Command";
-import GetEmoji from "../modules/GetEmoji";
-import FormatUptime from "../modules/FormatUptime";
 import fastFolderSize from "fast-folder-size";
-import FormatBytes from "../modules/FormatBytes";
 import CommandCategories from "../modules/CommandCategories";
 import Session from "../modules/Session";
 import Embed from "../modules/Embed";
@@ -35,11 +32,11 @@ class Command {
             description: "Creating session id. Please wait...",
             color: Colors.Yellow
         }),
-            _apiURL = `${self.env == "prod" ? process.env.SERVER : "http://localhost:6969"}`
+            _apiURL = `${env == "prod" ? process.env.SERVER : "http://localhost:6969"}`
         fastFolderSize(process.cwd() + "/.cache", async (err, bytes) => {
             if (err) console.error(err)
             await cmd.message.reply({ embeds: [embed] }).then(async msg => {
-                let _sessExT = self.env !== "dev" ? cmd.message?.author?.id == "1111257318961709117" ? 600 : _sessionExpireTime : 9e5
+                let _sessExT = env !== "dev" ? cmd.message?.author?.id == "1111257318961709117" ? 600 : _sessionExpireTime : 9e5
                 const session_id = await Session.Create(_sessExT),
                     cache_links: Array<EmbedField> = []
 
@@ -52,7 +49,7 @@ class Command {
                     })
                 })
 
-                embed.setDescription(`${GetEmoji("yes")} Temporary cache link created. I've sent you the link via dms.`)
+                embed.setDescription(`${utils.GetEmoji("yes")} Temporary cache link created. I've sent you the link via dms.`)
                     .setColor(Colors.Green)
                     .setFooter({ text: `${cmd.id}` })
                     .setTimestamp()
@@ -63,12 +60,12 @@ class Command {
                             color: Colors.Green,
                             title: "Temporary Cache Link",
                             fields: [{
-                                name: `${GetEmoji("warn")} Note:`,
-                                value: `This temporary link is only available for ${inlineCode(FormatUptime(_sessExT * 1000))}.`,
+                                name: `${utils.GetEmoji("warn")} Note:`,
+                                value: `This temporary link is only available for ${inlineCode(utils.FormatUptime(_sessExT * 1000))}.`,
                                 inline: false,
                             }, {
                                 name: `Cache Size:`,
-                                value: `${inlineCode("~ " + FormatBytes(bytes))}`,
+                                value: `${inlineCode("~ " + utils.FormatBytes(bytes))}`,
                                 inline: false,
                             }, ...cache_links],
                             footer: {
@@ -79,7 +76,7 @@ class Command {
                     ]
                 }).catch(async err => {
                     embed.setColor(Colors.Red)
-                        .setDescription(`${GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`)
+                        .setDescription(`${utils.GetEmoji("no")} Please change your ${inlineCode("Privacy Setting")} so I can send you the results in your Direct Messages.`)
                     await msg.edit({ embeds: [embed] })
                     console.error(err)
                 })

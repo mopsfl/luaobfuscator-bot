@@ -1,6 +1,5 @@
 import { Colors, hyperlink } from "discord.js";
-import GetEmoji from "../../GetEmoji";
-import { config } from "../../../index";
+import { config, utils } from "../../../index";
 
 export default function () {
     return {
@@ -9,9 +8,9 @@ export default function () {
         timestamp: true,
         description: "",
         fields: [
-            { name: `${GetEmoji("update")} Last Updated`, value: `-# N/A`, inline: true },
+            { name: `${utils.GetEmoji("update")} Last Updated`, value: `-# N/A`, inline: true },
             { name: "\u200B", value: "\u200B", inline: true },
-            { name: `${GetEmoji("offline")} Last Outage`, value: `-# N/A`, inline: true },
+            { name: `${utils.GetEmoji("offline")} Last Outage`, value: `-# N/A`, inline: true },
             { name: "\u200B", value: "**__Services:__**", inline: false },
             { name: "Homepage:", value: `-# N/A`, inline: true },
             { name: "Forum:", value: `-# N/A`, inline: true },

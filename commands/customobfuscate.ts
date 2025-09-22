@@ -1,7 +1,6 @@
 import { bold, ComponentType } from "discord.js";
 import { config, utils } from "../index"
 import { cmdStructure } from "../modules/Command";
-import GetEmoji from "../modules/GetEmoji";
 import CommandCategories from "../modules/CommandCategories";
 import { CustomObfuscateController } from "../modules/CustomObfuscate/Controller";
 
@@ -14,7 +13,7 @@ class Command {
     callback = async (cmd: cmdStructure) => {
         if (!cmd.message.channel.isDMBased()) {
             const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
-            await cmd.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
+            await cmd.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
             return true
         }
 
