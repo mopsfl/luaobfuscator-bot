@@ -232,7 +232,7 @@ export default class StatusDisplayController {
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.services, fieldValues.services, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.status, fieldValues.status, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.time, fieldValues.time, true)
-        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](http://localhost:6969/outagehistory?s=${session}).`)
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](${env == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session}).`)
 
         await interaction.reply({ ephemeral: true, embeds: [historyEmbed] })
 
