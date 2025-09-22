@@ -13,7 +13,7 @@ export default function () {
             { name: `Recent Obfuscations:`, value: `-# N/A`, inline: true },
         ],
         footer: {
-            text: `Lua Obfuscator - Service Status • by mopsfl`,
+            text: `Lua Obfuscator • by mopsfl`,
             iconURL: config.icon_url,
         }
     }

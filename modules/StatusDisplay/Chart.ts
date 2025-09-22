@@ -18,8 +18,8 @@ export default {
             options: {
                 legend: { labels: { fontColor: 'white' } },
                 scales: {
-                    xAxes: [{ barPercentage: 0.5, ticks: { fontColor: "white" } }],
-                    yAxes: [{ ticks: { beginAtZero: true, fontColor: "white" } }]
+                    xAxes: [{ barPercentage: 0.5, ticks: { fontColor: "white" }, gridLines: { color: "rgba(50,50,50)" } }],
+                    yAxes: [{ ticks: { beginAtZero: true, fontColor: "white" }, gridLines: { color: "rgba(50,50,50)" } }]
                 }
             }
         }).toURL()
