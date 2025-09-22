@@ -35,22 +35,25 @@ class Command {
         let connection: PoolConnection
 
         try {
-            const _t1 = new Date().getTime()
+            const _t1 = Date.now()
             connection = await pool.getConnection()
 
-            const _t2 = new Date().getTime()
+            const _t2 = Date.now()
             await connection.ping()
 
             const embed = Embed({
                 title: `:information: LuaObfuscator Database Information`,
                 color: Colors.Green,
                 footer: {
-                    text: `threadId: ${connection.info.threadId.toString()} | ${(new Date().getTime() - _t1).toString()}ms`
+                    text: `threadId: ${connection.info.threadId.toString()} | took ${(Date.now() - _t1).toString()}ms`
                 },
                 fields: [
-                    { name: "Server Version", value: inlineCode(connection.serverVersion()), inline: true },
-                    { name: "Status", value: inlineCode(statusFlags[connection.info.status] || connection.info.status.toString()), inline: true },
-                    { name: "Ping", value: `\`${(new Date().getTime() - _t2).toString()}ms\``, inline: false },
+                    { name: "Server Version", value: `-# ${connection.serverVersion()}`, inline: true },
+                    { name: "\u200B", value: "\u200B", inline: true },
+                    { name: "Status", value: `-# ${statusFlags[connection.info.status] || connection.info.status.toString()}`, inline: true },
+                    { name: "Active Connections", value: `-# ${pool.activeConnections()}`, inline: true },
+                    { name: "Total Connections", value: `-# ${pool.totalConnections()}`, inline: true },
+                    { name: "Ping", value: `-# ${(Date.now() - _t2).toString()}ms`, inline: true },
                 ]
             })
 
