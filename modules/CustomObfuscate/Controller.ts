@@ -3,7 +3,23 @@
 
 // TODO: handle when no saved configs yet (crashes right now)
 
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, Colors, EmbedBuilder, inlineCode, InteractionCollector, Message, SelectMenuComponentOptionData, StringSelectMenuBuilder, StringSelectMenuInteraction, User } from "discord.js"
+import {
+    ActionRowBuilder,
+    AttachmentBuilder,
+    ButtonBuilder,
+    ButtonInteraction,
+    ButtonStyle,
+    CacheType,
+    Colors,
+    EmbedBuilder,
+    inlineCode,
+    InteractionCollector,
+    Message,
+    SelectMenuComponentOptionData,
+    StringSelectMenuBuilder,
+    StringSelectMenuInteraction,
+    User
+} from "discord.js"
 import { utils } from "../../index";
 import { randomUUID } from "crypto";
 import Embed from "../Embed";
@@ -92,52 +108,61 @@ export class CustomObfuscateController {
     }
 
     public OnButtonClick = async (interaction: ButtonInteraction<CacheType>) => {
-        if (interaction.user.id !== this.user.id) return interaction.deferUpdate();
+        try {
+            if (interaction.user.id !== this.user.id) return interaction.deferUpdate();
 
-        switch (interaction.customId) {
-            case Buttons.CANCEL:
-                this.main_collector.stop()
-                await this.response.edit({ embeds: [this.components.embeds.cancelled], components: [] })
-                await interaction.deferUpdate()
-                break;
-            case Buttons.OBFUSCATE:
-                this.components.rows.main.components.forEach((component: ButtonBuilder) => {
-                    component.setDisabled(true)
-                    if (component.data.label == "Obfuscate") component.setLabel(" ").setEmoji("<:loading:1135544416933785651>")
-                })
+            switch (interaction.customId) {
+                case Buttons.CANCEL:
+                    this.main_collector.stop()
+                    await this.response.edit({ embeds: [this.components.embeds.cancelled], components: [] })
+                    await interaction.deferUpdate()
+                    break;
+                case Buttons.OBFUSCATE:
+                    this.components.rows.main.components.forEach((component: ButtonBuilder) => {
+                        component.setDisabled(true)
+                        if (component.data.label == "Obfuscate") component.setLabel(" ").setEmoji("<:loading:1135544416933785651>")
+                    })
 
-                await interaction.deferUpdate()
-                await this.ProcessObfuscation()
-                break;
-            case Buttons.CONFIGURE_PLUGINS:
+                    await interaction.deferUpdate()
+                    await this.ProcessObfuscation()
+                    break;
+                case Buttons.CONFIGURE_PLUGINS:
 
-                await this.response.edit({ components: [this.components.rows.configure_plugins_select_menu, this.components.rows.configure_plugins_buttons] })
-                await interaction.deferUpdate()
-                break;
-            case Buttons.PLUGINS_BACK:
-                await this.response.edit({ components: [this.components.rows.main] })
-                await interaction.deferUpdate()
-                break;
-            case Buttons.PLUGINS_VISUALIZE:
-                this.visualize_config = !this.visualize_config
-                this.components.embeds.main.data.fields[0].value = this.GetSelectedPlugins(this.visualize_config)
+                    await this.response.edit({ components: [this.components.rows.configure_plugins_select_menu, this.components.rows.configure_plugins_buttons] })
+                    await interaction.deferUpdate()
+                    break;
+                case Buttons.PLUGINS_BACK:
+                    await this.response.edit({ components: [this.components.rows.main] })
+                    await interaction.deferUpdate()
+                    break;
+                case Buttons.PLUGINS_VISUALIZE:
+                    this.visualize_config = !this.visualize_config
+                    this.components.embeds.main.data.fields[0].value = this.GetSelectedPlugins(this.visualize_config)
 
-                await this.response.edit({ embeds: [this.components.embeds.main], components: [this.components.rows.configure_plugins_select_menu, this.components.rows.configure_plugins_buttons] })
-                await interaction.deferUpdate()
-                break;
-            case Buttons.PLUGINS_LOAD:
-                const saved_configs = await this.GetUserConfigSaves()
-                this.components.load_menu.setOptions(saved_configs)
+                    await this.response.edit({ embeds: [this.components.embeds.main], components: [this.components.rows.configure_plugins_select_menu, this.components.rows.configure_plugins_buttons] })
+                    await interaction.deferUpdate()
+                    break;
+                case Buttons.PLUGINS_LOAD:
+                    const saved_configs = await this.GetUserConfigSaves()
 
-                await this.response.edit({ components: [this.components.rows.load_save_select_menu, this.components.rows.configure_plugins_buttons] })
-                await interaction.deferUpdate()
-                break;
-            case Buttons.PLUGINS_SAVE:
-                await this.SaveCurrentPlugins(interaction)
-                break;
-            default:
-                interaction.reply({ ephemeral: true, content: interaction.customId });
-                break;
+                    if (saved_configs.length <= 0) {
+                        return await interaction.reply({ ephemeral: true, content: "You don't have a saved configuration yet." })
+                    }
+
+                    this.components.load_menu.setOptions(saved_configs)
+
+                    await this.response.edit({ components: [this.components.rows.load_save_select_menu, this.components.rows.configure_plugins_buttons] })
+                    await interaction.deferUpdate()
+                    break;
+                case Buttons.PLUGINS_SAVE:
+                    await this.SaveCurrentPlugins(interaction)
+                    break;
+                default:
+                    interaction.reply({ ephemeral: true, content: interaction.customId });
+                    break;
+            }
+        } catch (error) {
+            console.error(error)
         }
     }
 
