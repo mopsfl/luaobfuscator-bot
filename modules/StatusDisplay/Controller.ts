@@ -1,4 +1,4 @@
-import { Colors, EmbedBuilder, Message, TextBasedChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, TextBasedChannel } from "discord.js";
 import { client, config, env, utils } from "../../index"
 import Main from "./Embeds/Main";
 import Embed from "../Embed";
@@ -11,6 +11,7 @@ import Alert from "./Embeds/Alert";
 import { createHash } from "crypto";
 import Chart from "./Chart";
 import ObfuscatorStats from "../ObfuscatorStats";
+import History from "./Embeds/History";
 export default class StatusDisplayController {
     constructor(
         public statusChannel?: TextBasedChannel,
@@ -20,14 +21,19 @@ export default class StatusDisplayController {
         public mainEmbed?: EmbedBuilder,
         public statisticsEmbed?: EmbedBuilder,
 
+        public outageHistoryButton?: ButtonBuilder,
+        public interactionCollector?: InteractionCollector<ButtonInteraction<CacheType>>,
+
         public lastUpdate: number = 0,
         public lastOutage: ServiceOutage = null,
 
-        public _initTime: number = 0
+        public _initTime: number = 0,
+        public _cache: { [id: string]: boolean } = null
     ) { }
 
     async init() {
         this._initTime = Date.now()
+        this._cache = {}
         this.mainEmbed = Embed(Main())
         this.statisticsEmbed = Embed(Stats())
 
@@ -46,7 +52,11 @@ export default class StatusDisplayController {
             console.error(`[Status Display Error]:`, err)
         })
 
+        this.outageHistoryButton = new ButtonBuilder().setLabel("Outage History").setCustomId("outage_history").setStyle(ButtonStyle.Secondary).setEmoji(`<:history:1419671276875939981>`)
+        this.interactionCollector = this.statusMessage.createMessageComponentCollector({ componentType: ComponentType.Button })
         this.lastOutage = await this.GetLastOutage();
+
+        this.interactionCollector.on("collect", this.CreateOutageHistory.bind(this));
 
         (async () => {
             while (true) {
@@ -125,7 +135,12 @@ export default class StatusDisplayController {
             time: Date.now()
         })
 
-        await this.statusMessage.edit({ embeds: [mainEmbed, statisticsEmbed] })
+        await this.statusMessage.edit({
+            embeds: [mainEmbed, statisticsEmbed],
+            components: [
+                new ActionRowBuilder<ButtonBuilder>().addComponents(this.outageHistoryButton).toJSON()
+            ],
+        });
     }
 
     GetStatusEmoji(statusCode: number | string) {
@@ -180,5 +195,46 @@ export default class StatusDisplayController {
 
             this.alertChannel.send({ embeds: [alertEmbed], content: config.STATUS_DISPLAY.ids_to_alert.map(id => `<@${id}>`).join(' ') })
         }
+    }
+
+    async CreateOutageHistory(interaction: ButtonInteraction) {
+        if (this._cache[interaction.user.id]) return await interaction.reply({ ephemeral: true, content: "Please wait a few seconds..." })
+        this._cache[interaction.user.id] = true
+
+        const result = await Database.GetTable("outage_log", null, null, 10),
+            historyEmbed = Embed(History()),
+            fieldValues = {
+                services: "",
+                status: "",
+                time: ""
+            }
+
+        if (!result.success) {
+            await interaction.reply({ ephemeral: true, content: "An error occurred while trying to fetch the outage history!" })
+            return console.error(result.error.message)
+        }
+
+        const outage_log: ServiceOutage[] = result.data.map((outage: ServiceOutage) => {
+            outage.services = JSON.parse(outage.services.toString())
+            return outage
+        })
+
+        outage_log.reverse().forEach(outage => {
+            const firstService = Object.values(outage.services)[0]
+
+            fieldValues.services += `-# ${Object.keys(outage.services).join(", ")}\n`;
+            fieldValues.status += `-# ${firstService?.statusText || "N/A"} (_${firstService?.statusCode || "N/A"}_)\n`;
+            fieldValues.time += `-# <t:${Math.floor(outage.time / 1000)}:R>\n`;
+        });
+
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.services, fieldValues.services, true)
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.status, fieldValues.status, true)
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.time, fieldValues.time, true)
+
+        await interaction.reply({ ephemeral: true, embeds: [historyEmbed] })
+
+        utils.Sleep(10000).then(() => {
+            this._cache[interaction.user.id] = false
+        })
     }
 }

@@ -1,7 +1,7 @@
 const start_tick = new Date().getTime()
 const DISABLE_DISCORDLOGIN = false //does not login the discord client
 
-import { ActivityType, Client, Collection, Events, IntentsBitField, Partials, REST, Routes } from "discord.js"
+import { ActivityType, Client, Collection, Events, IntentsBitField, MessageType, Partials, REST, Routes } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
 import express from "express"
 import dotenv from "dotenv"
@@ -127,7 +127,7 @@ client.once(Events.ClientReady, async () => {
 
 client.on(Events.MessageCreate, async (message) => {
     try {
-        if (message.channelId == statusDisplayController.statusChannel.id) { return await message.delete().catch(console.error) }
+        if (message.channelId == statusDisplayController.statusChannel.id && message.type === MessageType.Default) { return await message.delete().catch(console.error) }
         //if (NoHello(message)) return;
         if (message.author.bot || !message.content || !message.content.startsWith(config.prefix)) return
 

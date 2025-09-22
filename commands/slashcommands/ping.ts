@@ -1,4 +1,4 @@
-import { Colors, SlashCommandBuilder } from 'discord.js';
+import { bold, Colors, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 import Database from '../../modules/Database/Database';
@@ -18,9 +18,7 @@ const command = {
         })
 
         await interaction.reply({ embeds: [embed], ephemeral: true }).then(msg => {
-            embed.setFields([{ name: "Result:", value: `-# ${(msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, "")}` }])
-                .setDescription(" ")
-                .setTimestamp()
+            embed.setDescription(`${bold("Result")}:\n-# ${(msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, "")}`)
                 .setColor(Colors.Green)
 
             msg.edit({ embeds: [embed] })

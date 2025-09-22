@@ -1,5 +1,5 @@
 import { Message, MessageType } from "discord.js";
-import { client } from "../../dist";
+import { client } from "../../";
 import Database from "../Database/Database";
 
 const nohello_words = [

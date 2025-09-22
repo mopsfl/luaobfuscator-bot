@@ -26,10 +26,15 @@ export default {
             affectedServices: 0,
             outageTime: 2,
             outageId: 3
+        },
+        OutageHistory: {
+            services: 0,
+            status: 1,
+            time: 2
         }
     },
 
-    SetValue(fields: APIEmbedField[], index: number, value: string) {
-        fields[index].value = `-# ${value}`
+    SetValue(fields: APIEmbedField[], index: number, value: string, notSmall = false) {
+        fields[index].value = `${notSmall ? "" : "-# "}${value}`
     }
 }
