@@ -12,6 +12,7 @@ import { createHash } from "crypto";
 import Chart from "./Chart";
 import ObfuscatorStats from "../ObfuscatorStats";
 import History from "./Embeds/History";
+import Session from "../Session";
 export default class StatusDisplayController {
     constructor(
         public statusChannel?: TextBasedChannel,
@@ -214,10 +215,11 @@ export default class StatusDisplayController {
             return console.error(result.error.message)
         }
 
-        const outage_log: ServiceOutage[] = result.data.map((outage: ServiceOutage) => {
-            outage.services = JSON.parse(outage.services.toString())
-            return outage
-        })
+        const session = await Session.Create(300),
+            outage_log: ServiceOutage[] = result.data.map((outage: ServiceOutage) => {
+                outage.services = JSON.parse(outage.services.toString())
+                return outage
+            })
 
         outage_log.reverse().forEach(outage => {
             const firstService = Object.values(outage.services)[0]
@@ -230,6 +232,7 @@ export default class StatusDisplayController {
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.services, fieldValues.services, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.status, fieldValues.status, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.time, fieldValues.time, true)
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](http://localhost:6969/outagehistory?s=${session}).`)
 
         await interaction.reply({ ephemeral: true, embeds: [historyEmbed] })
 

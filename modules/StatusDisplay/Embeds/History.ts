@@ -1,4 +1,4 @@
-import { Colors } from "discord.js";
+import { Colors, inlineCode } from "discord.js";
 import { config, utils } from "../../../index";
 
 export default function () {
@@ -11,6 +11,7 @@ export default function () {
             { name: `Services`, value: `-# N/A`, inline: true },
             { name: "Status", value: `-# N/A`, inline: true },
             { name: `Time`, value: `-# N/A`, inline: true },
+            { name: "\u200B", value: `-# You can see the full outage history on the [website](http://localhost:6969/outagehistory).`, inline: false }
         ],
         footer: {
             text: `Lua Obfuscator • by mopsfl`,

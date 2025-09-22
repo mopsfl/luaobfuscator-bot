@@ -30,7 +30,8 @@ export default {
         OutageHistory: {
             services: 0,
             status: 1,
-            time: 2
+            time: 2,
+            website: 3
         }
     },
 

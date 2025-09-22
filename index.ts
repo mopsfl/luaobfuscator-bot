@@ -223,11 +223,14 @@ app.get("/api/v1/cache/:name", async (req, res) => {
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 });
 
-app.get("/outagelog", (req, res) => {
-    res.sendFile(process_path + "/static/outageLog/index.html")
+app.get("/outagehistory", (req, res) => {
+    res.sendFile(process_path + "/static/outagehistory/index.html")
 })
 
-app.get("/outagelog/logs", async (req, res) => {
+app.get("/outagehistory/logs", async (req, res) => {
+    const session_ids: Array<any> = await cache.get("stats_session_ids")
+    if (!session_ids?.includes(req.query.s)) return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
+
     const result = await Database.GetTable("outage_log")
     const outages = result.data?.map((outage: ServiceOutage) => ({
         time: outage.time,

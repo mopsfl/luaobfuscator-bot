@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lua Obfuscator - Outage Log</title>
+    <title>Lua Obfuscator - Outage History</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,200,0,0" />
 
@@ -29,11 +29,11 @@
 
         window.onload = async () => {
             let list = document.querySelector(".list>.content"),
-                outageLogRequest = await fetch(`/outagelog/logs`),
+                outageHistoryRequest = await fetch(`/outagehistory/logs${location.search}`),
                 currentRenderLimit = 100
 
-            if (!outageLogRequest.ok) {
-                const error = await outageLogRequest.json()
+            if (!outageHistoryRequest.ok) {
+                const error = await outageHistoryRequest.json()
 
                 list.innerHTML = `<span class="error">
                     <span>${error.message} (${error.code})</span>
@@ -43,13 +43,17 @@
                 return console.error(error)
             }
 
-            let outageLogs = await outageLogRequest.json()
-            if (!outageLogs) return console.error("unable to fetch outage logs")
+            let outageHistory = await outageHistoryRequest.json()
+            if (!outageHistory) return console.error("unable to fetch outage logs")
             list.innerHTML = ""
 
             function RenderOutages(limit = 100, ascending = true) {
+                let outages = [...outageHistory]
+                outages.sort((a, b) => ascending ? a.time - b.time : b.time - a.time)
+
                 list.innerHTML = ""
-                outageLogs.forEach(outage => {
+
+                outages.slice(0, limit).forEach(outage => {
                     const element = document.createElement("div"),
                         services = new Map(Object.entries(outage.services)),
                         firstOutage = services.entries().next().value[1]
@@ -57,12 +61,15 @@
                     let statusCode = firstOutage.statusCode,
                         statusText = firstOutage.statusText
 
-                    if (!statusText) {
-                        statusText = statusCode == 522 && "Connection Timed Out" || statusCode == 524 && "A Timeout Occurred" || "Unknown Error"
-                    }
-                    console.log(outage);
+                    if (!statusText) statusText = statusCode == 522 && "Connection Timed Out" || statusCode == 524 && "A Timeout Occurred" || "Unknown Error"
+
                     element.classList.add("outage")
-                    element.setAttribute("id", Array.from(services.values()).map(o => o.name).join("") + statusText?.toLowerCase().replace(/(\s|\,)/gm, "") + statusCode)
+                    element.setAttribute("id", btoa(
+                        Array.from(services.values()).map(o => o.name).join("")
+                        + statusText?.toLowerCase().replace(/(\s|\,)/gm, "")
+                        + statusCode
+                        + Array.from(services.keys()).join(""))
+                    )
                     element.setAttribute("time", outage.time)
                     element.innerHTML = `
                             <span class="services">${Array.from(services.keys()).join(", ")}</span>
@@ -73,14 +80,14 @@
                     list.appendChild(element)
                 })
 
-                if (currentRenderLimit >= outageLogs.length) load_more.classList.add("hide")
+                if (currentRenderLimit >= outageHistory.length) load_more.classList.add("hide")
             }
 
             const search_bar = document.querySelector(".outage_search")
             search_bar.addEventListener("input", (input) => {
                 let matches = 0
                 list.querySelectorAll(".outage").forEach(el => {
-                    const id = el.getAttribute("id"),
+                    const id = atob(el.getAttribute("id")),
                         value = input.target.value.replace(/(\s|\,)/gm, "").toLowerCase().trim()
 
                     if (id.includes(value)) {
@@ -117,7 +124,7 @@
 
             const load_all = document.querySelector("#load_all")
             load_all.addEventListener("click", () => {
-                currentRenderLimit = outageLogs.length
+                currentRenderLimit = outageHistory.length
                 RenderOutages(currentRenderLimit, false)
             })
 
@@ -335,7 +342,7 @@
 
 <body>
     <header>
-        <p class="title">Lua Obfuscator - Outage Log</p>
+        <p class="title">Lua Obfuscator - Outage History</p>
 
         <div class="header-inputs">
             <div class="buttons">
