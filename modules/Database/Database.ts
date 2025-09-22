@@ -25,12 +25,15 @@ export default {
   async GetTable<T = any>(
     table: DatabaseTable,
     reqQuery?: Record<string, any>,
-    latest = false
+    latest = false,
+    limit?: number,
+    desc?: boolean
   ): Promise<DBResponse<T | T[]>> {
     try {
       const { clause, value } = buildWhereClause(reqQuery);
       let sql = `SELECT * FROM \`${table}\`${clause ? " WHERE " + clause : ""}`;
-      if (latest) sql += " ORDER BY time DESC LIMIT 1";
+      if (latest) { sql += " ORDER BY time DESC" } else if (desc) { sql += " ORDER BY time DESC" }
+      if (latest) { sql += " LIMIT 1" } else if (limit) { sql += ` LIMIT ${limit}` }
 
       const rows = await pool.query(sql, clause ? [value] : []);
       if (!rows.length) return fail("notFound", "No rows found", 404);

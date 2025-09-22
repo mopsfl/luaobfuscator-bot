@@ -1,5 +1,5 @@
 import { Colors, EmbedBuilder, Message, TextBasedChannel } from "discord.js";
-import { client, config, env, obfuscatorStats } from "../../index"
+import { client, config, env } from "../../index"
 import Main from "./Embeds/Main";
 import Embed from "../Embed";
 import Fields from "./Fields";
@@ -13,6 +13,8 @@ import Stats from "./Embeds/Stats";
 import FormatNumber from "../FormatNumber";
 import Alert from "./Embeds/Alert";
 import { createHash } from "crypto";
+import Chart from "./Chart";
+import ObfuscatorStats from "../ObfuscatorStats";
 export default class StatusDisplayController {
     constructor(
         public statusChannel?: TextBasedChannel,
@@ -97,7 +99,7 @@ export default class StatusDisplayController {
                 this.lastOutage.count += 1
             } else {
                 this.lastOutage = {
-                    time: new Date().getTime(),
+                    time: Date.now(),
                     services: Object.fromEntries(failedServices),
                     id: outageId,
                     count: 0,
@@ -109,21 +111,22 @@ export default class StatusDisplayController {
             this.lastOutage = await this.GetLastOutage()
         }
 
-        this.lastUpdate = new Date().getTime()
+        this.lastUpdate = Date.now()
         mainEmbed.setColor(failedServices.size > 0 ? Colors.Red : Colors.Green)
+        statisticsEmbed.setImage(Chart.Create(await ObfuscatorStats.Parse()))
 
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastUpdated, this.lastUpdate ? `<t:${(this.lastUpdate / 1000).toFixed()}:R>` : "N/A")
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastOutage, this.lastOutage ? `<t:${(this.lastOutage.time / 1000).toFixed()}:R>` : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? FormatUptime(new Date().getTime() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
+        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? FormatUptime(Date.now() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.memoryUsage, serverStatistics ? FormatBytes(serverStatistics.memory_usage) : "N/A")
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? FormatUptime(client.uptime, true) : "N/A")
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? FormatNumber(serverStatistics.total_obfuscations) : "N/A")
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.recentObfuscations, "N/A")
 
-        obfuscatorStats.Update({
-            total_file_uploads: serverStatistics.total_file,
+        ObfuscatorStats.Update({
+            total_uploads: serverStatistics.total_file,
             total_obfuscations: serverStatistics.total_obfuscations,
-            time: new Date().getTime()
+            time: Date.now()
         })
 
         await this.statusMessage.edit({ embeds: [mainEmbed, statisticsEmbed] })
@@ -142,7 +145,7 @@ export default class StatusDisplayController {
     }
 
     async SaveOutage(services: Map<string, ServiceStatus>, outageId: string) {
-        const time = new Date().getTime()
+        const time = Date.now()
 
         await Database.Insert("outage_log", {
             time: time.toString(),

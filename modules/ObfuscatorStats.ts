@@ -1,71 +1,65 @@
-import { file_cache, utils } from "../index"
-import ChartImage from "./ChartImage"
+import Database from "./Database/Database"
 
-export default class ObfuscatorStats {
-    constructor(
-        public file_cache_name = "obfuscator_stats",
-    ) { }
-
+export default {
     async Get(): Promise<Saved_Stats> {
-        return await file_cache.get(this.file_cache_name)
-    }
-
-    async Set(stats: Saved_Stats) {
-        return await file_cache.set(this.file_cache_name, stats)
-    }
-
-    async Update(today_stats: Obfuscator_Stats) {
         try {
-            let current_stats: Saved_Stats = await this.Get(),
-                current_date = utils.GetFullDate()
+            const result = await Database.GetTable("obfuscator_stats")
 
-            if (!current_stats) return console.log(`unable to update obfuscator stats. (current_stats is undefined)`)
-            if (Object.values(current_stats).length <= 0) {
-                const dates = ChartImage.GetLocalizedDateStrings(8, true)
-                dates.forEach(date => {
-                    current_stats[date] = {
-                        total_obfuscations: today_stats.total_obfuscations,
-                        total_file_uploads: today_stats.total_file_uploads,
-                        time: new Date().getTime()
-                    }
-                })
+            if (!result.success) {
+                console.error("<Get->GetTable>[Obfuscator Stats Error]:", result.error.message)
+                return {}
             }
-            current_stats[current_date] = today_stats
-            if (current_stats[current_date].total_file_uploads === undefined || current_stats[current_date].total_obfuscations === undefined) return
-            return await this.Set(current_stats);
+
+            return result.data
         } catch (error) {
             console.error(error)
         }
-    }
+    },
 
-    async ParseCurrentStat(name?: "total_file_uploads" | "total_obfuscations", returnFullStatList = false) {
+    async Update(stats: Obfuscator_Stats) {
         try {
-            let current_stats = await this.Get(),
-                req_stats = []
-            if (!current_stats) { console.log(`unable to parse '${name}' stat. (current_stats is undefined)`); return [] }
+            if (stats.total_uploads === undefined || stats.total_obfuscations === undefined) return false
 
-            Object.keys(current_stats).forEach(date => {
-                const stat = current_stats[date]
-                req_stats.push(stat[name])
-            })
-            req_stats.forEach((stat, index) => {
-                let current_index = (req_stats.length - index) - 1,
-                    previous_index = (current_index - 1)
+            await Database.GetTable("obfuscator_stats", null, true).then(async res => {
+                if (!res.success) return console.error("<Update->GetTable>[Obfuscator Stats Error]:", res.error.message)
+                const result = await Database.Update("obfuscator_stats", stats, { time: res.data.time })
 
-                if (previous_index <= -1) previous_index = 1
-                if (req_stats[previous_index] > 0) req_stats[current_index] = (req_stats[current_index] - req_stats[previous_index])
-                if (req_stats[current_index] < 0) req_stats[current_index] = 0
-            })
-            return !returnFullStatList ? req_stats.slice(req_stats.length - 7) : req_stats
+                if (!result.success) return console.error("<Update->Update>[Obfuscator Stats Error]:", result.error.message)
+            }).catch(console.error)
+
+            return true
         } catch (error) {
             console.error(error)
+        }
+    },
+
+    async Parse(): Promise<number[]> {
+        try {
+            const result = await Database.GetTable("obfuscator_stats", null, false, 8, true);
+
+            if (!result.success) {
+                console.error("[Parse->GetTable][Obfuscator Stats Error]:", result.error.message);
+                return [];
+            }
+
+            let data: number[] = result.data.map((d: Obfuscator_Stats) => d.total_obfuscations).reverse();
+
+            data = data.map((value, index) => {
+                const diff = value - (index > 0 ? data[index - 1] : 0);
+                return diff > 0 ? diff : 0;
+            });
+
+            return data.slice(-7);
+        } catch (error) {
+            console.error("[Parse Error]:", error);
+            return [];
         }
     }
 }
 
 export interface Obfuscator_Stats {
     total_obfuscations: number
-    total_file_uploads: number
+    total_uploads: number
     time: number
 }
 

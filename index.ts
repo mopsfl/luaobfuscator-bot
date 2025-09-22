@@ -10,11 +10,12 @@ import cors from "cors"
 import mariadb from "mariadb"
 import Config from "./config"
 import Utils from "./modules/Utils"
-import Command, { cmdStructure, command } from "./modules/Command"
+import Command, { command } from "./modules/Command"
 import StatusDisplayController from "./modules/StatusDisplay/Controller"
-import ObfuscatorStats from "./modules/ObfuscatorStats"
 import { Cache, FileSystemCache } from "file-system-cache"
 import { gzipSync } from "zlib";
+import Database from "./modules/Database/Database"
+import { ServiceOutage } from "./modules/StatusDisplay/Types"
 
 const app = express()
 dotenv.config()
@@ -23,7 +24,6 @@ const config = new Config()
 const command = new Command()
 const utils = new Utils()
 const statusDisplayController = new StatusDisplayController()
-const obfuscatorStats = new ObfuscatorStats()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
 let file_cache: FileSystemCache
@@ -188,10 +188,6 @@ app.listen(process.env.PORT, async () => {
         ttl: Infinity,
     })
 
-    file_cache.fileExists(obfuscatorStats.file_cache_name).then(async file => {
-        if (!file) await file_cache.set(obfuscatorStats.file_cache_name, {})
-    })
-
     console.log(`> express server listening on port ${process.env.PORT}\n> logging in...`)
     !DISABLE_DISCORDLOGIN ? await client.login(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]).then(async () => {
         console.log(`> logged in as ${client.user.username}`)
@@ -209,18 +205,6 @@ app.listen(process.env.PORT, async () => {
 
 app.use(cors())
 app.get("/", async (req, res) => res.sendStatus(200));
-app.get("/api/v1/obfuscator/stats", async (req, res) => res.json({
-    total_obfuscations: await obfuscatorStats.ParseCurrentStat("total_obfuscations", true),
-    total_file_uploads: await obfuscatorStats.ParseCurrentStat("total_file_uploads", true),
-}))
-
-app.get("/api/v1/statusdisplay/data", (req, res) => res.json(statusDisplayController))
-app.get("/api/v1/commands/:cmdname", (req, res) => {
-    const _command: any = command.commands.get(req.params.cmdname)
-    if (_command.permissions) _command.permissions.forEach((v: any, i: number) => _command.permissions[i] = utils.GetPermissionsName(v))
-    if (_command.callback) _command.callback = typeof (_command.callback)
-    res.json(_command)
-})
 
 // TODO: get botstats and cmdstats from database since its not saved in file cache anymore (why not do it now? too lazy)
 app.get("/api/v1/cache/:name", async (req, res) => {
@@ -239,18 +223,27 @@ app.get("/api/v1/cache/:name", async (req, res) => {
     return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 });
 
-app.get("/bruhduhdicklick/do/data/base/thing/pleasebabygurl/:date", async (req, res) => {
-    const date = new Date(parseInt(req.params.date))
-    const formatted = date.toLocaleDateString("en-US", {
-        month: "2-digit",
-        day: "2-digit",
-        year: "numeric"
-    })
-    res.json(formatted)
+app.get("/outagelog", (req, res) => {
+    res.sendFile(process_path + "/static/outageLog/index.html")
+})
+
+app.get("/outagelog/logs", async (req, res) => {
+    const result = await Database.GetTable("outage_log")
+    const outages = result.data?.map((outage: ServiceOutage) => ({
+        time: outage.time,
+        services: (() => {
+            try {
+                return JSON.parse(outage.services?.toString() ?? "[]");
+            } catch { return [] }
+        })(),
+        id: outage.id
+    }));
+
+    res.json(outages);
 })
 
 export {
-    statusDisplayController, command, utils, obfuscatorStats,
+    statusDisplayController, command, utils,
     client, config, env, cache, file_cache, cacheValues, pool,
     start_tick
 }

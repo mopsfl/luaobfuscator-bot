@@ -21,28 +21,15 @@
         }
 
         function ToTime(ms) {
-            const d = new Date(ms);
+            const d = new Date(parseInt(ms));
             return [d.getHours(), d.getMinutes(), d.getSeconds()]
                 .map(v => String(v).padStart(2, '0'))
                 .join(':');
         }
 
-        function FilterOutages(outages, timeWindowMs = 600000) {
-            const seen = [];
-            for (const outage of outages) {
-                if (outage.affected_services.some(s => s.status === 403)) continue;
-                const services = outage.affected_services.map(s => s.name).sort().join(",");
-
-                if (!seen.some(o => Math.abs(o.time - outage.time) < timeWindowMs && o.services === services))
-                    seen.push({ time: outage.time, services, original: outage });
-            }
-            return seen.map(o => o.original);
-        }
-
-
         window.onload = async () => {
             let list = document.querySelector(".list>.content"),
-                outageLogRequest = await fetch(`/api/v1/cache/outage_log${window.location.search}`),
+                outageLogRequest = await fetch(`/outagelog/logs`),
                 currentRenderLimit = 100
 
             if (!outageLogRequest.ok) {
@@ -56,31 +43,29 @@
                 return console.error(error)
             }
 
-            let outageLogs = (await outageLogRequest.json())?.outages
+            let outageLogs = await outageLogRequest.json()
             if (!outageLogs) return console.error("unable to fetch outage logs")
             list.innerHTML = ""
 
             function RenderOutages(limit = 100, ascending = true) {
                 list.innerHTML = ""
-                const slicedOutageLogs = outageLogs.filter(o => { return !(o.affected_services.length === 1 && o.affected_services[0].name === "stats"); })
-                    .slice(-limit)
-                    .sort((a, b) => ascending ? a.time - b.time : b.time - a.time);
+                outageLogs.forEach(outage => {
+                    const element = document.createElement("div"),
+                        services = new Map(Object.entries(outage.services)),
+                        firstOutage = services.entries().next().value[1]
 
-                FilterOutages(slicedOutageLogs).forEach(outage => {
-                    const element = document.createElement("div")
-
-                    let statusCode = outage.affected_services[0].status,
-                        statusText = outage.affected_services[0].statusText
+                    let statusCode = firstOutage.statusCode,
+                        statusText = firstOutage.statusText
 
                     if (!statusText) {
                         statusText = statusCode == 522 && "Connection Timed Out" || statusCode == 524 && "A Timeout Occurred" || "Unknown Error"
                     }
-
+                    console.log(outage);
                     element.classList.add("outage")
-                    element.setAttribute("id", outage.affected_services.map(o => o.name).join("") + statusText?.toLowerCase().replace(/(\s|\,)/gm, "") + statusCode)
+                    element.setAttribute("id", Array.from(services.values()).map(o => o.name).join("") + statusText?.toLowerCase().replace(/(\s|\,)/gm, "") + statusCode)
                     element.setAttribute("time", outage.time)
                     element.innerHTML = `
-                            <span class="services">${outage.affected_services.map(o => o.name).join(", ")}</span>
+                            <span class="services">${Array.from(services.keys()).join(", ")}</span>
                             <span class="time">${GetRelativeTime(outage.time)} - ${ToTime(outage.time)}</span>
                             <span class="status">${statusText || "Unknown Error"} <span class="status_code ${statusCode >= 500 ? "red" : "orange"}">${statusCode}</span></span>
                         `
