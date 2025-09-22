@@ -11,7 +11,6 @@ export default function () {
             { name: `Total Obfuscations:`, value: `-# N/A`, inline: true },
             { name: "\u200B", value: "\u200B", inline: true },
             { name: `Recent Obfuscations:`, value: `-# N/A`, inline: true },
-            { name: `\u200B`, value: `-# chart will be back asap :3`, inline: false },
         ],
         footer: {
             text: `Lua Obfuscator - Service Status • by mopsfl`,
