@@ -1,8 +1,6 @@
 // CustomObfuscate V2
 // prob the coolest discord bot thing ive ever made
 
-// TODO: handle when no saved configs yet (crashes right now)
-
 import {
     ActionRowBuilder,
     AttachmentBuilder,

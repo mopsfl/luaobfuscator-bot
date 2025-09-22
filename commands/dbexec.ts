@@ -9,7 +9,8 @@ const block = [
     "DELETE",
     "DROP TABLE",
     "DROP DATABASE",
-    "TRUNCATE"
+    "TRUNCATE",
+    "DROP"
 ]
 
 const STATUS_FLAGS: Record<number, string> = {

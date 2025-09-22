@@ -14,7 +14,7 @@ class Command {
         let lastCommitInfo = await GithubRepo.GetLastCommitData()
         const embed = Embed({
             title: `LuaObfuscator Bot`,
-            description: `Discord Bot made for ${hyperlink("LuaObfuscator", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
+            description: `A Discord bot made for ${hyperlink("luaobfuscator.com", "https://luaobfuscator.com")} to quickly obfuscate lua scripts via discord.`,
             fields: [
                 { name: "Links:", value: `${hyperlink("Status Page", 'https://mopsfl.de/status/luaobfuscator')}\n ${hyperlink("Support Server", config.support_url)}`, inline: false },
                 { name: "Uptime:", value: `-# ${utils.FormatUptime(client?.uptime)}`, inline: true },
