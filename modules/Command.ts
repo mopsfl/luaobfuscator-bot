@@ -58,7 +58,7 @@ export default class Command {
             Database.Increment("bot_statistics", "total_commands_executed").catch(console.error)
 
             this.ratelimits.set(cmd.message.author.id, false);
-            console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${new Date().getTime() - cmd.timestamp}ms (id: ${cmd.id})`);
+            console.log(`> command '${cmd.used_command_name}', requested by '${cmd.message.author.username}', finished in ${Date.now() - cmd.timestamp}ms (id: ${cmd.id})`);
         } catch (error) {
             this.ratelimits.set(cmd.message.author.id, false);
             utils.SendErrorMessage("error", cmd, error)

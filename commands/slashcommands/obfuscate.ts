@@ -44,7 +44,7 @@ const command = {
                     raw_arguments = _command.getRawArgs(message),
                     hasCodeBlock = utils.HasCodeblock(raw_arguments),
                     file_attachment: AttachmentBuilder,
-                    start_time = new Date().getTime()
+                    start_time = Date.now()
 
                 // Get Script Content
                 if (hasCodeBlock) {
@@ -80,7 +80,7 @@ const command = {
                         }
 
                         await message.reply({
-                            content: `-# sessionId: \`${res.sessionId}\`\n-# took: \`${new Date().getTime() - start_time}ms\``,
+                            content: `-# sessionId: \`${res.sessionId}\`\n-# took: \`${Date.now() - start_time}ms\``,
                             files: [file_attachment],
                         })
                     })

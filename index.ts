@@ -1,3 +1,6 @@
+// TODO: remake command handling logic
+//       index.ts cleanup
+
 const START_TICK = Date.now(),
     DISABLE_DISCORDLOGIN = false
 
@@ -20,13 +23,13 @@ const app = express()
 dotenv.config()
 
 const config = new Config()
-const command = new Command()
-const utils = new Utils()
-const statusDisplayController = new StatusDisplayController()
-const env = process.argv[2] || "prod"
-let cache: MemoryCache
+const command = new Command(),
+    utils = new Utils(),
+    statusDisplayController = new StatusDisplayController(),
+    env = process.argv[2] || "prod",
+    slashCommands = new Collection()
 
-const slashCommands = new Collection()
+let cache: MemoryCache
 
 const discordREST = new REST({ version: '10' }).setToken(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]);
 const pool = mariadb.createPool({
@@ -151,7 +154,7 @@ client.on(Events.MessageCreate, async (message) => {
                 id: command.createCommandId(),
                 callback: c.callback,
                 message: message,
-                timestamp: new Date().getTime(),
+                timestamp: Date.now(),
                 allowed: allowed,
                 success: false,
                 public_command: c.public_command

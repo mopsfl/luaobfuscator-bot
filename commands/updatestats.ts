@@ -19,7 +19,7 @@ class Command {
         })
         await cmd.message.reply({ embeds: [embed] }).then(async msg => {
             await statusDisplayController.Update()
-            embed.setDescription(`${utils.GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(new Date().getTime() - cmd.timestamp)}ms`)})`)
+            embed.setDescription(`${utils.GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(Date.now() - cmd.timestamp)}ms`)})`)
                 .setColor(Colors.Green)
                 .setTimestamp()
                 .setFooter({ text: `${cmd.id}` })

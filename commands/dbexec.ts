@@ -64,7 +64,7 @@ class Command {
         })
 
         try {
-            const _t = new Date().getTime()
+            const _t = Date.now()
             connection = await pool.getConnection()
 
             const query = cmd.raw_arguments
@@ -72,7 +72,7 @@ class Command {
             if (res) {
                 const attachment = utils.CreateFileAttachment(Buffer.from(JSON.stringify(res, (key, value) => typeof value === 'bigint' ? value.toString() : value, 2)), `mariadb_result_${connection.threadId}.json`);
                 cmd.message.reply({ //@ts-ignore
-                    files: [attachment], content: `-# query: ${inlineCode(query)}\n-# took: \`${new Date().getTime() - _t}ms\`\n-# threadId: ${inlineCode(connection.threadId.toString())}\n-# status: \`${getReadableStatus(connection.info.status)} (${connection.info.status})\`\n-# seed: \`${connection.info.seed.toString()}\``
+                    files: [attachment], content: `-# query: ${inlineCode(query)}\n-# took: \`${Date.now() - _t}ms\`\n-# threadId: ${inlineCode(connection.threadId.toString())}\n-# status: \`${getReadableStatus(connection.info.status)} (${connection.info.status})\`\n-# seed: \`${connection.info.seed.toString()}\``
                 })
             }
         } catch (error) {

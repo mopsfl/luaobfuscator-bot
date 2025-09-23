@@ -14,7 +14,7 @@ class Command {
             color: Colors.Yellow
         })
         await cmd.message.reply({ embeds: [embed] }).then(msg => {
-            embed.setDescription(`${bold("Result")}:\n-# ${(msg.createdTimestamp - new Date().getTime() + "ms").replace(/\-/, "")}`)
+            embed.setDescription(`${bold("Result")}:\n-# ${(msg.createdTimestamp - Date.now() + "ms").replace(/\-/, "")}`)
                 .setColor(Colors.Green)
 
             msg.edit({ embeds: [embed] })

@@ -212,7 +212,7 @@ export class CustomObfuscateController {
 
     private ProcessObfuscation = async () => {
         try {
-            this.process_begin = new Date().getTime()
+            this.process_begin = Date.now()
             if (!this.plugins) {
                 await this.UpdateProcessField("obfuscating script...")
                 await LuaObfuscator.v1.Obfuscate(this.script_content).then(async result => {
@@ -292,7 +292,7 @@ export class CustomObfuscateController {
         try {
             let process_content = "",
                 process_value = "",
-                process_time = `${this.process_begin ? `${Math.max((new Date().getTime() - this.process_begin) - 1000, 0)}ms` : "N/A"}`
+                process_time = `${this.process_begin ? `${Math.max((Date.now() - this.process_begin) - 1000, 0)}ms` : "N/A"}`
 
             if (replaceLast) {
                 this.process_fields = this.process_fields.slice(0, this.process_fields.length - 1)

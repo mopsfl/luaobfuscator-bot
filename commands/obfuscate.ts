@@ -27,7 +27,7 @@ class Command {
             chunksAmount = 0,
             hasCodeBlock = utils.HasCodeblock(cmd.raw_arguments),
             file_attachment: AttachmentBuilder,
-            start_time = new Date().getTime()
+            start_time = Date.now()
 
         // Get Script Content
         if (hasCodeBlock) {
@@ -124,7 +124,7 @@ class Command {
                     row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
 
                 await cmd.message.reply({
-                    content: `-# sessionId: \`${obfuscation_process.results.sessionId}\`\n-# took: \`${new Date().getTime() - start_time}ms\``,
+                    content: `-# sessionId: \`${obfuscation_process.results.sessionId}\`\n-# took: \`${Date.now() - start_time}ms\``,
                     files: [file_attachment],
                     components: [row]
                 })
