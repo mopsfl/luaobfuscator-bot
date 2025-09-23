@@ -1,4 +1,4 @@
-import { bold, Colors, EmbedBuilder, EmbedField, hyperlink, inlineCode, SlashCommandBuilder, underline } from 'discord.js';
+import { bold, ChatInputCommandInteraction, Colors, EmbedBuilder, EmbedField, hyperlink, inlineCode, Interaction, SlashCommandBuilder, underline } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 import { config, client, command as _command, utils } from '../../index';
@@ -25,7 +25,9 @@ const command = {
                     }))
             )),
 
-    async callback(interaction: CommandInteraction): Promise<void> {
+    async callback(interaction: Interaction): Promise<void> {
+        if (!interaction.isChatInputCommand()) return;
+
         let embed: EmbedBuilder,
             option = interaction.options.get("command")
 

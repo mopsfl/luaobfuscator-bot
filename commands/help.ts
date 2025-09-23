@@ -10,6 +10,8 @@ class Command {
     description = "Returns a list of all commands and other useful informations for the bot."
 
     callback = async (cmd: cmdStructure) => {
+        if (!cmd.message.channel.isSendable()) return;
+
         let embed: EmbedBuilder,
             validcommand = false,
             fullcommand_name = ""

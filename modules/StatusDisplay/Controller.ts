@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, TextBasedChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, TextBasedChannel, TextChannel } from "discord.js";
 import { client, config, env, utils } from "../../index"
 import Main from "./Embeds/Main";
 import Embed from "../Embed";
@@ -15,9 +15,9 @@ import History from "./Embeds/History";
 import Session from "../Session";
 export default class StatusDisplayController {
     constructor(
-        public statusChannel?: TextBasedChannel,
+        public statusChannel?: TextChannel,
         public statusMessage?: Message,
-        public alertChannel?: TextBasedChannel,
+        public alertChannel?: TextChannel,
 
         public mainEmbed?: EmbedBuilder,
         public statisticsEmbed?: EmbedBuilder,
@@ -39,7 +39,7 @@ export default class StatusDisplayController {
         this.statisticsEmbed = Embed(Stats())
 
         await client.channels.fetch(config[env].STATUS_CHANNEL_ID).then(async channel => {
-            if (!channel.isTextBased()) return console.error(`[Status Display Error]: status channel '${channel.id}' must be textBased.`)
+            if (channel.type !== ChannelType.GuildText) return console.error(`[Status Display Error]: status channel '${channel.id}' must be textBased.`)
             this.statusChannel = channel
             this.statusMessage = (await this.statusChannel.messages.fetch()).first()
         }).catch(err => {
@@ -47,7 +47,7 @@ export default class StatusDisplayController {
         })
 
         await client.channels.fetch(config.STATUS_DISPLAY.alert_channel).then(channel => {
-            if (!channel.isTextBased()) return console.error(`[Status Display Error]: alert channel '${channel.id}' must be textBased.`)
+            if (channel.type !== ChannelType.GuildText) return console.error(`[Status Display Error]: alert channel '${channel.id}' must be textBased.`)
             this.alertChannel = channel
         }).catch(err => {
             console.error(`[Status Display Error]:`, err)

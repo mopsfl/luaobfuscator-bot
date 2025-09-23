@@ -1,5 +1,5 @@
 import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js"
-import { config, utils, env, file_cache, client } from "../index"
+import { config, utils, env, client } from "../index"
 import { cmdStructure } from "./Command"
 import { randomUUID } from "crypto"
 import Embed from "./Embed"

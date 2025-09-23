@@ -118,7 +118,7 @@ export class CustomObfuscateController {
                 case Buttons.OBFUSCATE:
                     this.components.rows.main.components.forEach((component: ButtonBuilder) => {
                         component.setDisabled(true)
-                        if (component.data.label == "Obfuscate") component.setLabel(" ").setEmoji("<:loading:1135544416933785651>")
+                        if ("label" in component.data && component.data.label === "Obfuscate") component.setLabel(" ").setEmoji("<:loading:1135544416933785651>")
                     })
 
                     await interaction.deferUpdate()

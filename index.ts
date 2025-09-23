@@ -1,5 +1,5 @@
-const start_tick = new Date().getTime()
-const DISABLE_DISCORDLOGIN = false //does not login the discord client
+const START_TICK = Date.now(),
+    DISABLE_DISCORDLOGIN = false
 
 import { ActivityType, Client, Collection, Events, IntentsBitField, MessageType, Partials, REST, Routes } from "discord.js"
 import { MemoryCache, caching } from "cache-manager"
@@ -12,10 +12,9 @@ import Config from "./config"
 import Utils from "./modules/Utils"
 import Command, { command } from "./modules/Command"
 import StatusDisplayController from "./modules/StatusDisplay/Controller"
-import { Cache, FileSystemCache } from "file-system-cache"
-import { gzipSync } from "zlib";
 import Database from "./modules/Database/Database"
 import { ServiceOutage } from "./modules/StatusDisplay/Types"
+import path from "path"
 
 const app = express()
 dotenv.config()
@@ -26,7 +25,6 @@ const utils = new Utils()
 const statusDisplayController = new StatusDisplayController()
 const env = process.argv[2] || "prod"
 let cache: MemoryCache
-let file_cache: FileSystemCache
 
 const slashCommands = new Collection()
 
@@ -40,18 +38,6 @@ const pool = mariadb.createPool({
 });
 
 const process_path = process.cwd()
-var base64regex = /^([0-9a-zA-Z+/]{4})*(([0-9a-zA-Z+/]{2}==)|([0-9a-zA-Z+/]{3}=))?$/;
-
-const cacheValues = {
-    "last_outage": { time: "N/A", affected_services: [] },
-    "outage_log": { outages: [] },
-    "bot_stats": { obfuscations: 0, total_commands_executed: 0 },
-    "cmd_stats": {},
-    "bot_settings": { alerts: true },
-    "error_logs": [],
-    "customobfuscate_usersaves": {},
-    "obfuscator_stats": {}
-}
 
 const client = new Client({
     intents: [
@@ -71,28 +57,38 @@ const client = new Client({
     }
 })
 
-async function RegisterSlashCommands(path: string, files: string[]) {
-    const _commands = [];
+async function RegisterSlashCommands(basePath: string, files: string[]) {
+    const commands: any[] = [];
 
     for (const file of files) {
         try {
-            const command_data = require(`${path}/${file}`).command;
-            _commands.push(command_data.data.toJSON());
+            const { command } = require(path.join(basePath, file));
 
-            slashCommands.set(command_data.data.name, command_data)
+            if (!command?.data || typeof command.data.toJSON !== "function") {
+                console.warn(`> skipped slash command ${file} (invalid command format)`);
+                continue;
+            }
+
+            commands.push(command.data.toJSON());
+            slashCommands.set(command.data.name, command);
         } catch (error) {
-            console.error(`[Slash Command Loader]: Error loading ${file} | ${error}`);
+            console.error(`> failed to load slash command ${file}:`, error);
         }
     }
 
+    if (commands.length === 0) return;
+
     try {
-        await discordREST.put(
-            Routes.applicationCommands(process.env[env == "prod" ? "CLIENT_ID" : "CLIENT_ID_DEV"]),
-            { body: _commands }
-        );
-        console.log('> slash commands registered');
+        const clientId = process.env[process.env.NODE_ENV === "production" ? "CLIENT_ID" : "CLIENT_ID_DEV"];
+
+        if (!clientId) {
+            throw new Error("Missing CLIENT_ID / CLIENT_ID_DEV in environment variables.");
+        }
+
+        await discordREST.put(Routes.applicationCommands(clientId), { body: commands });
+        console.log(`> registered ${commands.length} slash commands`);
     } catch (error) {
-        console.error('Failed to register commands:', error);
+        console.error("> failed to register slash commands:", error);
     }
 }
 
@@ -183,45 +179,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
 app.listen(process.env.PORT, async () => {
     cache = await caching("memory")
     await cache.set("stats_session_ids", [])
-    file_cache = new Cache({
-        basePath: "./.cache",
-        ttl: Infinity,
-    })
 
-    console.log(`> express server listening on port ${process.env.PORT}\n> logging in...`)
+    console.log(`> express server listening on port ${process.env.PORT}`)
+    console.log("> logging in discord client...");
+
     !DISABLE_DISCORDLOGIN ? await client.login(process.env[env == "prod" ? "DISCORD_TOKEN" : "DISCORD_TOKEN_DEV"]).then(async () => {
         console.log(`> logged in as ${client.user.username}`)
     }) : console.log("> discord login blocked")
-    Object.keys(cacheValues).forEach(async (n, i) => {
-        const _cacheValue = await file_cache.get(n).catch(console.error)
-        if (!_cacheValue) file_cache.setSync(n, Object.values(cacheValues)[i] || {})
-        if (n === "outage_log" && !base64regex.test(_cacheValue)) { //@ts-ignore
-            file_cache.setSync("outage_log", utils.ToBase64(gzipSync(JSON.stringify(_cacheValue))))
-        }
-    })
 
-    console.log(`> programm initalized in ${new Date().getTime() - start_tick}ms`)
+    console.log(`> programm initalized in ${Date.now() - START_TICK}ms`)
 })
 
 app.use(cors())
 app.get("/", async (req, res) => res.sendStatus(200));
 
-// TODO: get botstats and cmdstats from database since its not saved in file cache anymore (why not do it now? too lazy)
-app.get("/api/v1/cache/:name", async (req, res) => {
-    const session_ids: Array<any> = await cache.get("stats_session_ids")
-    if (session_ids && session_ids.includes(req.query.session) || env === "dev") {
-        const cacheValue = await file_cache.getSync(req.params.name)
-        try {
-            if (req.params.name === "status_display") return res.json(statusDisplayController);
-            if (!cacheValue) return res.sendStatus(404)
-            return res.setHeader("content-encoding", "gzip").send(Buffer.from(cacheValue, "base64"))
-        } catch (error) {
-            console.error(error)
-            return res.setHeader("content-encoding", "").json(cacheValue)
-        }
-    }
-    return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
-});
 
 app.get("/outagehistory", (req, res) => {
     res.sendFile(process_path + "/static/outagehistory/index.html")
@@ -247,6 +218,5 @@ app.get("/outagehistory/logs", async (req, res) => {
 
 export {
     statusDisplayController, command, utils,
-    client, config, env, cache, file_cache, cacheValues, pool,
-    start_tick
+    client, config, env, cache, pool, START_TICK
 }
