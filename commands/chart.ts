@@ -1,5 +1,5 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
-import { config } from "../index"
+import config from "../config";
 import { cmdStructure } from "../modules/Command";
 import ChartImage, { ChartDataset } from "../modules/Misc/ChartImage";
 import CommandCategories from "../modules/CommandCategories";

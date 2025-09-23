@@ -1,5 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, TextBasedChannel, TextChannel } from "discord.js";
-import { client, config, env, utils } from "../../index"
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, TextChannel } from "discord.js";
+import { client, env, utils } from "../../index"
+import config from "../../config";
 import Main from "./Embeds/Main";
 import Embed from "../Embed";
 import Fields from "./Fields";

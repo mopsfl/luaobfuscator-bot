@@ -1,4 +1,4 @@
-import { config } from "../../index"
+import config from "../../config";
 import { ServerStatistics, ServiceStatus } from "./Types"
 import getStatusCode from "url-status-code"
 import http_status from "http-status"

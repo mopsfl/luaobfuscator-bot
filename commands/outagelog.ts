@@ -1,5 +1,6 @@
 import { Colors, inlineCode } from "discord.js";
-import { env, utils, config } from "../index"
+import { env, utils } from "../index"
+import config from "../config";
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";

@@ -1,5 +1,6 @@
 import { Colors, EmbedBuilder, EmbedField, PermissionFlagsBits, PermissionsBitField, bold, inlineCode, underline, underscore } from "discord.js";
-import { command, config, utils } from "../index"
+import { command, utils } from "../index"
+import config from "../config";
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";

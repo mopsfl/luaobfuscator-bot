@@ -1,5 +1,6 @@
-import { Colors, hyperlink } from "discord.js";
-import { config, utils } from "../../../index";
+import { Colors } from "discord.js";
+import { utils } from "../../../index";
+import config from "../../../config";
 
 export default function () {
     return {

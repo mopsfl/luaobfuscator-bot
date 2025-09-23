@@ -1,5 +1,5 @@
 import { Colors, hyperlink } from "discord.js";
-import { config } from "../../../index";
+import config from "../../../config";
 
 export default function () {
     return {

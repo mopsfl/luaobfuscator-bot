@@ -1,5 +1,5 @@
 import { Message } from "discord.js"
-import { config } from "../../index"
+import config from "../../config";
 import { ObfuscationResult } from "./Types"
 
 export default {

@@ -1,5 +1,6 @@
 import { PermissionFlagsBits, Message, GuildMember } from "discord.js"
-import { config, client, command as _command, utils } from "../index"
+import { client, command as _command, utils } from "../index"
+import config from "../config";
 import { randomUUID } from "crypto"
 import Database from "./Database/Database"
 

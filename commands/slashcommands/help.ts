@@ -1,7 +1,7 @@
-import { bold, ChatInputCommandInteraction, Colors, EmbedBuilder, EmbedField, hyperlink, inlineCode, Interaction, SlashCommandBuilder, underline } from 'discord.js';
-import { CommandInteraction } from 'discord.js';
+import { bold, Colors, EmbedBuilder, EmbedField, inlineCode, Interaction, SlashCommandBuilder, underline } from 'discord.js';
 import Embed from '../../modules/Embed';
-import { config, client, command as _command, utils } from '../../index';
+import { command as _command, utils } from '../../index';
+import config from "../../config";
 import Database from '../../modules/Database/Database';
 
 const command = {

@@ -2,7 +2,8 @@
 
 import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Colors, bold, codeBlock, inlineCode } from "discord.js";
 import { cmdStructure } from "../modules/Command";
-import { utils, config } from "../index"
+import { utils } from "../index"
+import config from "../config";
 import { ObfuscationProcess } from "../modules/Utils";
 import CommandCategories from "../modules/CommandCategories";
 import Embed from "../modules/Embed";

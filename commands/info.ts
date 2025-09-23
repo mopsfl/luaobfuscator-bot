@@ -1,5 +1,6 @@
 import { Colors, hyperlink, inlineCode } from "discord.js";
-import { config, client, utils } from "../index"
+import { client, utils } from "../index"
+import config from "../config";
 import { cmdStructure } from "../modules/Command";
 import GithubRepo from "../modules/GithubRepo";
 import CommandCategories from "../modules/CommandCategories";

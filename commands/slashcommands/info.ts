@@ -2,7 +2,8 @@ import { Colors, hyperlink, SlashCommandBuilder } from 'discord.js';
 import { CommandInteraction } from 'discord.js';
 import Embed from '../../modules/Embed';
 import GithubRepo from '../../modules/GithubRepo';
-import { config, client, utils } from '../../index';
+import { client, utils } from '../../index';
+import config from "../../config";
 import Database from '../../modules/Database/Database';
 
 const command = {

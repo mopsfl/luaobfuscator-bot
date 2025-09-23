@@ -1,4 +1,4 @@
-import { config } from "../index";
+import config from "../config";
 
 export default {
     async GetLastCommitData(): Promise<LastCommitData> {

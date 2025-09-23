@@ -1,5 +1,6 @@
 import { bold, ComponentType } from "discord.js";
-import { config, utils } from "../index"
+import { utils } from "../index"
+import config from "../config";
 import { cmdStructure } from "../modules/Command";
 import CommandCategories from "../modules/CommandCategories";
 import { CustomObfuscateController } from "../modules/CustomObfuscate/Controller";

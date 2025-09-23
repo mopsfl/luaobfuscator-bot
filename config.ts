@@ -1,33 +1,33 @@
 import dotenv from "dotenv"
 dotenv.config()
 
-export default class Config {
-    prefix = "!"
+export default {
+    prefix: "!",
 
-    activity_update_interval = 10000 // Update interval for the bot activity. 1000(ms) = 1 second
-    status_update_interval = 60000 // Update interval for the status displays. 1000(ms) = 1 second
-    dm_commands = true // If dm commands should be allowed 
+    activity_update_interval: 10000, // Update interval for the bot activity. 1000(ms): 1 second
+    status_update_interval: 60000, // Update interval for the status displays. 1000(ms): 1 second
+    dm_commands: true, // If dm commands should be allowed 
 
-    support_url = "https://discord.com/invite/Y556HXUByG"
-    session_url = "https://luaobfuscator.com/?session="
-    api_url = "https://luaobfuscator.com/api/obfuscator/"
-    icon_url = "https://mopsfl.de/static/img/luaobflogo.png"
+    support_url: "https://discord.com/invite/Y556HXUByG",
+    session_url: "https://luaobfuscator.com/?session=",
+    api_url: "https://luaobfuscator.com/api/obfuscator/",
+    icon_url: "https://mopsfl.de/static/img/luaobflogo.png",
 
-    repo_commits_url = "https://api.github.com/repos/mopsfl/luaobfuscator-bot/commits?page=1&per_page=1"
+    repo_commits_url: "https://api.github.com/repos/mopsfl/luaobfuscator-bot/commits?page=1&per_page=1",
 
-    allowed_guild_ids = ["1112349916744917054", "1129884318634877032"]
+    allowed_guild_ids: ["1112349916744917054", "1129884318634877032"],
 
-    prod = {
+    prod: {
         SERVER_ID: "1112349916744917054",
         STATUS_CHANNEL_ID: "1128995128745402468"
-    }
+    },
 
-    dev = {
+    dev: {
         SERVER_ID: "1129884318634877032",
         STATUS_CHANNEL_ID: "1129885114038489188"
-    }
+    },
 
-    STATUS_DISPLAY = {
+    STATUS_DISPLAY: {
         status_update_interval: 60_000,
         alert_channel: "1112384996259414110",
         ids_to_alert: ["792875215243575306"],
