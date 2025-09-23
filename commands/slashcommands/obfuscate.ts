@@ -30,7 +30,7 @@ const command = {
                 .then(result => { if (!result.success) { console.error(result.error.message) } });
         }
 
-        Database.Increment("bot_statistics", "total_commands_executed", { command_name: command.commandId })
+        Database.Increment("bot_statistics", "total_commands_executed")
             .then(result => { if (!result.success) { console.error(result.error.message) } });
 
         await interaction.reply({
