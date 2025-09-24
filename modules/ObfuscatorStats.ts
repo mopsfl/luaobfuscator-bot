@@ -1,3 +1,4 @@
+import { utils } from "../index"
 import Database from "./Database/Database"
 
 export default {
@@ -22,9 +23,16 @@ export default {
 
             await Database.GetTable("obfuscator_stats", null, true).then(async res => {
                 if (!res.success) return console.error("<Update->GetTable>[Obfuscator Stats Error]:", res.error.message)
-                const result = await Database.Update("obfuscator_stats", stats, { time: res.data.time })
+                const currentDate = utils.ToLocalizedDateString(new Date(), true),
+                    lastDate = res.data.date
 
-                if (!result.success) return console.error("<Update->Update>[Obfuscator Stats Error]:", result.error.message)
+                if (currentDate === lastDate) {
+                    const updateResult = await Database.Update("obfuscator_stats", stats, { date: res.data.date })
+                    if (!updateResult.success) return console.error("<Update->Update>[Obfuscator Stats Error]:", updateResult.error.message)
+                } else {
+                    const insertResult = await Database.Insert("obfuscator_stats", stats)
+                    if (!insertResult.success) return console.error("<Update->Insert>[Obfuscator Stats Error]:", insertResult.error.message)
+                }
             }).catch(console.error)
 
             return true
@@ -60,7 +68,8 @@ export default {
 export interface Obfuscator_Stats {
     total_obfuscations: number
     total_uploads: number
-    time: number
+    time: string | number,
+    date: string,
 }
 
 export interface Saved_Stats {

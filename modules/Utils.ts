@@ -250,7 +250,27 @@ export default class Utils {
     DateToTimeStamp(date: string) {
         const [d, m, y] = date.split(".").map(n => parseInt(n, 10));
         return new Date(y, m - 1, d);
-    };
+    }
+
+    ToLocalizedDateString(date: Date, includeYear = false) {
+        return date.toLocaleDateString("en", {
+            month: "2-digit",
+            day: "2-digit",
+            year: includeYear ? "numeric" : undefined
+        }).replace(/\.$/, '')
+    }
+
+    GetLocalizedDateStrings(length = 7, includeYear = false): string[] {
+        return Array.from({ length }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            return d.toLocaleDateString("en", {
+                month: "2-digit",
+                day: "2-digit",
+                year: includeYear ? "numeric" : undefined
+            }).replace(/\.$/, '');
+        }).reverse();
+    }
 }
 
 export interface ObfuscationProcess {
