@@ -1,31 +1,32 @@
 import { Colors, inlineCode } from "discord.js";
-import { env, utils } from "../index"
+import { commandHandler, ENV } from "../index"
 import config from "../config";
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
 import Session from "../modules/Session";
+import Utils from "../modules/Utils";
 
-class Command {
+class CommandConstructor {
     name = ["outagelog", "ol", "outlog"]
-    category = CommandCategories.Misc
+    category = commandHandler.CommandCategories.Misc
     description = "Grants temporary access to the complete outage log for all luaobfuscator.com services."
     public_command = false
+    direct_message = false
 
-    callback = async (cmd: cmdStructure) => {
+    callback = async (cmd: Command) => {
         const session = await Session.Create(300),
-            apiURL = `${env == "prod" ? process.env.SERVER : "http://localhost:6969"}`
+            apiURL = `${ENV == "prod" ? process.env.SERVER : "http://localhost:6969"}`
 
         await cmd.message.author.send({
             embeds: [Embed({
                 timestamp: true,
                 color: Colors.Green,
                 title: "Outage Log",
-                description: `This temporary link is only available for ${inlineCode(utils.FormatUptime(300 * 1000))}.`,
+                description: `This temporary link is only available for ${inlineCode(Utils.FormatUptime(300 * 1000))}.`,
                 fields: [
                     {
                         name: "Link:",
-                        value: `[Outage Log](${apiURL}/outagelog?session=${session})`,
+                        value: `[Outage Log](${apiURL}/outagehistory?s=${session})`,
                         inline: false
                     },
                     {
@@ -40,14 +41,12 @@ class Command {
                 }
             })]
         }).catch(error => {
-            utils.SendErrorMessage("error", cmd, error.message)
+            Utils.SendErrorMessage("error", cmd, error.message)
             console.error(error)
         }).then(() => {
             cmd.message.reply("I have sent you the link via DM's!")
         })
-
-        return true
     }
 }
 
-module.exports = Command
+module.exports = CommandConstructor

@@ -18,7 +18,6 @@ import {
     StringSelectMenuInteraction,
     User
 } from "discord.js"
-import { utils } from "../../index";
 import { randomUUID } from "crypto";
 import Embed from "../Embed";
 import Main from "./Embeds/Main";
@@ -30,6 +29,7 @@ import Database from "../Database/Database";
 import LuaObfuscator from "../LuaObfuscator/API";
 import { ObfuscationResult } from "../LuaObfuscator/Types";
 import { ObfuscationPlugins, CustomObfuscateComponents } from "./Types";
+import Utils from "../Utils";
 
 export class CustomObfuscateController {
     constructor(
@@ -191,7 +191,7 @@ export class CustomObfuscateController {
                     config = JSON.parse(this.saved_configs[save_id])
 
                 this.plugins = config
-                this.used_plugins = utils.ObjectKeysToString(this.plugins, true)
+                this.used_plugins = Utils.ObjectKeysToString(this.plugins, true)
                 this.components.embeds.main.data.fields[0].value = this.GetSelectedPlugins(this.visualize_config)
                 this.components.select_menu.setOptions(Plugins.list)
 
@@ -248,7 +248,7 @@ export class CustomObfuscateController {
                         this.session = result.sessionId
 
                         await this.UpdateProcessField("obfuscation initiated!\n+ awaiting obfuscation status...")
-                        await utils.Sleep(1000)
+                        await Utils.Sleep(1000)
                         await LuaObfuscator.v2.GetStatus(result.sessionId).then(async status_result => {
                             if (status_result.status === "FINISHED") {
                                 this.result = status_result
@@ -270,7 +270,7 @@ export class CustomObfuscateController {
             }
 
             if (this.result?.code) {
-                this.result_attachment = utils.CreateFileAttachment(Buffer.from(this.result.code), `${this.session}.lua`)
+                this.result_attachment = Utils.CreateFileAttachment(Buffer.from(this.result.code), `${this.session}.lua`)
                 this.process_state = "FINISHED"
                 this.process_embed.setColor(Colors.Green)
 
@@ -306,13 +306,13 @@ export class CustomObfuscateController {
             process_value = `\`\`\`diff\n${process_content}\n\`\`\``
 
             this.process_embed.setFields([
-                { name: "Script:", value: `-# ${utils.FormatBytes(new TextEncoder().encode(this.script_content).length)}`, inline: true },
+                { name: "Script:", value: `-# ${Utils.FormatBytes(new TextEncoder().encode(this.script_content).length)}`, inline: true },
                 { name: "Obfuscation Type:", value: `-# ${!this.plugins ? "Default" : "Custom"}`, inline: true },
                 { name: "Process ID:", value: `-# ${this.process_id}`, inline: true },
                 { name: "Process State:", value: `-# ${this.process_state}`, inline: true },
                 { name: "Process Time:", value: `-# ${process_time}`, inline: true },
                 { name: "\u200B", value: "\u200B", inline: true },
-                { name: "Session:", value: `-# ${this.session ? inlineCode(this.session) : utils.GetEmoji("loading")}`, inline: false },
+                { name: "Session:", value: `-# ${this.session ? inlineCode(this.session) : Utils.GetEmoji("loading")}`, inline: false },
                 { name: `Process:`, value: process_value },
             ])
 
@@ -333,7 +333,7 @@ export class CustomObfuscateController {
 
     private GetSelectedPlugins(visualize_config = false) {
         if (!this.plugins && !visualize_config) return `-# None`
-        if (visualize_config) return `\`\`\`json\n${utils.ObjectToFormattedString(this.plugins || {}, 0, true)}\n\`\`\``
+        if (visualize_config) return `\`\`\`json\n${Utils.ObjectToFormattedString(this.plugins || {}, 0, true)}\n\`\`\``
 
         let str = "-# "
 
@@ -401,7 +401,7 @@ export class CustomObfuscateController {
                 configs.push({
                     value: save_id,
                     label: `Save ${index + 1}`,
-                    description: utils.ObjectKeysToString(JSON.parse(this.saved_configs[save_id])).toString().slice(0, 100)
+                    description: Utils.ObjectKeysToString(JSON.parse(this.saved_configs[save_id])).toString().slice(0, 100)
                 })
             })
 

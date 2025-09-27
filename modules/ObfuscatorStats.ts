@@ -1,5 +1,5 @@
-import { utils } from "../index"
 import Database from "./Database/Database"
+import Utils from "./Utils"
 
 export default {
     async Get(): Promise<Saved_Stats> {
@@ -23,7 +23,7 @@ export default {
 
             await Database.GetTable("obfuscator_stats", null, true).then(async res => {
                 if (!res.success) return console.error("<Update->GetTable>[Obfuscator Stats Error]:", res.error.message)
-                const currentDate = utils.ToLocalizedDateString(new Date(), true),
+                const currentDate = Utils.ToLocalizedDateString(new Date(), true),
                     lastDate = res.data.date
 
                 if (currentDate === lastDate) {
@@ -46,7 +46,7 @@ export default {
             const result = await Database.GetTable("obfuscator_stats", null, false, 8, true);
 
             if (!result.success) {
-                console.error("[Parse->GetTable][Obfuscator Stats Error]:", result.error.message);
+                console.error("<Parse->GetTable>[Obfuscator Stats Error]:", result.error.message);
                 return [];
             }
 

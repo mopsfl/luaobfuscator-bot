@@ -1,7 +1,20 @@
 // my database module thing but i used chatgpt to make it cleaner and stuff yk cuz before it looks hella goofy lol :3
 
-import { pool } from "../../index";
-import { DBResponse, DBError, ok, fail, buildSetClause, buildWhereClause } from "./Helpers";
+import mariadb from "mariadb"
+import {
+  DBResponse,
+  ok, fail,
+  buildSetClause,
+  buildWhereClause
+} from "./Helpers";
+
+const pool = mariadb.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  connectionLimit: 50,
+})
 
 export type DatabaseTable =
   | "bot_statistics"
@@ -123,3 +136,5 @@ export default {
     }
   }
 };
+
+export { pool }

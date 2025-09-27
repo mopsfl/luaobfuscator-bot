@@ -1,4 +1,4 @@
-import { Colors, hyperlink } from "discord.js";
+import { Colors } from "discord.js";
 import config from "../../../config";
 
 export default function () {

@@ -1,26 +1,34 @@
 import { bold, Colors } from "discord.js";
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
+import { client, commandHandler } from "../index";
+import config from "../config";
+import Utils from "../modules/Utils";
 
-class Command {
+class CommandConstructor {
     name = ["ping"]
-    category = CommandCategories.Bot
-    description = "Returns the bot's current ping in milliseconds, measuring its responsiveness to the Discord server."
+    category = commandHandler.CommandCategories.Bot
+    description = "Shows the bot's current latency to Discord."
 
-    callback = async (cmd: cmdStructure) => {
-        const embed = Embed({
-            description: "Pinging...",
-            color: Colors.Yellow
-        })
-        await cmd.message.reply({ embeds: [embed] }).then(msg => {
-            embed.setDescription(`${bold("Result")}:\n-# ${(msg.createdTimestamp - Date.now() + "ms").replace(/\-/, "")}`)
+    callback = async (command: Command) => {
+        const embed = Embed({ description: "Pinging...", color: Colors.Yellow }),
+            apiLatency = Math.round(client.ws.ping)
+
+        await command.message.reply({ embeds: [embed.setDescription(`${Utils.GetEmoji("loading")} Pinging...`)] }).then(sent => {
+            embed.setTitle("Ping Results")
                 .setColor(Colors.Green)
+                .setDescription(" ")
+                .setTimestamp()
+                .setFields([
+                    { name: "Response Time", value: `-# ${Date.now() - command.message.createdTimestamp}ms`, inline: true },
+                    { name: "\u200B", value: "\u200B", inline: true },
+                    { name: "API Latency", value: `-# ${apiLatency > 0 ? `${apiLatency}ms` : "N/A"}`, inline: true },
+                ])
+                .setFooter({ text: `Lua Obfuscator`, iconURL: config.icon_url })
 
-            msg.edit({ embeds: [embed] })
-        })
-        return true
+            sent.edit({ embeds: [embed] });
+        });
     }
 }
 
-module.exports = Command
+module.exports = CommandConstructor

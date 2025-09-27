@@ -1,43 +1,62 @@
 import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js"
-import { utils, env, client } from "../index"
+import { ENV, client } from "../index"
 import config from "../config";
-import { cmdStructure } from "./Command"
 import { randomUUID } from "crypto"
 import Embed from "./Embed"
 import { ObfuscationResult } from "./LuaObfuscator/Types"
+import { Command } from "./CommandHandler";
 
-export default class Utils {
-    HasCodeblock = function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) }
-    ParseCodeblock = function (string: string) { return string.replace(/(^`\S*)|`+.*/mg, "").trim() }
-    GetPermissionsName = function (bit: bigint) { return Object.keys(PermissionFlagsBits)[Object.values(PermissionFlagsBits).findIndex(n => n === bit)] }
-    ToBase64(str: string) { return Buffer.from(str).toString("base64") }
-    CreateFileAttachment = function (content: Buffer | BufferResolvable, name?: string) { return new AttachmentBuilder(content, { name: name || "obfuscated.lua" }) }
+export default {
+    HasCodeblock: function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) },
+    GetPermissionsName: function (bit: bigint) { return Object.keys(PermissionFlagsBits)[Object.values(PermissionFlagsBits).findIndex(n => n === bit)] },
+    ToBase64(str: string) { return Buffer.from(str).toString("base64") },
+    CreateFileAttachment: function (content: Buffer | BufferResolvable, name?: string) { return new AttachmentBuilder(content, { name: name || "obfuscated.lua" }) },
+    ParseCodeblock(input: string): string {
+        const match = input.match(/```(?:\w+)?\n?([\s\S]*?)```/);
+        return match ? match[1].trim() : "";
+    },
 
-    async ParseScriptFromMessage(cmd: cmdStructure): Promise<string> {
+    async ParseScriptFromMessage(cmd: Command): Promise<string> {
+        if (!cmd) return null
+
         return new Promise(async (resolve, reject) => {
-            if (utils.HasCodeblock(cmd.raw_arguments)) {
-                return resolve(utils.ParseCodeblock(cmd.raw_arguments))
+            if (this.HasCodeblock(cmd.raw_arguments)) {
+                return resolve(this.ParseCodeblock(cmd.raw_arguments))
             } else if ([...cmd.message.attachments].length > 0) {
                 const attachment = cmd.message.attachments.first(),
                     attachmentURL = attachment?.url
 
-                if (!attachmentURL) return utils.SendErrorMessage("error", cmd, "Unable to get attachment URL.")
+                if (!attachmentURL) return this.SendErrorMessage("error", cmd, "Unable to get attachment URL.")
                 await fetch(attachmentURL).then(async res => { resolve(await res.text()) }).catch(error => {
-                    utils.SendErrorMessage("error", cmd, error)
+                    this.SendErrorMessage("error", cmd, error)
                     reject(error)
                 })
             } else {
-                utils.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
-                    { name: "Syntax:", value: inlineCode(`${cmd.slash_command ? "/" : config.prefix}${cmd.used_command_name} <codeblock> | <file>`), inline: false },
+                this.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
+                    { name: "Syntax:", value: inlineCode(`${cmd.isSlashCommand ? "/" : config.prefix}${cmd.name} <codeblock> | <file>`), inline: false },
                     { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
                 ])
 
                 return reject("invalid script input")
             }
         })
-    }
+    },
 
-    ReadAllChunks = async function (stream: ReadableStream) {
+    async ParseScriptFromMessage2(message: Message): Promise<string> {
+        return new Promise(async (resolve, reject) => {
+            if (this.HasCodeblock(message.content)) return resolve(this.ParseCodeblock(message.content))
+            if ([...message.attachments].length > 0) {
+                const attachment = message.attachments.first()
+                if (!attachment || !attachment.url) return reject("Unable to parse attachment file!")
+
+                await fetch(attachment.url).then(async res => { resolve(await res.text()) }).catch(reject)
+            }
+
+            reject("Unable to parse script from message!")
+        })
+    },
+
+    ReadAllChunks: async function (stream: ReadableStream) {
         const reader = stream.getReader();
         const chunks = [];
         let done: boolean, value: any;
@@ -47,7 +66,7 @@ export default class Utils {
             chunks.push(value)
         }
         return chunks
-    }
+    },
 
     async DeleteErrorMessageCallback(msg: Message, deleteMs: number) {
         if (!deleteMs) return;
@@ -55,9 +74,9 @@ export default class Utils {
             if (msg.deletable === true)
                 await msg.delete();
         }, deleteMs);
-    }
+    },
 
-    async SendErrorMessage(type: "error" | "syntax" | "permission" | "ratelimit", cmd: cmdStructure, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>, deleteMs?: number) {
+    async SendErrorMessage(type: "error" | "syntax" | "permission" | "ratelimit", cmd: Command, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>, deleteMs?: number) {
         const errorId = randomUUID()
         let errorText = error instanceof Error && error.message || typeof (error) == "string" && error || "unknown internal error"
 
@@ -66,7 +85,7 @@ export default class Utils {
                 const embed_field = [
                     { name: "Error:", value: codeBlock(errorText), inline: false },
                 ]
-                if (env == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
+                if (ENV == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
                 await cmd.message.reply({
                     embeds: [Embed({
                         title: `${this.GetEmoji("no")} ${title || error instanceof Error && `${error.name}` || "Unknown Internal Error"}`,
@@ -126,7 +145,7 @@ export default class Utils {
                 break;
             }
         }
-    }
+    },
 
     ObjectKeysToString(obj: Object, toArray = false, hideFalseValues = true): any {
         let keys = [];
@@ -146,7 +165,7 @@ export default class Utils {
 
         traverse(obj);
         return !toArray ? keys.join(', ') : keys;
-    }
+    },
 
     ObjectToFormattedString(obj: Object, indent = 0, hideFalseValues = false) {
         if (Object.keys(obj).length === 0) return "{}";
@@ -166,13 +185,13 @@ export default class Utils {
 
         str += indentation + "}";
         return str;
-    }
+    },
 
     async Sleep(ms: number) {
         return new Promise((resolve) => {
             setTimeout(resolve, ms);
         });
-    }
+    },
 
     FormatNumber(num: number, digits: number = 2) {
         if (typeof (num) != "number") return "N/A"
@@ -190,7 +209,7 @@ export default class Utils {
             return num >= item.value;
         });
         return (item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0") || "N/A";
-    }
+    },
 
     FormatUptime(ms: number, relative = false): string {
         if (!relative) {
@@ -233,24 +252,24 @@ export default class Utils {
             if (result.length === 0) return '0 seconds';
             return result.join(' ');
         }
-    }
+    },
 
     FormatBytes(b: number, d: number = 2) {
         const sizes = ['Bytes', 'KB', 'MB', 'GB']
         if (!+b) return `0 ${sizes[0]}`
         const i = Math.floor(Math.log(b) / Math.log(1024))
         return `${(b / Math.pow(1024, i)).toFixed(d)} ${sizes[i]}`;
-    }
+    },
 
     GetEmoji(name: "loading" | "yes" | "no" | string) {
         if (!client) return console.error("Unable to get emoji! App not successfully initialized.")
         return client.emojis.cache.find(emoji => emoji.name === name)
-    }
+    },
 
     DateToTimeStamp(date: string) {
         const [d, m, y] = date.split(".").map(n => parseInt(n, 10));
         return new Date(y, m - 1, d);
-    }
+    },
 
     ToLocalizedDateString(date: Date, includeYear = false) {
         return date.toLocaleDateString("en", {
@@ -258,7 +277,7 @@ export default class Utils {
             day: "2-digit",
             year: includeYear ? "numeric" : undefined
         }).replace(/\.$/, '')
-    }
+    },
 
     GetLocalizedDateStrings(length = 7, includeYear = false): string[] {
         return Array.from({ length }, (_, i) => {

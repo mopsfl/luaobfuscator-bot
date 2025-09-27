@@ -1,46 +1,47 @@
-import { Colors, EmbedBuilder, EmbedField, PermissionFlagsBits, PermissionsBitField, bold, inlineCode, underline, underscore } from "discord.js";
-import { command, utils } from "../index"
+import { Colors, EmbedBuilder, EmbedField, bold, inlineCode, underline } from "discord.js";
+import { commandHandler } from "../index"
 import config from "../config";
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
+import Utils from "../modules/Utils";
 
-class Command {
+class CommandConstructor {
     name = ["help"]
-    category = CommandCategories.Bot
+    category = commandHandler.CommandCategories.Bot
     description = "Returns a list of all commands and other useful informations for the bot."
+    syntax_usage = "<command>"
 
-    callback = async (cmd: cmdStructure) => {
+    callback = async (cmd: Command) => {
         if (!cmd.message.channel.isSendable()) return;
 
         let embed: EmbedBuilder,
             validcommand = false,
             fullcommand_name = ""
 
-        command.commands.forEach(_command => {
+        commandHandler.commands?.forEach(command => {
             if (!validcommand) {
                 validcommand = cmd.arguments[0]
                     && typeof (cmd.arguments[0]) === "string"
-                    && _command.name.includes(cmd.arguments[0].replace(/\!/, ""))
+                    && command.name.includes(cmd.arguments[0].replace(/\!/, ""))
 
-                if (cmd.public_command === false && !config.allowed_guild_ids.includes(cmd.message.guildId)) validcommand = false
-                fullcommand_name = _command.name[0]
+                if (cmd.isPublic === false && !config.allowed_guild_ids.includes(cmd.message.guildId)) validcommand = false
+                fullcommand_name = command.name[0]
             }
         })
         if (validcommand && typeof (cmd.arguments[0]) === "string") {
-            const _command = command.commands.get(fullcommand_name.replace(/\!/, ""))
+            const command = commandHandler.commands.get(fullcommand_name.replace(/\!/, ""))
             let required_perms = ""
-            if (_command.permissions) {
-                _command.permissions.forEach(perm => {
-                    required_perms += `-# ${utils.GetPermissionsName(perm).toUpperCase()}`
+            if (command.permissions) {
+                command.permissions.forEach(perm => {
+                    required_perms += `-# ${Utils.GetPermissionsName(perm).toUpperCase()}`
                 })
             }
             embed = Embed({
                 title: "Lua Obfuscator Bot - Help",
-                description: `-# ${_command.description}`,
+                description: `-# ${command.description}`,
                 fields: [{
                     name: "Syntax Usage:",
-                    value: `-# ${bold(inlineCode(config.prefix + _command.name[0]))} ${_command.syntax_usage ? bold(inlineCode(_command.syntax_usage)) : ""}`,
+                    value: `-# ${bold(inlineCode(config.prefix + command.name[0]))} ${command.syntax_usage ? bold(inlineCode(command.syntax_usage)) : ""}`,
                     inline: false,
                 }, {
                     name: "Required Permissions:",
@@ -57,7 +58,7 @@ class Command {
             })
         } else {
             let commands_field: Array<EmbedField> = []
-            command.commands.forEach(command => {
+            commandHandler.commands.forEach(command => {
                 if (command.hidden) return
                 if (!commands_field.find(c => c.name == command.category)) commands_field.push({ name: command.category, value: "", inline: false })
                 const index = commands_field.findIndex(c => c.name == command.category)
@@ -85,8 +86,7 @@ class Command {
         }
 
         await cmd.message.channel.send({ embeds: [embed] })
-        return true
     }
 }
 
-module.exports = Command
+module.exports = CommandConstructor

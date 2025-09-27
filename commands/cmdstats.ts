@@ -1,22 +1,22 @@
 import { Colors } from "discord.js";
-import { command, utils } from "../index"
+import { commandHandler } from "../index"
 import config from "../config";
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
 import Database from "../modules/Database/Database";
+import Utils from "../modules/Utils";
 
-class Command {
+class CommandConstructor {
     name = ["cmdstats", "cs", "cstats"]
-    category = CommandCategories.Misc
+    category = commandHandler.CommandCategories.Misc
     description = "Shows the statistics of all commands aka wich command is being used the most."
 
-    callback = async (cmd: cmdStructure) => {
+    callback = async (cmd: Command) => {
         const result = await Database.GetTable("cmd_stats")
 
         if (!result.success) {
             console.error(result.error.message)
-            return utils.SendErrorMessage("error", cmd, result.error.code)
+            return Utils.SendErrorMessage("error", cmd, result.error.code)
         }
 
         const embed = Embed({
@@ -33,10 +33,8 @@ class Command {
 
         const statsMap = new Map(result.data.map(s => [s.command_name, s.call_count ?? 0]));
 
-        [...command.getAllCommands().values()]
-            .sort((a, b) =>
-                (Number(statsMap.get(b.name[0])) ?? 0) - (Number(statsMap.get(a.name[0])) ?? 0)
-            ).forEach(cmd =>
+        [...commandHandler.commands.values()]
+            .sort((a, b) => (Number(statsMap.get(b.name[0])) ?? 0) - (Number(statsMap.get(a.name[0])) ?? 0)).forEach(cmd =>
                 embed.addFields({
                     name: cmd.name[0],
                     value: `-# ${statsMap.get(cmd.name[0]) ?? 0}`,
@@ -46,7 +44,6 @@ class Command {
 
 
         cmd.message.reply({ embeds: [embed] })
-        return true
     }
 }
 
@@ -56,4 +53,4 @@ export interface BotStats {
     total_monkey_deobfuscations: number,
 }
 
-module.exports = Command
+module.exports = CommandConstructor

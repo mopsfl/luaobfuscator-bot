@@ -1,42 +1,42 @@
-import { bold, Colors, EmbedBuilder, EmbedField, inlineCode, Interaction, SlashCommandBuilder, underline } from 'discord.js';
-import Embed from '../../modules/Embed';
-import { command as _command, utils } from '../../index';
-import config from "../../config";
-import Database from '../../modules/Database/Database';
+import { Command, CommandNode } from "../../modules/CommandHandler"
+import Embed from "../../modules/Embed"
+import { commandHandler } from "../../index"
+import { bold, Colors, EmbedBuilder, EmbedField, inlineCode, MessageFlags, SlashCommandBuilder, underline } from "discord.js"
+import config from "../../config"
+import Database from "../../modules/Database/Database"
+import Utils from "../../modules/Utils"
 
-const command = {
-    name: ["help"],
-    commandId: "help_slash",
-    slash_command: true,
+class CommandConstructor implements CommandNode {
+    name = ["help"]
+    category = commandHandler.CommandCategories.Bot
+    description = "Returns a list of all commands and other useful informations for the bot."
+    slash_command = true
 
-    data: new SlashCommandBuilder()
-        .setName('help')
-        .setDMPermission(true)
-        .setDescription("Returns a list of all commands and other useful informations for the bot.")
+    slashCommandBuilder = new SlashCommandBuilder()
+        .setName(this.name[0])
+        .setDescription(this.description)
         .addStringOption(option => option.setName("command")
             .setDescription("Select a command to view its details.")
             .setRequired(false)
             .addChoices(
-                ...Array.from(_command.commands.values())
+                ...Array.from(commandHandler.commands.values())
                     .filter(command => !command.hidden)
                     .map(command => ({
                         name: command.name[0],
                         value: command.name[0]
                     }))
-            )),
+            ))
 
-    async callback(interaction: Interaction): Promise<void> {
-        if (!interaction.isChatInputCommand()) return;
-
+    callback = async (command: Command) => {
         let embed: EmbedBuilder,
-            option = interaction.options.get("command")
+            option = command.interaction.options.get("command")
 
         if (option) {
-            const _cmd = _command.commands.get(option.value.toString())
+            const _cmd = commandHandler.commands.get(option.value.toString())
             let required_perms = ""
             if (_cmd.permissions) {
                 _cmd.permissions.forEach(perm => {
-                    required_perms += `-# ${utils.GetPermissionsName(perm).toUpperCase()}`
+                    required_perms += `-# ${Utils.GetPermissionsName(perm).toUpperCase()}`
                 })
             }
             embed = Embed({
@@ -61,7 +61,7 @@ const command = {
             })
         } else {
             let commands_field: Array<EmbedField> = []
-            _command.commands.forEach(command => {
+            commandHandler.commands.forEach(command => {
                 if (command.hidden) return
                 if (!commands_field.find(c => c.name == command.category)) commands_field.push({ name: command.category, value: "", inline: false })
                 const index = commands_field.findIndex(c => c.name == command.category)
@@ -89,9 +89,8 @@ const command = {
         }
 
         Database.Increment("cmd_stats", "call_count", { command_name: "help" }).catch(console.error)
-        await interaction.reply({ ephemeral: true, embeds: [embed] })
-    },
-};
+        await command.interaction.reply({ flags: [MessageFlags.Ephemeral], embeds: [embed] })
+    }
+}
 
-
-export { command };
+module.exports = CommandConstructor

@@ -1,10 +1,10 @@
 import { Colors, inlineCode } from "discord.js";
-import { utils } from "../../../index";
 import config from "../../../config";
+import Utils from "../../Utils";
 
 export default function () {
     return {
-        title: `${utils.GetEmoji("offline")} Lua Obfuscator - Outage History`,
+        title: `${Utils.GetEmoji("offline")} Lua Obfuscator - Outage History`,
         color: Colors.Green,
         timestamp: true,
         description: "",

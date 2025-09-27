@@ -1,6 +1,6 @@
 import { Colors } from "discord.js";
-import { utils } from "../../../index";
 import config from "../../../config";
+import Utils from "../../Utils";
 
 export default function () {
     return {
@@ -9,9 +9,9 @@ export default function () {
         timestamp: true,
         description: "",
         fields: [
-            { name: `${utils.GetEmoji("update")} Last Updated`, value: `-# N/A`, inline: true },
+            { name: `${Utils.GetEmoji("update")} Last Updated`, value: `-# N/A`, inline: true },
             { name: "\u200B", value: "\u200B", inline: true },
-            { name: `${utils.GetEmoji("offline")} Last Outage`, value: `-# N/A`, inline: true },
+            { name: `${Utils.GetEmoji("offline")} Last Outage`, value: `-# N/A`, inline: true },
             { name: "\u200B", value: "**__Services:__**", inline: false },
             { name: "Homepage:", value: `-# N/A`, inline: true },
             { name: "Forum:", value: `-# N/A`, inline: true },

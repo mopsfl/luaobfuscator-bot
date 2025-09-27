@@ -1,9 +1,10 @@
 import { Colors, inlineCode, PermissionFlagsBits } from "discord.js";
-import { pool, utils } from "../index"
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { commandHandler } from "../index"
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
 import { PoolConnection } from "mariadb";
+import Utils from "../modules/Utils";
+import { pool } from "../modules/Database/Database";
 
 const block = [
     "DELETE",
@@ -36,15 +37,15 @@ function getReadableStatus(statusNumber: number): string[] {
         .map(([_, name]) => name);
 }
 
-class Command {
+class CommandConstructor {
     name = ["dbexec", "dbex", "dbx"]
-    category = CommandCategories.Misc
-    description = "test command for the db."
+    category = commandHandler.CommandCategories.Admin
+    description = "command to execute sql queries to the database"
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     hidden = true
 
-    callback = async (cmd: cmdStructure) => {
+    callback = async (cmd: Command) => {
         let connection: PoolConnection,
             _block = false
 
@@ -58,7 +59,7 @@ class Command {
 
         if (_block) return cmd.message.reply({
             embeds: [Embed({
-                description: `${utils.GetEmoji("no")} This function is blocked :)`,
+                description: `${Utils.GetEmoji("no")} This function is blocked :)`,
                 color: Colors.Red
             })]
         })
@@ -70,20 +71,18 @@ class Command {
             const query = cmd.raw_arguments
             const res = await connection.query(query)
             if (res) {
-                const attachment = utils.CreateFileAttachment(Buffer.from(JSON.stringify(res, (key, value) => typeof value === 'bigint' ? value.toString() : value, 2)), `mariadb_result_${connection.threadId}.json`);
+                const attachment = Utils.CreateFileAttachment(Buffer.from(JSON.stringify(res, (key, value) => typeof value === 'bigint' ? value.toString() : value, 2)), `mariadb_result_${connection.threadId}.json`);
                 cmd.message.reply({ //@ts-ignore
                     files: [attachment], content: `-# query: ${inlineCode(query)}\n-# took: \`${Date.now() - _t}ms\`\n-# threadId: ${inlineCode(connection.threadId.toString())}\n-# status: \`${getReadableStatus(connection.info.status)} (${connection.info.status})\`\n-# seed: \`${connection.info.seed.toString()}\``
                 })
             }
         } catch (error) {
-            utils.SendErrorMessage("error", cmd, error.message)
+            Utils.SendErrorMessage("error", cmd, error.message)
             console.error(error)
         } finally {
             if (connection) connection.release()
         }
-
-        return true
     }
 }
 
-module.exports = Command
+module.exports = CommandConstructor

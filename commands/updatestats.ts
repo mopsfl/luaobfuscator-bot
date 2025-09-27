@@ -1,32 +1,31 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
-import { statusDisplayController, utils } from "../index"
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { commandHandler, statusDisplayController } from "../index"
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
+import Utils from "../modules/Utils";
 
-class Command {
+class CommandConstructor {
     name = ["updatestats", "us"]
-    category = CommandCategories.Misc
+    category = commandHandler.CommandCategories.Misc
     description = "Forces to update the status display informations."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false
 
-    callback = async (cmd: cmdStructure) => {
+    callback = async (cmd: Command) => {
         const embed = Embed({
             description: "Updating status display... Please wait!",
             color: Colors.Yellow,
         })
         await cmd.message.reply({ embeds: [embed] }).then(async msg => {
             await statusDisplayController.Update()
-            embed.setDescription(`${utils.GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(Date.now() - cmd.timestamp)}ms`)})`)
+            embed.setDescription(`${Utils.GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(Date.now() - cmd.timestamp)}ms`)})`)
                 .setColor(Colors.Green)
                 .setTimestamp()
                 .setFooter({ text: `${cmd.id}` })
             msg.edit({ embeds: [embed] })
         })
-        return true
     }
 }
 
-module.exports = Command
+module.exports = CommandConstructor

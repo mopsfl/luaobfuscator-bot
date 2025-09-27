@@ -1,5 +1,5 @@
-import { codeBlock, Colors, hyperlink } from "discord.js";
-import { config } from "../../../..";
+import { Colors } from "discord.js";
+import config from "../../../config";
 
 export default function () {
     return {

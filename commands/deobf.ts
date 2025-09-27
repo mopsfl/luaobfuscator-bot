@@ -1,19 +1,17 @@
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { commandHandler } from "..";
+import { Command } from "../modules/CommandHandler"
 import Database from "../modules/Database/Database";
 
-class Command {
+class CommandConstructor {
     name = ["deobfuscate", "deobf"]
-    category = CommandCategories.LuaObfuscator
+    category = commandHandler.CommandCategories.LuaObfuscator
     description = "Deobfuscates a obfuscated script!! real!i!!i!"
     syntax_usage = "<file | codeblock>"
 
-    callback = async (cmd: cmdStructure) => {
-        await cmd.message.reply("Sorry, this ain't Luraph! :man_shrugging:")
-        await Database.Increment("bot_statistics", "deobf_tries")
-
-        return true
+    callback = async (cmd: Command) => {
+        cmd.message.reply("Sorry, this ain't Luraph! :man_shrugging:")
+        Database.Increment("bot_statistics", "deobf_tries")
     }
 }
 
-module.exports = Command
+module.exports = CommandConstructor

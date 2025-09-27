@@ -1,22 +1,22 @@
-import { Colors, inlineCode } from "discord.js";
-import { utils } from "../index"
+import { Colors } from "discord.js";
+import { commandHandler } from "../index"
 import config from "../config";
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
 import Database from "../modules/Database/Database";
+import Utils from "../modules/Utils";
 
-class Command {
+class CommandConstructor {
     name = ["botstats", "bs", "bots"]
-    category = CommandCategories.Misc
+    category = commandHandler.CommandCategories.Misc
     description = "Shows you some bot statistics."
 
-    callback = async (cmd: cmdStructure) => {
+    callback = async (cmd: Command) => {
         const result = await Database.GetTable("bot_statistics")
 
         if (!result.success) {
             console.error(result.error.message)
-            return utils.SendErrorMessage("error", cmd, result.error.code)
+            return Utils.SendErrorMessage("error", cmd, result.error.code)
         }
 
         const bot_stats: BotStats = result.data[0]
@@ -37,7 +37,6 @@ class Command {
         })
 
         cmd.message.reply({ embeds: [embed] })
-        return true
     }
 }
 
@@ -47,4 +46,4 @@ export interface BotStats {
     deobf_tries: number,
 }
 
-module.exports = Command
+module.exports = CommandConstructor

@@ -1,11 +1,12 @@
 import ChartJSImage from "chart.js-image"
+import Utils from "../Utils"
 
 export default {
     Create(data: number[]) {
         return new ChartJSImage().chart(<ChartOptions>{
             type: "bar",
             data: {
-                labels: this.GetLocalizedDateStrings(),
+                labels: Utils.GetLocalizedDateStrings(),
                 datasets: [
                     {
                         label: "Daily Obfuscated Files",
@@ -23,20 +24,7 @@ export default {
                 }
             }
         }).toURL()
-    },
-
-    GetLocalizedDateStrings(length: number = 7, includeYear: boolean = false): Array<string> {
-        const dateStrings = [];
-        const today = new Date();
-        for (let i = 0; i < length; i++) {
-            const currentDate = new Date(today);
-            currentDate.setDate(currentDate.getDate() - i);
-            let localizedDateString = currentDate.toLocaleDateString("en", { month: "2-digit", day: "numeric", year: includeYear ? "numeric" : undefined });
-            localizedDateString = localizedDateString.replace(/\.$/, '');
-            dateStrings.push(localizedDateString);
-        }
-        return dateStrings.reverse();
-    },
+    }
 }
 
 export interface ChartOptions {

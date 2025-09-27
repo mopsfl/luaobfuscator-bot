@@ -1,31 +1,37 @@
-import { bold, Colors, SlashCommandBuilder } from 'discord.js';
-import { CommandInteraction } from 'discord.js';
-import Embed from '../../modules/Embed';
-import Database from '../../modules/Database/Database';
+import { Command, CommandNode } from "../../modules/CommandHandler"
+import Embed from "../../modules/Embed"
+import { client, commandHandler } from "../../index"
+import { Colors, MessageFlags, SlashCommandBuilder } from "discord.js"
+import config from "../../config"
 
-const command = {
-    name: ["ping"],
-    commandId: "ping_slash",
-    slash_command: true,
-    data: new SlashCommandBuilder()
-        .setName('ping')
-        .setDMPermission(true)
-        .setDescription("Returns the bot's current ping in milliseconds, measuring its responsiveness to the Discord server."),
-    async callback(interaction: CommandInteraction): Promise<void> {
-        const embed = Embed({
-            description: "Pinging...",
-            color: Colors.Yellow
-        })
+class CommandConstructor implements CommandNode {
+    name = ["ping"]
+    category = commandHandler.CommandCategories.Bot
+    description = "Shows the bot's current latency to Discord."
+    slash_command = true
 
-        await interaction.reply({ embeds: [embed], ephemeral: true }).then(msg => {
-            embed.setDescription(`${bold("Result")}:\n-# ${(msg.createdTimestamp - Date.now() + "ms").replace(/\-/, "")}`)
-                .setColor(Colors.Green)
+    slashCommandBuilder = new SlashCommandBuilder()
+        .setName(this.name[0])
+        .setDescription(this.description)
 
-            msg.edit({ embeds: [embed] })
-        })
+    callback = async (command: Command) => {
+        await command.interaction.deferReply({ flags: [MessageFlags.Ephemeral] })
+        const embed = Embed({ description: "Pinging...", color: Colors.Yellow }),
+            apiLatency = Math.round(client.ws.ping)
 
-        Database.Increment("cmd_stats", "call_count", { command_name: "ping" }).catch(console.error)
-    },
-};
+        embed.setTitle("Ping Results")
+            .setColor(Colors.Green)
+            .setDescription(" ")
+            .setTimestamp()
+            .setFields([
+                { name: "Response Time", value: `-# ${Date.now() - command.interaction.createdTimestamp}ms`, inline: true },
+                { name: "\u200B", value: "\u200B", inline: true },
+                { name: "API Latency", value: `-# ${apiLatency > 0 ? `${apiLatency}ms` : "N/A"}`, inline: true },
+            ])
+            .setFooter({ text: `Lua Obfuscator`, iconURL: config.icon_url })
 
-export { command };
+        await command.interaction.editReply({ embeds: [embed] });
+    }
+}
+
+module.exports = CommandConstructor

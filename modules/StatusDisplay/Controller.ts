@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, TextChannel } from "discord.js";
-import { client, env, utils } from "../../index"
+import { client, ENV } from "../../index"
 import config from "../../config";
 import Main from "./Embeds/Main";
 import Embed from "../Embed";
@@ -14,6 +14,8 @@ import Chart from "./Chart";
 import ObfuscatorStats from "../ObfuscatorStats";
 import History from "./Embeds/History";
 import Session from "../Session";
+import Utils from "../Utils";
+
 export default class StatusDisplayController {
     constructor(
         public statusChannel?: TextChannel,
@@ -39,7 +41,7 @@ export default class StatusDisplayController {
         this.mainEmbed = Embed(Main())
         this.statisticsEmbed = Embed(Stats())
 
-        await client.channels.fetch(config[env].STATUS_CHANNEL_ID).then(async channel => {
+        await client.channels.fetch(config[ENV].STATUS_CHANNEL_ID).then(async channel => {
             if (channel.type !== ChannelType.GuildText) return console.error(`[Status Display Error]: status channel '${channel.id}' must be textBased.`)
             this.statusChannel = channel
             this.statusMessage = (await this.statusChannel.messages.fetch()).first()
@@ -125,17 +127,18 @@ export default class StatusDisplayController {
 
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastUpdated, this.lastUpdate ? `<t:${(this.lastUpdate / 1000).toFixed()}:R>` : "N/A")
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastOutage, this.lastOutage ? `<t:${(this.lastOutage.time / 1000).toFixed()}:R>` : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? utils.FormatUptime(Date.now() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.memoryUsage, serverStatistics ? utils.FormatBytes(serverStatistics.memory_usage) : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? utils.FormatUptime(client.uptime, true) : "N/A")
-        Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? utils.FormatNumber(serverStatistics.total_obfuscations) : "N/A")
+        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? Utils.FormatUptime(Date.now() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
+        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.memoryUsage, serverStatistics ? Utils.FormatBytes(serverStatistics.memory_usage) : "N/A")
+        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? Utils.FormatUptime(client.uptime, true) : "N/A")
+        Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? Utils.FormatNumber(serverStatistics.total_obfuscations) : "N/A")
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.recentObfuscations, "N/A")
 
         ObfuscatorStats.Update({
             total_uploads: serverStatistics.total_file,
             total_obfuscations: serverStatistics.total_obfuscations,
-            time: Date.now()
-        })
+            time: Date.now(),
+            date: Utils.ToLocalizedDateString(new Date(), true)
+        }).catch(console.error)
 
         await this.statusMessage.edit({
             embeds: [mainEmbed, statisticsEmbed],
@@ -146,7 +149,7 @@ export default class StatusDisplayController {
     }
 
     GetStatusEmoji(statusCode: number | string) {
-        return statusCode == 200 ? utils.GetEmoji("online") : utils.GetEmoji("offline")
+        return statusCode == 200 ? Utils.GetEmoji("online") : Utils.GetEmoji("offline")
     }
 
     CreateOutageIdentifier(services: Map<string, ServiceStatus>, length = 12) {
@@ -188,7 +191,7 @@ export default class StatusDisplayController {
                 affected_services = []
 
             failedServices.forEach((serviceStatus, serviceName) => {
-                affected_services.push(`${utils.GetEmoji("offline")} **${serviceName}: \`${serviceStatus.statusText} (${serviceStatus.statusCode}) | ${serviceStatus.ping}ms\`**`)
+                affected_services.push(`${Utils.GetEmoji("offline")} **${serviceName}: \`${serviceStatus.statusText} (${serviceStatus.statusCode}) | ${serviceStatus.ping}ms\`**`)
             })
 
             Fields.SetValue(alertEmbed.data.fields, Fields.Indexes.Alert.affectedServices, affected_services.join("\n-# "))
@@ -233,11 +236,11 @@ export default class StatusDisplayController {
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.services, fieldValues.services, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.status, fieldValues.status, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.time, fieldValues.time, true)
-        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](${env == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session}).`)
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](${ENV == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session}).`)
 
         await interaction.reply({ ephemeral: true, embeds: [historyEmbed] })
 
-        utils.Sleep(10000).then(() => {
+        Utils.Sleep(10000).then(() => {
             this._cache[interaction.user.id] = false
         })
     }

@@ -1,9 +1,10 @@
-import { codeBlock, Colors, inlineCode, PermissionFlagsBits } from "discord.js";
-import { pool, utils } from "../index"
-import { cmdStructure } from "../modules/Command";
-import CommandCategories from "../modules/CommandCategories";
+import { Colors, PermissionFlagsBits } from "discord.js";
+import { commandHandler } from "../index"
+import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
 import { PoolConnection } from "mariadb";
+import Utils from "../modules/Utils";
+import { pool } from "../modules/Database/Database";
 
 const statusFlags = {
     2: "SERVER_STATUS_AUTOCOMMIT",
@@ -23,15 +24,16 @@ const statusFlags = {
     32768: "SERVER_SESSION_STATE_CHANGED"
 };
 
-class Command {
+class CommandConstructor {
     name = ["dbinfo", "dbi"]
-    category = CommandCategories.Misc
+    category = commandHandler.CommandCategories.Admin
     description = "Returns informations about the LuaObfuscator database."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
+    direct_message = false
     hidden = true
 
-    callback = async (cmd: cmdStructure) => {
+    callback = async (cmd: Command) => {
         let connection: PoolConnection
 
         try {
@@ -59,14 +61,12 @@ class Command {
 
             cmd.message.reply({ embeds: [embed] })
         } catch (error) {
-            utils.SendErrorMessage("error", cmd, error.message)
+            Utils.SendErrorMessage("error", cmd, error.message)
             console.error(error)
         } finally {
             if (connection) connection.release()
         }
-
-        return true
     }
 }
 
-module.exports = Command
+module.exports = CommandConstructor
