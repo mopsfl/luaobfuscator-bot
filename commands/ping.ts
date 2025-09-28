@@ -1,4 +1,4 @@
-import { bold, Colors } from "discord.js";
+import { Colors } from "discord.js";
 import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
 import { client, commandHandler } from "../index";

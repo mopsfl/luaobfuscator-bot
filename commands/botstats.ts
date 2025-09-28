@@ -4,7 +4,7 @@ import config from "../config";
 import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Embed";
 import Database from "../modules/Database/Database";
-import Utils from "../modules/Utils";
+import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
 
 class CommandConstructor {
     name = ["botstats", "bs", "bots"]
@@ -15,8 +15,11 @@ class CommandConstructor {
         const result = await Database.GetTable("bot_statistics")
 
         if (!result.success) {
-            console.error(result.error.message)
-            return Utils.SendErrorMessage("error", cmd, result.error.code)
+            return ErrorHandler.new({
+                message: cmd.message,
+                error: `${result.error.code}\n > ${result.error.sqlMessage}`,
+                title: "Database Error"
+            })
         }
 
         const bot_stats: BotStats = result.data[0]

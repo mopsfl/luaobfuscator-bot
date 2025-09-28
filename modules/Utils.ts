@@ -5,6 +5,7 @@ import { randomUUID } from "crypto"
 import Embed from "./Embed"
 import { ObfuscationResult } from "./LuaObfuscator/Types"
 import { Command } from "./CommandHandler";
+import ErrorHandler from "./ErrorHandler/ErrorHandler";
 
 export default {
     HasCodeblock: function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) },
@@ -14,32 +15,6 @@ export default {
     ParseCodeblock(input: string): string {
         const match = input.match(/```(?:\w+)?\n?([\s\S]*?)```/);
         return match ? match[1].trim() : "";
-    },
-
-    async ParseScriptFromMessage(cmd: Command): Promise<string> {
-        if (!cmd) return null
-
-        return new Promise(async (resolve, reject) => {
-            if (this.HasCodeblock(cmd.raw_arguments)) {
-                return resolve(this.ParseCodeblock(cmd.raw_arguments))
-            } else if ([...cmd.message.attachments].length > 0) {
-                const attachment = cmd.message.attachments.first(),
-                    attachmentURL = attachment?.url
-
-                if (!attachmentURL) return this.SendErrorMessage("error", cmd, "Unable to get attachment URL.")
-                await fetch(attachmentURL).then(async res => { resolve(await res.text()) }).catch(error => {
-                    this.SendErrorMessage("error", cmd, error)
-                    reject(error)
-                })
-            } else {
-                this.SendErrorMessage("syntax", cmd, "Please provide a valid Lua script as a codeblock or a file.", null, [
-                    { name: "Syntax:", value: inlineCode(`${cmd.isSlashCommand ? "/" : config.prefix}${cmd.name} <codeblock> | <file>`), inline: false },
-                    { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
-                ])
-
-                return reject("invalid script input")
-            }
-        })
     },
 
     async ParseScriptFromMessage2(message: Message): Promise<string> {

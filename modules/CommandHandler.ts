@@ -7,6 +7,7 @@ import fs from "fs"
 import { ChatInputCommandInteraction, GuildMember, InteractionType, Message, MessageType, OmitPartialGroupDMChannel, PermissionFlagsBits, Routes, SlashCommandBuilder } from "discord.js";
 import { discordREST, ENV, statusDisplayController } from "../index";
 import Database from "./Database/Database";
+import ErrorHandler from "./ErrorHandler/ErrorHandler";
 
 export default class CommandHandler {
     constructor(
@@ -51,23 +52,38 @@ export default class CommandHandler {
             console.log(`> command '${command.name}', requested by '${this.GetInvokerName(command)}', finished in ${Date.now() - command.timestamp}ms (id: ${command.id})`)
             this.UpdateCommandStatistic(command)
         } catch (error) {
-            console.error(error)
+            ErrorHandler.new({
+                message: command.message,
+                error: error
+            })
+
+            console.error(`[Command Handler Error]: error occurred while trying to execute command '${command.name}'!`, error)
         }
     }
 
     private IsCommandRunnable(command: Command): boolean {
         if (!command.callback || typeof command.callback !== "function") {
-            console.log("missing callback")
+            ErrorHandler.new({
+                message: command.message,
+                error: `unable to execute command. (missing <${command.name}.callback()>)`
+            })
             return false
         }
         if (!command.allowDirectMessage && command.message?.channel?.isDMBased()) {
-            console.log("no dm")
+            ErrorHandler.new({
+                message: command.message,
+                error: `This command is disabled in direct messages!`
+            })
             return false
         }
         if (!command.hasPermission) {
-            console.log("missing permission")
+            ErrorHandler.new({
+                message: command.message,
+                error: `You are not allowed to execute this command!`
+            })
             return false
         }
+
         return true
     }
 

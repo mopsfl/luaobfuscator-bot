@@ -28,10 +28,10 @@ export default {
   async Execute<T = any>(sql: string, params: any[] = []): Promise<DBResponse<T[]>> {
     try {
       const rows = await pool.query(sql, params);
-      return rows.length ? ok(rows) : fail("notFound", "No rows found", 404);
+      return rows.length ? ok(rows) : fail("notFound", "No rows found", null, 404);
     } catch (err: any) {
       console.error(err);
-      return fail(err.code ?? "queryError", err.message ?? "Query failed");
+      return fail(err.code ?? "queryError", err.message ?? "Query failed", err.sqlMessage ?? "Query failed");
     }
   },
 
@@ -49,12 +49,12 @@ export default {
       if (latest) { sql += " LIMIT 1" } else if (limit) { sql += ` LIMIT ${limit}` }
 
       const rows = await pool.query(sql, clause ? [value] : []);
-      if (!rows.length) return fail("notFound", "No rows found", 404);
+      if (!rows.length) return fail("notFound", "No rows found", null, 404);
 
       return ok(latest || clause ? rows[0] : rows);
     } catch (err: any) {
-      console.error(err);
-      return fail(err.code ?? "queryError", err.message ?? "Query failed");
+      console.error(err.message);
+      return fail(err.code ?? "queryError", err.message ?? "Query failed", err.sqlMessage ?? "Query failed");
     }
   },
 
@@ -68,7 +68,7 @@ export default {
       return ok(result);
     } catch (err: any) {
       console.error(err);
-      return fail(err.code ?? "insertError", err.message ?? "Insert failed");
+      return fail(err.code ?? "insertError", err.message ?? "Insert failed", err.sqlMessage ?? "Insert failed");
     }
   },
 
@@ -79,30 +79,30 @@ export default {
   ): Promise<DBResponse<any>> {
     try {
       const { clause, value } = buildWhereClause(reqQuery);
-      if (!clause) return fail("invalidQuery", "Missing WHERE condition", 400);
+      if (!clause) return fail("invalidQuery", "Missing WHERE condition", null, 400);
 
       const sql = `UPDATE \`${table}\` SET ${buildSetClause(updates)} WHERE ${clause}`,
         result = await pool.query(sql, [...Object.values(updates), value]);
 
-      return result.affectedRows > 0 ? ok(result) : fail("notFound", "No rows updated", 404);
+      return result.affectedRows > 0 ? ok(result) : fail("notFound", "No rows updated", null, 404);
     } catch (err: any) {
       console.error(err);
-      return fail(err.code ?? "updateError", err.message ?? "Update failed");
+      return fail(err.code ?? "updateError", err.message ?? "Update failed", err.sqlMessage ?? "Update failed");
     }
   },
 
   async Delete(table: DatabaseTable, reqQuery: Record<string, any>): Promise<DBResponse<any>> {
     try {
       const { clause, value } = buildWhereClause(reqQuery);
-      if (!clause) return fail("invalidQuery", "Missing WHERE condition", 400);
+      if (!clause) return fail("invalidQuery", "Missing WHERE condition", null, 400);
 
       const sql = `DELETE FROM \`${table}\` WHERE ${clause}`,
         result = await pool.query(sql, [value]);
 
-      return result.affectedRows > 0 ? ok(result) : fail("notFound", "No rows deleted", 404);
+      return result.affectedRows > 0 ? ok(result) : fail("notFound", "No rows deleted", null, 404);
     } catch (err: any) {
       console.error(err);
-      return fail(err.code ?? "deleteError", err.message ?? "Delete failed");
+      return fail(err.code ?? "deleteError", err.message ?? "Delete failed", err.sqlMessage ?? "Delete failed");
     }
   },
 
@@ -129,10 +129,10 @@ export default {
         sql = `UPDATE \`${table}\` SET \`${column}\` = \`${column}\` + 1${clause ? " WHERE " + clause : ""}`;
 
       const result = await pool.query(sql, clause ? [value] : []);
-      return result.affectedRows > 0 ? ok(true) : fail("notFound", "No rows updated", 404);
+      return result.affectedRows > 0 ? ok(true) : fail("notFound", "No rows updated", null, 404);
     } catch (err: any) {
       console.error(err);
-      return fail(err.code ?? "incrementError", err.message ?? "Increment failed");
+      return fail(err.code ?? "incrementError", err.message ?? "Increment failed", err.sqlMessage ?? "Increment failed");
     }
   }
 };

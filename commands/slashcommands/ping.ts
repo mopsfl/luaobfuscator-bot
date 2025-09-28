@@ -15,13 +15,10 @@ class CommandConstructor implements CommandNode {
         .setDescription(this.description)
 
     callback = async (command: Command) => {
-        await command.interaction.deferReply({ flags: [MessageFlags.Ephemeral] })
-        const embed = Embed({ description: "Pinging...", color: Colors.Yellow }),
-            apiLatency = Math.round(client.ws.ping)
-
-        embed.setTitle("Ping Results")
+        const apiLatency = Math.round(client.ws.ping)
+        const embed = Embed({})
+            .setTitle("Ping Results")
             .setColor(Colors.Green)
-            .setDescription(" ")
             .setTimestamp()
             .setFields([
                 { name: "Response Time", value: `-# ${Date.now() - command.interaction.createdTimestamp}ms`, inline: true },
@@ -30,7 +27,7 @@ class CommandConstructor implements CommandNode {
             ])
             .setFooter({ text: `Lua Obfuscator`, iconURL: config.icon_url })
 
-        await command.interaction.editReply({ embeds: [embed] });
+        await command.interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] });
     }
 }
 

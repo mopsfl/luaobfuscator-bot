@@ -1,6 +1,7 @@
 export type DBError = {
     code: string;
     message: string;
+    sqlMessage?: string;
     status: number;
 };
 
@@ -11,9 +12,9 @@ export type DBResponse<T> = {
 };
 
 export const ok = <T>(data: T): DBResponse<T> => ({ success: true, data });
-export const fail = (code: string, message: string, status = 500): DBResponse<any> => ({
+export const fail = (code: string, message: string, sqlMessage: string, status = 500): DBResponse<any> => ({
     success: false,
-    error: { code, message, status },
+    error: { code, message, sqlMessage, status },
 });
 
 export const parseSearchQuery = (query?: Record<string, any>): [string?, any?] => {

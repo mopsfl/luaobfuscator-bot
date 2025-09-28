@@ -9,6 +9,7 @@ import Embed from "../modules/Embed";
 import Database from "../modules/Database/Database";
 import LuaObfuscator from "../modules/LuaObfuscator/API";
 import { ObfuscationResult } from "../modules/LuaObfuscator/Types";
+import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
 
 class CommandConstructor {
     name = ["obfuscate", "obf", "obfsc"]
@@ -43,10 +44,14 @@ class CommandConstructor {
                     script_content += Buffer.from(chunk).toString() || ""
                 })
             })
-        } else return Utils.SendErrorMessage("syntax", command, "Please provide a valid Lua script as a codeblock or a file.", null, [
-            { name: "Syntax:", value: inlineCode(`${config.prefix}${command.name} <codeblock> | <file>`), inline: false },
-            { name: "Reminder:", value: `-# If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
-        ])
+        } else {
+            return ErrorHandler.new({
+                type: "syntax",
+                message: command.message,
+                error: "Please provide a valid Lua script as a codeblock or a file.",
+                syntax: `${config.prefix}${command.name} <codeblock> | <file>`
+            })
+        }
 
         // Obfuscation Process
         const obfuscation_process: ObfuscationProcess = {
@@ -90,7 +95,7 @@ class CommandConstructor {
                     obfuscation_process.embed.setColor("Red")
                     obfuscation_process.processes[process_id] = `${Utils.GetEmoji("no")} Obfuscation failed!`
                     obfuscation_process.error = obfuscation_process.results.message
-                    Utils.SendErrorMessage("error", command, obfuscation_process.error, "Obfuscation Error")
+                    ErrorHandler.new({ error: obfuscation_process.error, message: command.message, title: "Obfuscation Error" })
                     return await updateProcess()
                 }
                 obfuscation_process.processes[process_id] = `${Utils.GetEmoji("yes")} Script obfuscated!`

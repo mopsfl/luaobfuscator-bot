@@ -20,7 +20,7 @@ export default {
             })
             return await response.json().catch(async err => {
                 console.error(err)
-                return { message: `unexpected error occurred while obfuscating your script. (${response.statusText}_${response.status})` }
+                return { message: `An unexpected error occurred while obfuscating your script! This is most likely due to a syntax error in your script.\n> ${response.statusText} | ${response.status}` }
             })
         },
     },

@@ -5,6 +5,7 @@ import Embed from "../modules/Embed";
 import { PoolConnection } from "mariadb";
 import Utils from "../modules/Utils";
 import { pool } from "../modules/Database/Database";
+import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
 
 const block = [
     "DELETE",
@@ -77,8 +78,11 @@ class CommandConstructor {
                 })
             }
         } catch (error) {
-            Utils.SendErrorMessage("error", cmd, error.message)
-            console.error(error)
+            return ErrorHandler.new({
+                message: cmd.message,
+                error: error,
+                title: "Database Error"
+            })
         } finally {
             if (connection) connection.release()
         }
