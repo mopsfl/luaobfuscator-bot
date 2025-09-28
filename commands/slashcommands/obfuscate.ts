@@ -6,6 +6,8 @@ import { AttachmentBuilder, MessageFlags, SlashCommandBuilder } from "discord.js
 import LuaObfuscator from "../../modules/LuaObfuscator/API"
 import Database from "../../modules/Database/Database"
 import Utils from "../../modules/Utils"
+import ErrorHandler from "../../modules/ErrorHandler/ErrorHandler"
+import config from "../../config"
 
 class CommandConstructor implements CommandNode {
     name = ["obfuscate"]
@@ -26,8 +28,7 @@ class CommandConstructor implements CommandNode {
                 let message = msg.first()
                 let script_content = "",
                     chunksAmount = 0,
-                    raw_arguments = "",//_command.getRawArgs(message),
-                    hasCodeBlock = Utils.HasCodeblock(raw_arguments),
+                    hasCodeBlock = Utils.HasCodeblock(message.content),
                     file_attachment: AttachmentBuilder,
                     start_time = new Date().getTime()
 
@@ -35,10 +36,10 @@ class CommandConstructor implements CommandNode {
                 if (hasCodeBlock) {
                     script_content = Utils.ParseCodeblock(message.content)
                 } else if ([...message.attachments].length > 0) {
-                    const attachment = message.attachments.first()
-                    const url = attachment?.url
-                    if (!url) Utils.SendErrorMessage("error", ({ message: message } as any), "Unable to get url from attachment.")
-                    await fetch(url).then(async res => {
+                    const attachmentUrl = message.attachments.first()?.url
+                    if (!attachmentUrl) Utils.SendErrorMessage("error", ({ message: message } as any), "Unable to get url from attachment.")
+
+                    await fetch(attachmentUrl).then(async res => {
                         const chunks = await Utils.ReadAllChunks(res.body)
                         chunksAmount = chunks.length
                         chunks.forEach(chunk => {
@@ -47,15 +48,22 @@ class CommandConstructor implements CommandNode {
                     })
                 } else {
                     interactionReply.delete()
-                    return Utils.SendErrorMessage("syntax", ({ message: message } as any), "Please provide a valid Lua script as a codeblock or a file.", null, [
-                        { name: "Reminder:", value: `If you need help, you may ask in <#1128990603087200276> for assistance.`, inline: false }
-                    ])
+                    return ErrorHandler.new({
+                        type: "syntax",
+                        interaction: command.interaction,
+                        error: "Please provide a valid Lua script as a codeblock or a file.",
+                        syntax: `${config.prefix}${command.name} <codeblock> | <file>`
+                    })
                 }
 
                 command.interaction.followUp({ content: `${Utils.GetEmoji("loading")} Obfuscation in progress! This should only take a few seconds...`, flags: [MessageFlags.Ephemeral] }).then(async processReply => {
                     interactionReply.delete()
                     await LuaObfuscator.v1.Obfuscate(script_content, message).then(async res => {
-                        if (res.message) return Utils.SendErrorMessage("error", ({ message: message } as any), res.message, "Obfuscation Error")
+                        if (res.message) return ErrorHandler.new({
+                            title: "Obfuscation Error",
+                            interaction: command.interaction,
+                            error: res.message,
+                        })
                         console.log(`Script by ${message.author.username} successfully obfuscated: ${res.sessionId} (slash command)`)
                         Database.Increment("bot_statistics", "obfuscations")
 
