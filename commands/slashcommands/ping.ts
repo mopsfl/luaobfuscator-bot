@@ -1,5 +1,5 @@
 import { Command, CommandNode } from "../../modules/CommandHandler"
-import Embed from "../../modules/Embed"
+import Embed from "../../modules/Misc/Embed"
 import { client, commandHandler } from "../../index"
 import { Colors, MessageFlags, SlashCommandBuilder } from "discord.js"
 import config from "../../config"

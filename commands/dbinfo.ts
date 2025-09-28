@@ -1,7 +1,7 @@
 import { Colors, PermissionFlagsBits } from "discord.js";
 import { commandHandler } from "../index"
 import { Command } from "../modules/CommandHandler"
-import Embed from "../modules/Embed";
+import Embed from "../modules/Misc/Embed";
 import { PoolConnection } from "mariadb";
 import Utils from "../modules/Utils";
 import { pool } from "../modules/Database/Database";

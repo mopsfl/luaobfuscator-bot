@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheT
 import { client, ENV } from "../../index"
 import config from "../../config";
 import Main from "./Embeds/Main";
-import Embed from "../Embed";
+import Embed from "../Misc/Embed";
 import Fields from "./Fields";
 import Services from "./Services";
 import { ServiceOutage, ServiceStatus } from "./Types";
@@ -13,7 +13,7 @@ import { createHash } from "crypto";
 import Chart from "./Chart";
 import ObfuscatorStats from "../ObfuscatorStats";
 import History from "./Embeds/History";
-import Session from "../Session";
+import Session from "../Misc/Session";
 import Utils from "../Utils";
 
 export default class StatusDisplayController {

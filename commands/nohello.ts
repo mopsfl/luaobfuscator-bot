@@ -2,7 +2,7 @@ import { bold, Colors } from "discord.js";
 import { commandHandler } from "../index"
 import config from "../config";
 import { Command } from "../modules/CommandHandler"
-import Embed from "../modules/Embed";
+import Embed from "../modules/Misc/Embed";
 import Database from "../modules/Database/Database";
 import Utils from "../modules/Utils";
 

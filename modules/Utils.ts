@@ -2,7 +2,7 @@ import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, 
 import { ENV, client } from "../index"
 import config from "../config";
 import { randomUUID } from "crypto"
-import Embed from "./Embed"
+import Embed from "./Misc/Embed"
 import { ObfuscationResult } from "./LuaObfuscator/Types"
 import { Command } from "./CommandHandler";
 import ErrorHandler from "./ErrorHandler/ErrorHandler";

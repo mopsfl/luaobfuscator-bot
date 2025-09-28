@@ -1,4 +1,4 @@
-import { cache } from "../index"
+import { cache } from "../../index"
 import { randomUUID } from "crypto"
 
 export default {

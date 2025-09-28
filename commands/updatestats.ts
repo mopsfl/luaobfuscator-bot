@@ -1,7 +1,7 @@
 import { Colors, PermissionFlagsBits, inlineCode } from "discord.js";
 import { commandHandler, statusDisplayController } from "../index"
 import { Command } from "../modules/CommandHandler"
-import Embed from "../modules/Embed";
+import Embed from "../modules/Misc/Embed";
 import Utils from "../modules/Utils";
 
 class CommandConstructor {

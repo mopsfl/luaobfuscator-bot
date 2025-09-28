@@ -2,7 +2,7 @@ import { Colors, EmbedBuilder, EmbedField, bold, inlineCode, underline } from "d
 import { commandHandler } from "../index"
 import config from "../config";
 import { Command } from "../modules/CommandHandler"
-import Embed from "../modules/Embed";
+import Embed from "../modules/Misc/Embed";
 import Utils from "../modules/Utils";
 
 class CommandConstructor {

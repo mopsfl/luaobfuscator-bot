@@ -19,7 +19,7 @@ import {
     User
 } from "discord.js"
 import { randomUUID } from "crypto";
-import Embed from "../Embed";
+import Embed from "../Misc/Embed";
 import Main from "./Embeds/Main";
 import Cancel from "./Embeds/Cancel";
 import Processing from "./Embeds/Processing";

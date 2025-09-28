@@ -2,8 +2,8 @@ import { Colors, inlineCode } from "discord.js";
 import { commandHandler, ENV } from "../index"
 import config from "../config";
 import { Command } from "../modules/CommandHandler"
-import Embed from "../modules/Embed";
-import Session from "../modules/Session";
+import Embed from "../modules/Misc/Embed";
+import Session from "../modules/Misc/Session";
 import Utils from "../modules/Utils";
 
 class CommandConstructor {

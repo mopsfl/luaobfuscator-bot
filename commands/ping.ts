@@ -1,6 +1,6 @@
 import { Colors } from "discord.js";
 import { Command } from "../modules/CommandHandler"
-import Embed from "../modules/Embed";
+import Embed from "../modules/Misc/Embed";
 import { client, commandHandler } from "../index";
 import config from "../config";
 import Utils from "../modules/Utils";

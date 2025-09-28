@@ -3,6 +3,8 @@ import { commandHandler } from "../../index"
 import { ComponentType, MessageFlags, SlashCommandBuilder } from "discord.js"
 import Utils from "../../modules/Utils"
 import { CustomObfuscateController } from "../../modules/CustomObfuscate/Controller"
+import ErrorHandler from "../../modules/ErrorHandler/ErrorHandler"
+import config from "../../config"
 
 class CommandConstructor implements CommandNode {
     name = ["customobfuscate"]
@@ -20,19 +22,24 @@ class CommandConstructor implements CommandNode {
             flags: [MessageFlags.Ephemeral]
         }).then(interactionReply => {
             command.interaction.channel.awaitMessages({ filter: (m) => m.author.id === command.interaction.user.id, max: 1, time: 60_000, errors: ["time"] }).then(async msg => {
+                interactionReply.delete()
                 Utils.ParseScriptFromMessage2(msg.first()).then(async script => {
                     const Controller = new CustomObfuscateController(command.interaction.user)
 
                     Controller.script_content = script
-                    Controller.response = await command.interaction.channel.send({ components: [Controller.components.rows.main], embeds: [Controller.components.embeds.main] })
+                    Controller.response = await command.interaction.followUp({ components: [Controller.components.rows.main], embeds: [Controller.components.embeds.main] })
                     Controller.main_collector = Controller.response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 })
                     Controller.plugins_collector = Controller.response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 120000 })
 
                     Controller.main_collector.on("collect", Controller.OnButtonClick.bind(this))
                     Controller.plugins_collector.on("collect", Controller.OnPluginSelect.bind(this))
                 }).catch(err => {
-                    interactionReply.edit(`${Utils.GetEmoji("no")} ${err}`)
-                    console.error(`> unable to create custom obfuscation process for ${command.interaction.user.username}! (${err})`)
+                    return ErrorHandler.new({
+                        type: "syntax",
+                        interaction: command.interaction,
+                        error: "Please provide a valid Lua script as a codeblock or a file.",
+                        syntax: `${config.prefix}${command.name} <codeblock> | <file>`
+                    })
                 })
             })
         })

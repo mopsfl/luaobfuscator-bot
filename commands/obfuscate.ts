@@ -5,7 +5,7 @@ import { Command } from "../modules/CommandHandler";
 import { commandHandler } from "../index"
 import config from "../config";
 import Utils, { ObfuscationProcess } from "../modules/Utils";
-import Embed from "../modules/Embed";
+import Embed from "../modules/Misc/Embed";
 import Database from "../modules/Database/Database";
 import LuaObfuscator from "../modules/LuaObfuscator/API";
 import { ObfuscationResult } from "../modules/LuaObfuscator/Types";

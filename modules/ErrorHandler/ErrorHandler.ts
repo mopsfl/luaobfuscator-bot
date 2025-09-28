@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, codeBlock, Colors, EmbedBuilder, inlineCode, Message, MessageFlags } from "discord.js"
-import Embed from "../Embed";
+import Embed from "../Misc/Embed";
 import Utils from "../Utils";
 import ErrorEmbed from "./Embeds/Error";
 import SyntaxEmbed from "./Embeds/Syntax";

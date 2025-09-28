@@ -2,8 +2,8 @@ import { Colors, hyperlink } from "discord.js";
 import { client, commandHandler } from "../index"
 import config from "../config";
 import { Command } from "../modules/CommandHandler"
-import GithubRepo from "../modules/GithubRepo";
-import Embed from "../modules/Embed";
+import GithubRepo from "../modules/Misc/GithubRepo";
+import Embed from "../modules/Misc/Embed";
 import Utils from "../modules/Utils";
 
 class CommandConstructor {
