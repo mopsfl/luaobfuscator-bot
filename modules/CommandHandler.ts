@@ -5,7 +5,7 @@ import path from "path";
 import config from "../config"
 import fs from "fs"
 import { ChatInputCommandInteraction, GuildMember, InteractionType, Message, MessageType, OmitPartialGroupDMChannel, PermissionFlagsBits, Routes, SlashCommandBuilder } from "discord.js";
-import { discordREST, statusDisplayController } from "../index";
+import { discordREST, ENV, statusDisplayController } from "../index";
 import Database from "./Database/Database";
 
 export default class CommandHandler {
@@ -132,7 +132,7 @@ export default class CommandHandler {
         console.log("> registering commands...")
 
         const command_paths = this.ParseAllCommands(this.commands_directory),
-            clientId = process.env[process.env.NODE_ENV === "production" ? "CLIENT_ID" : "CLIENT_ID_DEV"],
+            clientId = process.env[ENV === "prod" ? "CLIENT_ID" : "CLIENT_ID_DEV"],
             start_tick = Date.now()
 
         command_paths.forEach((path, name) => {
