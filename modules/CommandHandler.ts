@@ -1,10 +1,9 @@
-// todo: make a function to send error embeds (e.g. dm disabled, execution error, ...)
-//       cleaner way to manage command node and command type cuz its messy rn
+// todo: cleaner way to manage command node and command type cuz its messy rn
 
 import path from "path";
 import config from "../config"
 import fs from "fs"
-import { ChatInputCommandInteraction, GuildMember, InteractionType, Message, MessageType, OmitPartialGroupDMChannel, PermissionFlagsBits, Routes, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, InteractionType, Message, MessageType, OmitPartialGroupDMChannel, PermissionFlagsBits, Routes, SlashCommandBuilder, User } from "discord.js";
 import { discordREST, ENV, statusDisplayController } from "../index";
 import Database from "./Database/Database";
 import ErrorHandler from "./ErrorHandler/ErrorHandler";
@@ -23,7 +22,9 @@ export default class CommandHandler {
             Bot: "Bot",
             Misc: "Misc",
             Admin: "Admin"
-        }
+        },
+
+        public cooldowns = new Map<string, number>()
     ) { }
 
     public async OnMessageCreate(message: OmitPartialGroupDMChannel<Message<boolean>>) {
@@ -47,7 +48,20 @@ export default class CommandHandler {
     private async ExecuteCommand(command: Command) {
         if (!this.IsCommandRunnable(command)) return
 
+        if (this.cooldowns.get(command.user.id)) {
+            if ((Date.now() - this.cooldowns.get(command.user.id)) < 2000) {
+                ErrorHandler.new({
+                    message: command.message,
+                    error: `You are using commands too fast! Please wait...`,
+                    ttl: 2000
+                })
+                return false
+            } else this.cooldowns.delete(command.user.id)
+        }
+
         try {
+            this.cooldowns.set(command.user.id, Date.now())
+
             await command.callback(command)
             console.log(`> command '${command.name}', requested by '${this.GetInvokerName(command)}', finished in ${Date.now() - command.timestamp}ms (id: ${command.id})`)
             this.UpdateCommandStatistic(command)
@@ -57,6 +71,7 @@ export default class CommandHandler {
                 error: error
             })
 
+            this.cooldowns.delete(command.user.id)
             console.error(`[Command Handler Error]: error occurred while trying to execute command '${command.name}'!`, error)
         }
     }
@@ -99,6 +114,7 @@ export default class CommandHandler {
 
         return this.BuildCommand(this.commands.get(name) || this.commands.get(this.aliases.get(name)), {
             id: "",
+            user: message.author,
             name,
             arguments: parts,
             raw_arguments: parts.join(" "),
@@ -111,6 +127,7 @@ export default class CommandHandler {
 
         return this.BuildCommand(this.slash_commands.get(interaction.commandName.toLowerCase()), {
             id: "",
+            user: interaction.user,
             name: interaction.commandName.toLowerCase(),
             arguments: args,
             raw_arguments: args.join(" "),
@@ -224,6 +241,7 @@ export default class CommandHandler {
 }
 
 export type Command = {
+    user?: User,
     name?: string,
     id?: string,
     arguments?: Array<any>,
