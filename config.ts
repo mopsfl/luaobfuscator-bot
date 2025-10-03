@@ -6,12 +6,12 @@ export default {
 
     activity_update_interval: 10000, // Update interval for the bot activity. 1000(ms): 1 second
     status_update_interval: 60000, // Update interval for the status displays. 1000(ms): 1 second
-    dm_commands: true, // If dm commands should be allowed 
+    dm_commands: true, // If dm commands should be allowed
 
     support_url: "https://discord.com/invite/Y556HXUByG",
     session_url: "https://luaobfuscator.com/?session=",
     api_url: "https://luaobfuscator.com/api/obfuscator/",
-    icon_url: "https://mopsfl.de/static/img/luaobflogo.png",
+    icon_url: "https://mopsfl.de/images/projects/luaobf.png",
 
     repo_commits_url: "https://api.github.com/repos/mopsfl/luaobfuscator-bot/commits?page=1&per_page=1",
 

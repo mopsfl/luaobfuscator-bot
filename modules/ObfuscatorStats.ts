@@ -2,13 +2,13 @@ import Database from "./Database/Database"
 import Utils from "./Utils"
 
 export default {
-    async Get(): Promise<Saved_Stats> {
+    async Get(): Promise<Obfuscator_Stats[]> {
         try {
             const result = await Database.GetTable("obfuscator_stats")
 
             if (!result.success) {
                 console.error("<Get->GetTable>[Obfuscator Stats Error]:", result.error.message)
-                return {}
+                return []
             }
 
             return result.data
@@ -41,9 +41,9 @@ export default {
         }
     },
 
-    async Parse(): Promise<number[]> {
+    async Parse(limit = 7): Promise<number[]> {
         try {
-            const result = await Database.GetTable("obfuscator_stats", null, false, 8, true);
+            const result = await Database.GetTable("obfuscator_stats", null, false, limit + 1, true);
 
             if (!result.success) {
                 console.error("<Parse->GetTable>[Obfuscator Stats Error]:", result.error.message);
@@ -57,7 +57,7 @@ export default {
                 return diff > 0 ? diff : 0;
             });
 
-            return data.slice(-7);
+            return data.slice(-limit);
         } catch (error) {
             console.error("[Parse Error]:", error);
             return [];
@@ -70,8 +70,4 @@ export interface Obfuscator_Stats {
     total_uploads: number
     time: string | number,
     date: string,
-}
-
-export interface Saved_Stats {
-    [index: string]: Obfuscator_Stats
 }

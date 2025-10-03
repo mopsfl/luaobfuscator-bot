@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, TextChannel } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, MessageFlags, TextChannel } from "discord.js";
 import { client, ENV } from "../../index"
 import config from "../../config";
 import Main from "./Embeds/Main";
@@ -123,7 +123,7 @@ export default class StatusDisplayController {
 
         this.lastUpdate = Date.now()
         mainEmbed.setColor(failedServices.size > 0 ? Colors.Red : Colors.Green)
-        statisticsEmbed.setImage(Chart.Create(await ObfuscatorStats.Parse()))
+        statisticsEmbed.setImage(Chart.Create(await ObfuscatorStats.Parse()).toString())
 
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastUpdated, this.lastUpdate ? `<t:${(this.lastUpdate / 1000).toFixed()}:R>` : "N/A")
         Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastOutage, this.lastOutage ? `<t:${(this.lastOutage.time / 1000).toFixed()}:R>` : "N/A")
@@ -203,7 +203,7 @@ export default class StatusDisplayController {
     }
 
     async CreateOutageHistory(interaction: ButtonInteraction) {
-        if (this._cache[interaction.user.id]) return await interaction.reply({ ephemeral: true, content: "Please wait a few seconds..." })
+        if (this._cache[interaction.user.id]) return await interaction.reply({ flags: [MessageFlags.Ephemeral], content: "Please wait a few seconds..." })
         this._cache[interaction.user.id] = true
 
         const result = await Database.GetTable("outage_log", null, null, 10),
@@ -215,11 +215,11 @@ export default class StatusDisplayController {
             }
 
         if (!result.success) {
-            await interaction.reply({ ephemeral: true, content: "An error occurred while trying to fetch the outage history!" })
+            await interaction.reply({ flags: [MessageFlags.Ephemeral], content: "An error occurred while trying to fetch the outage history!" })
             return console.error(result.error.message)
         }
 
-        const session = await Session.Create(300),
+        const session = await Session.CreateV2(300, interaction.user),
             outage_log: ServiceOutage[] = result.data.map((outage: ServiceOutage) => {
                 outage.services = JSON.parse(outage.services.toString())
                 return outage
@@ -236,7 +236,7 @@ export default class StatusDisplayController {
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.services, fieldValues.services, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.status, fieldValues.status, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.time, fieldValues.time, true)
-        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](${ENV == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session}).`)
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](${ENV == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session.session}).`)
 
         await interaction.reply({ ephemeral: true, embeds: [historyEmbed] })
 

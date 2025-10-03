@@ -27,13 +27,12 @@
                 .join(':');
         }
 
-        window.onload = async () => {
-            let list = document.querySelector(".list>.content"),
-                outageHistoryRequest = await fetch(`/outagehistory/logs${location.search}`),
-                currentRenderLimit = 100
+        async function FetchOutageLog() {
+            const response = await fetch(`api/outagehistory/logs${location.search}`)
 
-            if (!outageHistoryRequest.ok) {
-                const error = await outageHistoryRequest.json()
+            if (!response.ok) {
+                const list = document.querySelector(".list>.content"),
+                    error = await response.json()
 
                 list.innerHTML = `<span class="error">
                     <span>${error.message} (${error.code})</span>
@@ -43,15 +42,29 @@
                 return console.error(error)
             }
 
-            let outageHistory = await outageHistoryRequest.json()
+            return await response.json()
+        }
+
+        window.onload = async () => {
+            let list = document.querySelector(".list>.content"),
+                currentRenderLimit = 100
+
+            let outageHistory = await FetchOutageLog()
             if (!outageHistory) return console.error("unable to fetch outage logs")
             list.innerHTML = ""
 
-            function RenderOutages(limit = 100, ascending = true) {
-                let outages = [...outageHistory]
+            async function RenderOutages(limit = 100, ascending = true, refresh = false) {
+                list.innerHTML = ""
+
+                let outages
+                if (refresh) {
+                    outageHistory = await FetchOutageLog()
+                    if (!outageHistory) return console.error("unable to fetch outage logs")
+                    outages = [...outageHistory]
+                } else outages = [...outageHistory]
+
                 outages.sort((a, b) => ascending ? a.time - b.time : b.time - a.time)
 
-                list.innerHTML = ""
 
                 outages.slice(0, limit).forEach(outage => {
                     const element = document.createElement("div"),
@@ -122,14 +135,20 @@
                 RenderOutages(currentRenderLimit, false)
             })
 
-            const load_all = document.querySelector("#load_all")
+            const refresh = document.querySelector("#refresh")
+            refresh.addEventListener("click", () => {
+                RenderOutages(currentRenderLimit, false, true)
+            })
+
+            /*const load_all = document.querySelector("#load_all")
             load_all.addEventListener("click", () => {
                 currentRenderLimit = outageHistory.length
                 RenderOutages(currentRenderLimit, false)
-            })
+            })*/
 
             RenderOutages(currentRenderLimit, false)
 
+            tippy("#refresh", { content: 'Refresh' });
             tippy("#load_all", { content: 'Load All' });
             tippy("#sort_time", { content: 'Sort Time' })
         }
@@ -347,7 +366,8 @@
         <div class="header-inputs">
             <div class="buttons">
                 <span class="material-symbols-outlined button" id="sort_time">clock_arrow_down</span>
-                <span class="material-symbols-outlined button" id="load_all">expand_all</span>
+                <span class="material-symbols-outlined button" id="refresh">refresh</span>
+                <!--<span class="material-symbols-outlined button" id="load_all">expand_all</span>-->
             </div>
 
             <input type="text" placeholder="Search" class="outage_search" autocomplete="off">

@@ -11,12 +11,11 @@ export default {
 
         await Promise.all(
             Object.entries(config.STATUS_DISPLAY.endpoints).map(async ([serviceName, serviceUrl]) => {
-                const start_tick = Date.now();
                 const statusCode = await getStatusCode(serviceUrl);
 
                 services.set(serviceName, {
                     ok: (statusCode == 405 && serviceName == "api" ? 200 : statusCode) === 200,
-                    ping: Date.now() - start_tick,
+                    ping: Date.now() - Date.now(),
                     statusCode: (statusCode == 405 && serviceName == "api" ? 200 : statusCode),
                     statusText: (statusCode == 405 && serviceName == "api" ? HTTP_STATUS_TEXTS[200] : HTTP_STATUS_TEXTS[statusCode]),
                 });

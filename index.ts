@@ -19,11 +19,13 @@ import Database from "./modules/Database/Database";
 import { ServiceOutage } from "./modules/StatusDisplay/Types";
 import CommandHandler from "./modules/CommandHandler";
 import config from "./config";
+import Session from "./modules/Misc/Session"
+import ObfuscatorStats from "./modules/ObfuscatorStats"
 
 const DISABLE_DISCORDLOGIN = false
 const START_TIME = Date.now()
 const ENV = process.argv[2] || "prod"
-const PROCESS_PATH = process.cwd();
+const PROCESS_PATH = process.cwd()
 dotenv.config()
 
 const app = express()
@@ -57,7 +59,6 @@ client.on(Events.InteractionCreate, commandHandler.OnInteractionCreate.bind(comm
 
 app.listen(process.env.PORT, async () => {
     cache = await caching("memory")
-    await cache.set("stats_session_ids", [])
 
     console.log(`> server listening on port ${process.env.PORT}`)
 
@@ -76,23 +77,76 @@ app.listen(process.env.PORT, async () => {
 app.use(cors())
 app.get("/", async (req, res) => res.sendStatus(200));
 app.get("/outagehistory", (req, res) => res.sendFile(PROCESS_PATH + "/static/outagehistory/index.html"))
+app.get("/api/outagehistory/logs", async (req, res) => {
+    if (!req.query.s) return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 
-app.get("/outagehistory/logs", async (req, res) => {
-    const session_ids: Array<any> = await cache.get("stats_session_ids")
-    if (!session_ids?.includes(req.query.s)) return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
+    Session.Get(req.query.s.toString()).then(async session => {
+        if (!session) return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 
-    const result = await Database.GetTable("outage_log")
-    const outages = result.data?.map((outage: ServiceOutage) => ({
-        time: outage.time,
-        services: (() => {
-            try {
-                return JSON.parse(outage.services?.toString() ?? "[]");
-            } catch { return [] }
-        })(),
-        id: outage.id
-    }));
+        const result = await Database.GetTable("outage_log")
+        const outages = result.data?.map((outage: ServiceOutage) => ({
+            time: outage.time,
+            services: (() => {
+                try {
+                    return JSON.parse(outage.services?.toString() ?? "[]");
+                } catch { return [] }
+            })(),
+            id: outage.id
+        }));
 
-    res.json(outages);
+        res.json(outages);
+    })
+
+})
+
+app.get("/api/session/:session", async (req, res) => {
+    try {
+        const session = await Session.Get(req.params.session)
+        res.status(session ? 200 : 404).json(session ?? { code: 404, message: "Not Found", error: "unknown session id" })
+    } catch (error) {
+        console.error(error)
+        res.sendStatus(500)
+    }
+})
+
+app.get("/api/statistics/", async (req, res) => {
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit.toString()) : 7
+        return res.json(await ObfuscatorStats.Parse(limit))
+    } catch (error) {
+        console.error(error)
+        res.sendStatus(500)
+    }
+})
+
+app.get("/api/statistics/raw", async (req, res) => {
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit.toString()) : 7
+        return res.json((await ObfuscatorStats.Get()).slice(-limit))
+    } catch (error) {
+        console.error(error)
+        res.sendStatus(500)
+    }
+})
+
+app.get("/api/commands", async (req, res) => {
+    try {
+        const commands = JSON.parse(JSON.stringify({
+            chat_commands: Object.fromEntries(commandHandler.commands),
+            slash_commands: Object.fromEntries(commandHandler.slash_commands),
+        }, (_, value) =>
+            typeof value === "bigint" ? value.toString() : value
+        ));
+
+        res.json(commands);
+    } catch (error) {
+        console.error(error)
+        res.sendStatus(500)
+    }
+});
+
+app.get("/api/status", async (req, res) => {
+    return res.json({ lastOutage: statusDisplayController.lastOutage })
 })
 
 export {

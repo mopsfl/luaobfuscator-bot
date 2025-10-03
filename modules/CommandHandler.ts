@@ -28,7 +28,7 @@ export default class CommandHandler {
     ) { }
 
     public async OnMessageCreate(message: OmitPartialGroupDMChannel<Message<boolean>>) {
-        if (message.channelId === statusDisplayController.statusChannel.id) {
+        if (message.channelId === statusDisplayController.statusChannel.id && message.type === MessageType.Default) {
             return message.delete().catch(console.error)
         }
 
@@ -78,24 +78,15 @@ export default class CommandHandler {
 
     private IsCommandRunnable(command: Command): boolean {
         if (!command.callback || typeof command.callback !== "function") {
-            ErrorHandler.new({
-                message: command.message,
-                error: `unable to execute command. (missing <${command.name}.callback()>)`
-            })
+            ErrorHandler.new({ message: command.message, error: `unable to execute command. (missing <${command.name}.callback()>)` })
             return false
         }
         if (!command.allowDirectMessage && command.message?.channel?.isDMBased()) {
-            ErrorHandler.new({
-                message: command.message,
-                error: `This command is disabled in direct messages!`
-            })
+            ErrorHandler.new({ message: command.message, error: `This command is disabled in direct messages!` })
             return false
         }
         if (!command.hasPermission) {
-            ErrorHandler.new({
-                message: command.message,
-                error: `You are not allowed to execute this command!`
-            })
+            ErrorHandler.new({ message: command.message, error: `You are not allowed to execute this command!` })
             return false
         }
 
