@@ -3,7 +3,7 @@ import config from "../../../config";
 
 export default function () {
     return {
-        title: "Custom Obfuscation V2 (BETA)",
+        title: "Custom Obfuscation",
         color: Colors.Green,
         timestamp: true,
         description: "",
@@ -12,7 +12,7 @@ export default function () {
             { name: `Notes:`, value: `-# Read our ${hyperlink("Documentation", config.STATUS_DISPLAY.endpoints.forum + "/docs#plugins")} for more information about each plugin.`, inline: false },
         ],
         footer: {
-            text: `Lua Obfuscator Bot - Custom Obfuscation - made by mopsfl`,
+            text: `Lua Obfuscator Bot - made by mopsfl`,
             iconURL: config.icon_url,
         }
     }

@@ -8,7 +8,7 @@ export default function () {
         timestamp: true,
         description: `${Utils.GetEmoji("no")} Process cancelled!`,
         footer: {
-            text: `Lua Obfuscator Bot - Custom Obfuscation - made by mopsfl`,
+            text: `Lua Obfuscator Bot - made by mopsfl`,
             iconURL: config.icon_url,
         }
     }

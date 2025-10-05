@@ -27,7 +27,7 @@ export default {
                 await fetch(attachment.url).then(async res => { resolve(await res.text()) }).catch(reject)
             }
 
-            reject("Unable to parse script from message!")
+            reject("Please provide a valid Lua script as a codeblock or a file.")
         })
     },
 
@@ -143,22 +143,25 @@ export default {
     },
 
     ObjectToFormattedString(obj: Object, indent = 0, hideFalseValues = false) {
-        if (Object.keys(obj).length === 0) return "{}";
-        const indentation = "    ".repeat(indent);
-        let str = "{\n";
+        const entries = Object.entries(obj).filter(([_, v]) => !(v === false && hideFalseValues))
+        if (entries.length === 0) return "{}"
 
-        for (const [key, value] of Object.entries(obj)) {
-            if (value === false && hideFalseValues) continue
-            str += indentation + "    " + key + ": ";
+        const indentation = "    ".repeat(indent)
+        let str = "{\n"
+
+        entries.forEach(([key, value], index) => {
+            str += indentation + "    " + key + ": "
             if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-                str += this.ObjectToFormattedString(value, indent + 1);
+                str += this.ObjectToFormattedString(value, indent + 1, hideFalseValues)
             } else {
-                str += JSON.stringify(value);
+                str += JSON.stringify(value)
             }
-            str += "\n";
-        }
 
-        str += indentation + "}";
+            if (index < entries.length - 1) str += ","
+            str += "\n"
+        });
+
+        str += indentation + "}"
         return str;
     },
 

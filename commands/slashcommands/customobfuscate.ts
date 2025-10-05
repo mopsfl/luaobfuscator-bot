@@ -28,8 +28,8 @@ class CommandConstructor implements CommandNode {
 
                     Controller.script_content = script
                     Controller.response = await command.interaction.followUp({ components: [Controller.components.rows.main], embeds: [Controller.components.embeds.main] })
-                    Controller.main_collector = Controller.response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 120000 })
-                    Controller.plugins_collector = Controller.response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 120000 })
+                    Controller.main_collector = Controller.response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 180000 })
+                    Controller.plugins_collector = Controller.response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 180000 })
 
                     Controller.main_collector.on("collect", Controller.OnButtonClick.bind(this))
                     Controller.plugins_collector.on("collect", Controller.OnPluginSelect.bind(this))
@@ -37,7 +37,7 @@ class CommandConstructor implements CommandNode {
                     return ErrorHandler.new({
                         type: "syntax",
                         interaction: command.interaction,
-                        error: "Please provide a valid Lua script as a codeblock or a file.",
+                        error: err,
                         syntax: `${config.prefix}${command.name} <codeblock> | <file>`
                     })
                 })

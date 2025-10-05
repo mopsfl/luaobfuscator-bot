@@ -13,9 +13,13 @@ import {
     inlineCode,
     InteractionCollector,
     Message,
+    MessageFlags,
+    ModalBuilder,
     SelectMenuComponentOptionData,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction,
+    TextInputBuilder,
+    TextInputStyle,
     User
 } from "discord.js"
 import { randomUUID } from "crypto";
@@ -93,6 +97,7 @@ export class CustomObfuscateController {
                 this.CreateButton("Visualize Config", "plugins_select_menu_visualize", ButtonStyle.Secondary, ["data_object", "1365697611478339657"]),
                 this.CreateButton("Save Config", "plugins_select_menu_save_config", ButtonStyle.Secondary, ["save", "1365969698218577941"]),
                 this.CreateButton("Load Config", "plugins_select_menu_load_config", ButtonStyle.Secondary, ["load", "1365969684570177567"]),
+                this.CreateButton("Import Config", "plugins_select_menu_import_config", ButtonStyle.Secondary, ["load", "1365969684570177567"]),
             )
         }
 
@@ -125,7 +130,6 @@ export class CustomObfuscateController {
                     await this.ProcessObfuscation()
                     break;
                 case Buttons.CONFIGURE_PLUGINS:
-
                     await this.response.edit({ components: [this.components.rows.configure_plugins_select_menu, this.components.rows.configure_plugins_buttons] })
                     await interaction.deferUpdate()
                     break;
@@ -144,7 +148,7 @@ export class CustomObfuscateController {
                     const saved_configs = await this.GetUserConfigSaves()
 
                     if (saved_configs.length <= 0) {
-                        return await interaction.reply({ ephemeral: true, content: "You don't have a saved configuration yet." })
+                        return await interaction.reply({ flags: [MessageFlags.Ephemeral], content: "You don't have a saved configuration yet." })
                     }
 
                     this.components.load_menu.setOptions(saved_configs)
@@ -155,8 +159,24 @@ export class CustomObfuscateController {
                 case Buttons.PLUGINS_SAVE:
                     await this.SaveCurrentPlugins(interaction)
                     break;
+                case Buttons.IMPORT_CONFIG:
+                    // todo
+                    const modal = new ModalBuilder()
+                        .setCustomId("test")
+                        .setTitle("Import Config (not working yet .-.)")
+
+                    const textinput = new TextInputBuilder()
+                        .setCustomId("text")
+                        .setLabel("Config (JSON)")
+                        .setPlaceholder(`{\n   Virtualize: true,\n   CustomPlugins: { ... }\n}`)
+                        .setStyle(TextInputStyle.Paragraph)
+
+                    const row = new ActionRowBuilder<TextInputBuilder>().addComponents(textinput)
+                    modal.addComponents(row)
+                    await interaction.showModal(modal)
+                    break;
                 default:
-                    interaction.reply({ ephemeral: true, content: interaction.customId });
+                    interaction.reply({ flags: [MessageFlags.Ephemeral], content: interaction.customId });
                     break;
             }
         } catch (error) {
@@ -358,7 +378,7 @@ export class CustomObfuscateController {
                 const result = await Database.GetTable("customplugin_saves", { userid: this.user.id })
                 if (!result.success) {
                     console.error(`Failed to get saved plugins. ${result.error.message}`);
-                    return interaction.reply({ ephemeral: true, content: `${"Failed to save configuration!"}\n-# Error: get_${result.error.code}_${result.error.status}` })
+                    return interaction.reply({ flags: [MessageFlags.Ephemeral], content: `${"Failed to save configuration!"}\n-# Error: get_${result.error.code}_${result.error.status}` })
                 } else {
                     user_saves = JSON.parse(result.data.plugins) || {}
                 }
@@ -375,9 +395,9 @@ export class CustomObfuscateController {
 
             if (!result.success) {
                 console.error(`Failed to get save configuration. ${result.error.message}`);
-                return interaction.reply({ ephemeral: true, content: `${"Failed to save configuration!"}\n-# Error: get_${result.error.code}_${result.error.status}` })
+                return interaction.reply({ flags: [MessageFlags.Ephemeral], content: `${"Failed to save configuration!"}\n-# Error: get_${result.error.code}_${result.error.status}` })
             } else {
-                return interaction.reply({ ephemeral: true, content: `Plugins saved successfully!\n-# id: ${save_id}` })
+                return interaction.reply({ flags: [MessageFlags.Ephemeral], content: `Plugins saved successfully!\n-# id: ${save_id}` })
             }
         } catch (error) {
             console.error(error)

@@ -3,14 +3,14 @@ import config from "../../../config";
 
 export default function () {
     return {
-        title: "Custom Obfuscation V2 (BETA)",
+        title: "Custom Obfuscation",
         color: Colors.Yellow,
         timestamp: true,
         fields: [
             { name: `Process:`, value: ` `, inline: false }
         ],
         footer: {
-            text: `Lua Obfuscator Bot - Custom Obfuscation - made by mopsfl`,
+            text: `Lua Obfuscator Bot - made by mopsfl`,
             iconURL: config.icon_url,
         }
     }
