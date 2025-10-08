@@ -41,7 +41,7 @@ export default {
     latest = false,
     limit?: number,
     desc?: boolean
-  ): Promise<DBResponse<T | T[]>> {
+  ): Promise<DBResponse<T>> {
     try {
       const { clause, value } = buildWhereClause(reqQuery);
       let sql = `SELECT * FROM \`${table}\`${clause ? " WHERE " + clause : ""}`;

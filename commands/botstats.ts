@@ -12,7 +12,7 @@ class CommandConstructor {
     description = "Shows you some bot statistics."
 
     callback = async (cmd: Command) => {
-        const result = await Database.GetTable("bot_statistics")
+        const result = await Database.GetTable<BotStats>("bot_statistics")
 
         if (!result.success) {
             return ErrorHandler.new({
@@ -22,7 +22,6 @@ class CommandConstructor {
             })
         }
 
-        const bot_stats: BotStats = result.data[0]
         const embed = Embed({
             title: "Lua Obfuscator - Bot Statistics",
             color: Colors.Green,
@@ -33,9 +32,9 @@ class CommandConstructor {
                 iconURL: config.icon_url,
             },
             fields: [
-                { name: "Obfuscations:", value: `-# ${bot_stats?.obfuscations || "N/A"}`, inline: true },
-                { name: "Executed Commands:", value: `-# ${bot_stats?.total_commands_executed || "N/A"}`, inline: true },
-                { name: "Retards that tried deobf:", value: `-# ${bot_stats?.deobf_tries || "N/A"}`, inline: true }
+                { name: "Obfuscations:", value: `-# ${result.data?.obfuscations || "N/A"}`, inline: true },
+                { name: "Executed Commands:", value: `-# ${result.data?.total_commands_executed || "N/A"}`, inline: true },
+                { name: "Retards that tried deobf:", value: `-# ${result.data?.deobf_tries || "N/A"}`, inline: true }
             ]
         })
 

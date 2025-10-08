@@ -85,6 +85,10 @@ export default class CommandHandler {
             ErrorHandler.new({ message: command.message, error: `This command is disabled in direct messages!` })
             return false
         }
+        if (config.dm_commands === false) {
+            ErrorHandler.new({ message: command.message, error: `The use of commands in direct messages is currently disabled!` })
+            return false
+        }
         if (!command.hasPermission) {
             ErrorHandler.new({ message: command.message, error: `You are not allowed to execute this command!` })
             return false
@@ -219,6 +223,7 @@ export default class CommandHandler {
     }
 
     public async UpdateCommandStatistic(command: Command) {
+        if (ENV === "dev") return
         await Database.RowExists("cmd_stats", { command_name: command.name }).then(async exists => {
             if (!exists) {
                 await Database.Insert("cmd_stats", { command_name: command.name, call_count: 1 }).catch(console.error)

@@ -12,7 +12,7 @@ class CommandConstructor {
     description = "Shows the statistics of all commands aka wich command is being used the most."
 
     callback = async (cmd: Command) => {
-        const result = await Database.GetTable("cmd_stats")
+        const result = await Database.GetTable<CommandStat[]>("cmd_stats")
 
         if (!result.success) {
             return ErrorHandler.new({
@@ -35,7 +35,6 @@ class CommandConstructor {
         })
 
         const statsMap = new Map(result.data.map(s => [s.command_name, s.call_count ?? 0]));
-
         [...commandHandler.commands.values()]
             .sort((a, b) => (Number(statsMap.get(b.name[0])) ?? 0) - (Number(statsMap.get(a.name[0])) ?? 0)).forEach(cmd =>
                 embed.addFields({
@@ -50,10 +49,9 @@ class CommandConstructor {
     }
 }
 
-export interface BotStats {
-    obfuscations: number,
-    total_commands_executed: number,
-    total_monkey_deobfuscations: number,
+export type CommandStat = {
+    command_name: string,
+    call_count: number
 }
 
 module.exports = CommandConstructor

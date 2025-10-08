@@ -72,9 +72,9 @@ export class CustomObfuscateController {
 
         this.components.buttons = {
             main: {
-                obfuscate: this.CreateButton("Obfuscate", "obfuscate", ButtonStyle.Success, ["update", "1129139085362090145"]),
-                configure_plugins: this.CreateButton("Configure Plugins", "configure_plugins", ButtonStyle.Primary, ["edit", "1365040609940869181"]),
-                cancel: this.CreateButton("Cancel", "cancel", ButtonStyle.Danger, ["no", "1124835368655659059"]),
+                obfuscate: this.CreateButton("Obfuscate", Buttons.OBFUSCATE, ButtonStyle.Success, ["update", "1129139085362090145"]),
+                configure_plugins: this.CreateButton("Configure Plugins", Buttons.CONFIGURE_PLUGINS, ButtonStyle.Primary, ["edit", "1365040609940869181"]),
+                cancel: this.CreateButton("Cancel", Buttons.CANCEL, ButtonStyle.Danger, ["no", "1124835368655659059"]),
             }
         }
 
@@ -93,11 +93,11 @@ export class CustomObfuscateController {
             configure_plugins_select_menu: new ActionRowBuilder().addComponents(this.components.select_menu),
             load_save_select_menu: new ActionRowBuilder().addComponents(this.components.load_menu),
             configure_plugins_buttons: new ActionRowBuilder().addComponents(
-                this.CreateButton("Back", "plugins_select_menu_back", ButtonStyle.Secondary, ["arrow_left", "1365631337825832991"]),
-                this.CreateButton("Visualize Config", "plugins_select_menu_visualize", ButtonStyle.Secondary, ["data_object", "1365697611478339657"]),
-                this.CreateButton("Save Config", "plugins_select_menu_save_config", ButtonStyle.Secondary, ["save", "1365969698218577941"]),
-                this.CreateButton("Load Config", "plugins_select_menu_load_config", ButtonStyle.Secondary, ["load", "1365969684570177567"]),
-                this.CreateButton("Import Config", "plugins_select_menu_import_config", ButtonStyle.Secondary, ["load", "1365969684570177567"]),
+                this.CreateButton("Back", Buttons.PLUGINS_BACK, ButtonStyle.Secondary, ["arrow_left", "1365631337825832991"]),
+                this.CreateButton("Visualize Config", Buttons.PLUGINS_VISUALIZE, ButtonStyle.Secondary, ["data_object", "1365697611478339657"]),
+                this.CreateButton("Save Config", Buttons.PLUGINS_SAVE, ButtonStyle.Secondary, ["save", "1365969698218577941"]),
+                this.CreateButton("Load Config", Buttons.PLUGINS_LOAD, ButtonStyle.Secondary, ["load", "1365969684570177567"]),
+                this.CreateButton("Import Config", Buttons.IMPORT_CONFIG, ButtonStyle.Secondary, ["load", "1365969684570177567"]),
             )
         }
 

@@ -31,6 +31,8 @@ export default class StatusDisplayController {
         public lastUpdate: number = 0,
         public lastOutage: ServiceOutage = null,
 
+        public statusResults = new Map<string, ServiceStatus>(),
+
         public _initTime: number = 0,
         public _cache: { [id: string]: boolean } = null
     ) { }
@@ -88,6 +90,7 @@ export default class StatusDisplayController {
             [serviceStatuses, failedServices] = await Services.GetStatuses(),
             serverStatistics = await Services.GetStatistics()
 
+        this.statusResults = serviceStatuses
         serviceStatuses.forEach((serviceStatus, serviceName) => {
             if (!Fields.Indexes.Main.Services[serviceName]) return
 
@@ -238,7 +241,7 @@ export default class StatusDisplayController {
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.time, fieldValues.time, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](${ENV == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session.session}).`)
 
-        await interaction.reply({ ephemeral: true, embeds: [historyEmbed] })
+        await interaction.reply({ flags: [MessageFlags.Ephemeral], embeds: [historyEmbed] })
 
         Utils.Sleep(10000).then(() => {
             this._cache[interaction.user.id] = false
