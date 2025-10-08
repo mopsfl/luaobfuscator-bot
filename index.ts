@@ -71,7 +71,7 @@ app.listen(process.env.PORT, async () => {
         await commandHandler.RegisterCommands()
     } else console.log("> skipped discord login (DISABLE_DISCORDLOGIN = true)")
 
-    console.log(`> programm initalized in ${Date.now() - START_TIME}ms`)
+    console.log(`> programm initalized in ${Date.now() - START_TIME}ms (enviroment: ${ENV})`)
 })
 
 app.use(cors())
@@ -103,6 +103,17 @@ app.get("/api/session/:session", async (req, res) => {
     try {
         const session = await Session.Get(req.params.session)
         res.status(session ? 200 : 404).json(session ?? { code: 404, message: "Not Found", error: "unknown session id" })
+    } catch (error) {
+        console.error(error)
+        res.sendStatus(500)
+    }
+})
+
+app.post("/api/session/create", async (req, res) => {
+    try {
+        if (ENV !== "dev") return res.sendStatus(409)
+        const session = await Session.CreateV2(300)
+        res.json(session)
     } catch (error) {
         console.error(error)
         res.sendStatus(500)
@@ -146,7 +157,29 @@ app.get("/api/commands", async (req, res) => {
 });
 
 app.get("/api/status", async (req, res) => {
-    return res.json({ lastOutage: statusDisplayController.lastOutage })
+    return res.json({
+        lastOutage: statusDisplayController.lastOutage,
+        lastResult: Object.fromEntries(statusDisplayController.statusResults)
+    })
+})
+
+app.get("/api/database/usersaves", async (req, res) => {
+    Session.Get(req.query.s?.toString()).then(async session => {
+        if (!session) return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
+        const result = await Database.GetTable("customplugin_saves")
+
+        if (!result.success) {
+            return res.status(result.error.status).json({ code: result.error.status, error: result.error.sqlMessage })
+        }
+
+        return res.json(Object.fromEntries(
+            (<Array<{ userid: string, plugins: string }>>result.data).map(({ userid, plugins }) => [
+                userid, Object.fromEntries(Object.entries(JSON.parse(plugins)).map(([k, v]) => {
+                    try { return [k, JSON.parse(v as string)] } catch { return [k, v] }
+                }))
+            ])
+        ));
+    })
 })
 
 export {
