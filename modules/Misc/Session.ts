@@ -7,6 +7,7 @@ export default {
         let sid = randomUUID(),
             session_ids: Array<any> = await cache.get("stats_session_ids")
         if (typeof (session_ids) != "object") session_ids = []
+
         session_ids.push(sid)
         await cache.set("stats_session_ids", session_ids, tll_seconds != null ? tll_seconds * 1000 : undefined)
         return sid
@@ -14,11 +15,12 @@ export default {
 
     async CreateV2(ttl?: number, user?: User): Promise<Session> {
         const session: Session = {
-            userId: user.id,
-            username: user.username,
+            userId: user?.id,
+            username: user?.username,
             session: randomUUID(),
             created: Date.now(),
-            expires: ttl ? Date.now() + ttl * 1000 : undefined
+            expires: ttl ? Date.now() + ttl * 1000 : undefined,
+            uses: 0
         }
 
         await cache.set(session.session, session, ttl * 1000)
@@ -26,7 +28,13 @@ export default {
     },
 
     async Get(sessionId: string): Promise<Session> {
-        return await cache.get(sessionId)
+        const session: Session = await cache.get(sessionId)
+
+        if (!session) return null
+        session.uses += 1
+        await cache.set(sessionId, session)
+
+        return session
     }
 }
 
@@ -35,5 +43,6 @@ export type Session = {
     username: string,
     session: string,
     created: number,
-    expires?: number
+    expires?: number,
+    uses: number,
 }
