@@ -209,7 +209,7 @@ export default class StatusDisplayController {
         if (this._cache[interaction.user.id]) return await interaction.reply({ flags: [MessageFlags.Ephemeral], content: "Please wait a few seconds..." })
         this._cache[interaction.user.id] = true
 
-        const result = await Database.GetTable("outage_log", null, null, 10),
+        const result = await Database.GetTable<ServiceOutage[]>("outage_log", null, null, 10, true),
             historyEmbed = Embed(History()),
             fieldValues = {
                 services: "",
@@ -223,12 +223,12 @@ export default class StatusDisplayController {
         }
 
         const session = await Session.CreateV2(300, interaction.user),
-            outage_log: ServiceOutage[] = result.data.map((outage: ServiceOutage) => {
+            outage_log = result.data.map(outage => {
                 outage.services = JSON.parse(outage.services.toString())
                 return outage
             })
 
-        outage_log.reverse().forEach(outage => {
+        outage_log.forEach(outage => {
             const firstService = Object.values(outage.services)[0]
 
             fieldValues.services += `-# ${Object.keys(outage.services).join(", ")}\n`;
