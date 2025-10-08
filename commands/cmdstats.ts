@@ -9,7 +9,7 @@ import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
 class CommandConstructor {
     name = ["cmdstats", "cs", "cstats"]
     category = commandHandler.CommandCategories.Misc
-    description = "Shows the statistics of all commands aka wich command is being used the most."
+    description = "Shows all commands and how many times they were executed."
 
     callback = async (cmd: Command) => {
         const result = await Database.GetTable<CommandStat[]>("cmd_stats")
@@ -24,6 +24,7 @@ class CommandConstructor {
 
         const embed = Embed({
             title: "Lua Obfuscator - Command Statistics",
+            description: "-# Shows all commands and how many times they were executed.",
             color: Colors.Green,
             thumbnail: config.icon_url,
             timestamp: true,

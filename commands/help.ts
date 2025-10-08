@@ -8,27 +8,25 @@ import Utils from "../modules/Utils";
 class CommandConstructor {
     name = ["help"]
     category = commandHandler.CommandCategories.Bot
-    description = "Returns a list of all commands and other useful informations for the bot."
+    description = "Shows a list of all commands and information about them."
     syntax_usage = "<command>"
 
-    callback = async (cmd: Command) => {
-        if (!cmd.message.channel.isSendable()) return;
-
+    callback = async (command: Command) => {
         let embed: EmbedBuilder,
             validcommand = false,
             fullcommand_name = ""
 
-        commandHandler.commands?.forEach(command => {
+        commandHandler.commands?.forEach(cmd => {
             if (!validcommand) {
-                validcommand = cmd.arguments[0]
-                    && typeof (cmd.arguments[0]) === "string"
-                    && command.name.includes(cmd.arguments[0].replace(/\!/, ""))
+                validcommand = command.arguments[0]
+                    && typeof (command.arguments[0]) === "string"
+                    && cmd.name.includes(command.arguments[0].replace(/\!/, ""))
 
-                if (cmd.isPublic === false && !config.allowed_guild_ids.includes(cmd.message.guildId)) validcommand = false
-                fullcommand_name = command.name[0]
+                if (command.isPublic === false && !config.allowed_guild_ids.includes(command.message.guildId)) validcommand = false
+                fullcommand_name = cmd.name[0]
             }
         })
-        if (validcommand && typeof (cmd.arguments[0]) === "string") {
+        if (validcommand && typeof (command.arguments[0]) === "string") {
             const command = commandHandler.commands.get(fullcommand_name.replace(/\!/, ""))
             let required_perms = ""
             if (command.permissions) {
@@ -67,7 +65,7 @@ class CommandConstructor {
             commands_field.forEach(f => commands_field[commands_field.indexOf(f)].value = `-# ${f.value.replace(/,\s*$/, "")}`)
             commands_field.push({
                 name: "Note:",
-                value: `-# Use ${bold(underline(`${config.prefix}help`))} ${bold(underline("<command>"))} to get information about a specific command.`,
+                value: `-# Use ${bold(inlineCode(`${config.prefix}help`))} ${bold(inlineCode("<command>"))} to get information about a specific command.`,
                 inline: false
             })
 
@@ -85,7 +83,7 @@ class CommandConstructor {
             })
         }
 
-        await cmd.message.channel.send({ embeds: [embed] })
+        await command.message.reply({ embeds: [embed] })
     }
 }
 

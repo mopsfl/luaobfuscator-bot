@@ -7,7 +7,7 @@ import Utils from "../modules/Utils";
 class CommandConstructor {
     name = ["updatestats", "us"]
     category = commandHandler.CommandCategories.Misc
-    description = "Forces to update the status display informations."
+    description = "Requests an update of the status display."
     permissions = [PermissionFlagsBits.Administrator]
     public_command = false
     direct_message = false

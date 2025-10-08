@@ -20,7 +20,7 @@ class CommandConstructor {
                 .setDescription(" ")
                 .setTimestamp()
                 .setFields([
-                    { name: "Response Time", value: `-# ${Date.now() - sent.createdTimestamp}ms`, inline: true },
+                    { name: "Response Time", value: `-# ${Date.now() - command.message.createdTimestamp}ms`, inline: true },
                     { name: "\u200B", value: "\u200B", inline: true },
                     { name: "API Latency", value: `-# ${apiLatency > 0 ? `${apiLatency}ms` : "N/A"}`, inline: true },
                 ])

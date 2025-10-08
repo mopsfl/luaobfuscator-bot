@@ -9,7 +9,7 @@ import Utils from "../../modules/Utils"
 class CommandConstructor implements CommandNode {
     name = ["help"]
     category = commandHandler.CommandCategories.Bot
-    description = "Returns a list of all commands and other useful informations for the bot."
+    description = "Shows a list of all commands and information about them."
     slash_command = true
 
     slashCommandBuilder = new SlashCommandBuilder()
@@ -88,7 +88,6 @@ class CommandConstructor implements CommandNode {
             })
         }
 
-        Database.Increment("cmd_stats", "call_count", { command_name: "help" }).catch(console.error)
         await command.interaction.reply({ flags: [MessageFlags.Ephemeral], embeds: [embed] })
     }
 }

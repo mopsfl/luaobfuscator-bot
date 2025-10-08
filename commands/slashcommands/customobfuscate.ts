@@ -9,7 +9,7 @@ import config from "../../config"
 class CommandConstructor implements CommandNode {
     name = ["customobfuscate"]
     category = commandHandler.CommandCategories.Bot
-    description = "Obfuscates your given input using the REST API with your selected plugins."
+    description = "Obfuscates your script with custom configuration."
     slash_command = true
 
     slashCommandBuilder = new SlashCommandBuilder()

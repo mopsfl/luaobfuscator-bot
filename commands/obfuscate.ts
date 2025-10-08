@@ -14,7 +14,7 @@ import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
 class CommandConstructor {
     name = ["obfuscate", "obf", "obfsc"]
     category = commandHandler.CommandCategories.LuaObfuscator
-    description = "Obfuscates your given input using the REST API with the default preset."
+    description = "Obfuscates your script with the default configurations."
     syntax_usage = "<file | codeblock>"
 
     callback = async (command: Command) => {

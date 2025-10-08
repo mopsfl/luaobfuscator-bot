@@ -9,7 +9,7 @@ import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
 class CommandConstructor {
     name = ["customobfuscate", "co", "cobf"]
     category = commandHandler.CommandCategories.LuaObfuscator
-    description = "Obfuscates your given input using the REST API with your selected plugins."
+    description = "Obfuscates your script with custom configuration."
     syntax_usage = "<file | codeblock>"
 
     callback = async (command: Command) => {

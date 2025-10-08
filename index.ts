@@ -47,7 +47,6 @@ const discordREST = new REST({ version: "10" }).setToken(process.env[ENV === "pr
             activities: [{
                 name: "Lua Obfuscator",
                 type: ActivityType.Watching,
-                url: config.STATUS_DISPLAY.endpoints.homepage,
             }],
         },
     });

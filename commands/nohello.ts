@@ -9,7 +9,7 @@ import Utils from "../modules/Utils";
 class CommandConstructor {
     name = ["nohello", "nh", "nhs"]
     category = commandHandler.CommandCategories.Misc
-    description = "Shows you some bot statistics."
+    description = "Shows you statistics about the No Hello plugin."
 
     callback = async (cmd: Command) => {
         const result = await Database.GetTable("nohello_stats")

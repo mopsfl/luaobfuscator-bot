@@ -9,7 +9,7 @@ import Utils from "../modules/Utils";
 class CommandConstructor {
     name = ["outagelog", "ol", "outlog"]
     category = commandHandler.CommandCategories.Misc
-    description = "Grants temporary access to the complete outage log for all luaobfuscator.com services."
+    description = "Returns you a link to view the full outage history of [luaobfuscator.com](https://luaobfuscator.com)."
     public_command = false
     direct_message = false
 

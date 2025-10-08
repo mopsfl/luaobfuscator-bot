@@ -1,22 +1,28 @@
-import { Colors } from "discord.js";
-import { commandHandler } from "../index"
-import config from "../config";
-import { Command } from "../modules/CommandHandler"
-import Embed from "../modules/Misc/Embed";
-import Database from "../modules/Database/Database";
-import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
+import { Command, CommandNode } from "../../modules/CommandHandler"
+import Embed from "../../modules/Misc/Embed"
+import { commandHandler } from "../../index"
+import { Colors, MessageFlags, SlashCommandBuilder } from "discord.js"
+import config from "../../config"
+import Database from "../../modules/Database/Database"
+import { BotStats } from "../botstats"
+import ErrorHandler from "../../modules/ErrorHandler/ErrorHandler"
 
-class CommandConstructor {
-    name = ["botstats", "bs", "bots"]
+class CommandConstructor implements CommandNode {
+    name = ["botstats"]
     category = commandHandler.CommandCategories.Misc
     description = "Shows some statistics about the bot."
+    slash_command = true
 
-    callback = async (cmd: Command) => {
+    slashCommandBuilder = new SlashCommandBuilder()
+        .setName(this.name[0])
+        .setDescription(this.description)
+
+    callback = async (command: Command) => {
         const result = await Database.GetTable<BotStats>("bot_statistics")
 
         if (!result.success) {
             return ErrorHandler.new({
-                message: cmd.message,
+                message: command.message,
                 error: `${result.error.code}\n > ${result.error.sqlMessage}`,
                 title: "Database Error"
             })
@@ -38,14 +44,8 @@ class CommandConstructor {
             ]
         })
 
-        cmd.message.reply({ embeds: [embed] })
+        await command.interaction.reply({ embeds: [embed], flags: [MessageFlags.Ephemeral] })
     }
-}
-
-export interface BotStats {
-    obfuscations: number,
-    total_commands_executed: number,
-    deobf_tries: number,
 }
 
 module.exports = CommandConstructor
