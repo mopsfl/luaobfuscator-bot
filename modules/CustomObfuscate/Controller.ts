@@ -32,7 +32,7 @@ import Buttons from "./Buttons";
 import Database from "../Database/Database";
 import LuaObfuscator from "../LuaObfuscator/API";
 import { ObfuscationResult } from "../LuaObfuscator/Types";
-import { ObfuscationPlugins, CustomObfuscateComponents } from "./Types";
+import { ObfuscationPlugins, CustomObfuscateComponents, UserConfigSave } from "./Types";
 import Utils from "../Utils";
 
 export class CustomObfuscateController {
@@ -375,7 +375,8 @@ export class CustomObfuscateController {
             if (!await Database.RowExists("customplugin_saves", { userid: this.user.id })) {
                 await Database.Insert("customplugin_saves", { userid: this.user.id, plugins: "{}" })
             } else {
-                const result = await Database.GetTable("customplugin_saves", { userid: this.user.id })
+                const result = await Database.GetTable<UserConfigSave>("customplugin_saves", { userid: this.user.id })
+
                 if (!result.success) {
                     console.error(`Failed to get saved plugins. ${result.error.message}`);
                     return interaction.reply({ flags: [MessageFlags.Ephemeral], content: `${"Failed to save configuration!"}\n-# Error: get_${result.error.code}_${result.error.status}` })
@@ -407,7 +408,7 @@ export class CustomObfuscateController {
     private async GetUserConfigSaves(): Promise<Array<SelectMenuComponentOptionData>> {
         try {
             if (!await Database.RowExists("customplugin_saves", { userid: this.user.id })) return [];
-            const result = await Database.GetTable("customplugin_saves", { userid: this.user.id }),
+            const result = await Database.GetTable<UserConfigSave>("customplugin_saves", { userid: this.user.id }),
                 configs: Array<SelectMenuComponentOptionData> = []
 
             if (!result.success) {

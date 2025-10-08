@@ -7,7 +7,7 @@ export type ServiceStatus = {
 
 export type ServiceOutage = {
     time: number,
-    services: { [name: string]: ServiceStatus },
+    services: { [name: string]: ServiceStatus } | string,
     id: string,
     count?: number,
 }

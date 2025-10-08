@@ -23,3 +23,4 @@ export type CustomObfuscateEmbeds = {
 }
 
 export type ObfuscationPlugins = { MinifiyAll: false, Virtualize: false, CustomPlugins: {} }
+export type UserConfigSave = { userid: string, plugins: string }

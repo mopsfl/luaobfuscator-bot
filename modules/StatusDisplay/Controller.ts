@@ -174,17 +174,18 @@ export default class StatusDisplayController {
     }
 
     async GetLastOutage(): Promise<ServiceOutage> {
-        const result = await Database.GetTable("outage_log", null, true)
+        const result = await Database.GetTable<ServiceOutage>("outage_log", null, true)
 
-        if (result.success) {
-            return {
-                time: result.data.time,
-                services: JSON.parse(result.data.services) || {},
-                id: result.data.id,
-                count: 0
-            }
-        } else {
+        if (!result.success) {
             console.error("[Status Display Database Error]:", result.error.message)
+            return
+        }
+
+        return {
+            time: result.data.time,
+            services: JSON.parse(<string>result.data.services) ?? {},
+            id: result.data.id,
+            count: 0
         }
     }
 
