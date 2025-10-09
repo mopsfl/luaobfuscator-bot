@@ -32,9 +32,9 @@ export default {
         let embed: EmbedBuilder = null
         if (args.type === undefined || args.type === "default") {
             embed = Embed(ErrorEmbed()).setTitle(`${Utils.GetEmoji("no")} ${args.title || errorName}`)
-            embed.data.fields[0].value = codeBlock(errorMessage.slice(0, 1000) || "unknown error")
+            embed.data.fields[0].value = codeBlock(errorMessage?.slice(0, 1000) || "unknown error")
         } else if (args.type === "syntax") {
-            embed = Embed(SyntaxEmbed()).setDescription(codeBlock(errorMessage.slice(0, 1000)))
+            embed = Embed(SyntaxEmbed()).setDescription(codeBlock(errorMessage?.slice(0, 1000)))
             embed.data.fields[0].value = `-# ${args.syntax ? inlineCode(args.syntax) : inlineCode("unknown command syntax :(")}`
         }
 

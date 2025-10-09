@@ -29,11 +29,11 @@ class CommandConstructor {
 
             Controller.main_collector.on("collect", Controller.OnButtonClick.bind(this))
             Controller.plugins_collector.on("collect", Controller.OnPluginSelect.bind(this))
-        }).catch(err => {
+        }).catch(error => {
             return ErrorHandler.new({
                 type: "syntax",
                 message: command.message,
-                error: err,
+                error,
                 syntax: `${config.prefix}${command.name} <codeblock> | <file>`
             })
         })

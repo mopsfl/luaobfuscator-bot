@@ -22,7 +22,7 @@ class CommandConstructor implements CommandNode {
     callback = async (command: Command) => {
         await command.interaction.reply({
             content: `Please upload a valid Lua script as a file, or paste it here inside a code block.`,
-            ephemeral: true
+            flags: [MessageFlags.Ephemeral]
         }).then(interactionReply => {
             command.interaction.channel.awaitMessages({ filter: (m) => m.author.id === command.interaction.user.id, max: 1, time: 60_000, errors: ["time"] }).then(async msg => {
                 let message = msg.first()

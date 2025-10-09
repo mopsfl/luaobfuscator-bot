@@ -1,15 +1,15 @@
-// TODO: remake
-
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Colors, bold, codeBlock, inlineCode } from "discord.js";
-import { Command } from "../modules/CommandHandler";
-import { commandHandler } from "../index"
+import { AttachmentBuilder, bold, Colors, inlineCode, Message } from "discord.js";
+import { Command } from "../modules/CommandHandler"
+import { commandHandler } from "../index";
 import config from "../config";
-import Utils, { ObfuscationProcess } from "../modules/Utils";
+import Utils from "../modules/Utils";
+import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
+import Processing from "../modules/CustomObfuscate/Embeds/Processing";
 import Embed from "../modules/Misc/Embed";
-import Database from "../modules/Database/Database";
 import LuaObfuscator from "../modules/LuaObfuscator/API";
 import { ObfuscationResult } from "../modules/LuaObfuscator/Types";
-import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
+import Database from "../modules/Database/Database";
+import { randomUUID } from "crypto";
 
 class CommandConstructor {
     name = ["obfuscate", "obf", "obfsc"]
@@ -20,120 +20,117 @@ class CommandConstructor {
     callback = async (command: Command) => {
         if (!command.message.channel.isDMBased()) {
             const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
-            await command.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or slide in my dms ${Utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
-            return true
+            return await command.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or just slide in my dms ${Utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
         }
 
         let script_content = "",
-            chunksAmount = 0,
-            hasCodeBlock = Utils.HasCodeblock(command.message.content),
-            file_attachment: AttachmentBuilder,
-            start_time = Date.now()
+            result: ObfuscationResult = null,
+            result_attachment: AttachmentBuilder = null,
+            response: Message = null,
+            session: string = null,
+            process_id: string = null,
+            process_state: "PROCESSING" | "FINISHED" | "FAILED" = "PROCESSING",
+            process_begin: number = null,
+            process_embed = Embed(Processing()).setTitle("Script Obfuscation"),
+            process_fields = []
 
-        // Get Script Content
-        if (hasCodeBlock) {
-            script_content = Utils.ParseCodeblock(command.message.content)
-        } else if ([...command.message.attachments].length > 0) {
-            const attachment = command.message.attachments.first()
-            const url = attachment?.url
-            if (!url) Utils.SendErrorMessage("error", command, "Unable to get url from attachment.")
-            await fetch(url).then(async res => {
-                const chunks = await Utils.ReadAllChunks(res.body)
-                chunksAmount = chunks.length
-                chunks.forEach(chunk => {
-                    script_content += Buffer.from(chunk).toString() || ""
+        async function UpdateProcessField(message: string, replaceLast = false, failed = false) {
+            try {
+                let process_content = "",
+                    process_value = "",
+                    process_time = `${process_begin ? `${Math.max((Date.now() - process_begin) - 1000, 0)}ms` : "N/A"}`
+
+                if (replaceLast) {
+                    process_fields = process_fields.slice(0, process_fields.length - 1)
+                    process_fields.push(`${failed ? "-" : "+"} ${message}`)
+                } else process_fields.push(`${failed ? "-" : "+"} ${message}`)
+
+                process_fields.forEach(text => {
+                    process_content += `${text}\n`
                 })
+
+                process_value = `\`\`\`diff\n${process_content}\n\`\`\``
+
+                process_embed.setFields([
+                    { name: "Script:", value: `-# ${Utils.FormatBytes(new TextEncoder().encode(script_content).length)}`, inline: true },
+                    { name: "Obfuscation Type:", value: `-# Default`, inline: true },
+                    { name: "Process ID:", value: `-# ${process_id}`, inline: true },
+                    { name: "Process State:", value: `-# ${process_state}`, inline: true },
+                    { name: "Process Time:", value: `-# ${process_time}`, inline: true },
+                    { name: "\u200B", value: "\u200B", inline: true },
+                    { name: "Session:", value: `-# ${session ? inlineCode(session) : Utils.GetEmoji("loading")}`, inline: false },
+                    { name: `Process:`, value: process_value },
+                ])
+
+                if (failed) {
+                    process_embed.addFields([
+                        {
+                            name: "Important Note:",
+                            value: `-# Due to how the REST API is implemented, we cannot show the exact error that causes the obfuscation to fail when using the default preset. Please use the custom obfuscation command (${inlineCode("!customobfuscate")}) or the website to receive a detailed error.`,
+                            inline: false
+                        }
+                    ])
+                }
+
+                await response?.edit({ embeds: [process_embed] })
+                return process_value
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        await Utils.ParseScriptFromMessage2(command.message).then(async script => {
+            process_begin = Date.now()
+            script_content = script
+            process_id = randomUUID().slice(0, 8)
+
+            await UpdateProcessField("obfuscating script...")
+            response = await command.message.reply({ embeds: [process_embed] })
+
+            await LuaObfuscator.v1.Obfuscate(script).then(async _result => {
+                result = _result
+
+                if (result.code) {
+                    session = result.sessionId
+                    await UpdateProcessField("obfuscation completed!\n+ creating file attachment...")
+                } else {
+                    session = "N/A"
+                    process_state = "FAILED"
+                    process_embed.setColor(Colors.Red)
+
+                    await UpdateProcessField("obfuscation failed!\n- ↳ unexpected error occurred while obfuscating!", false, true)
+                }
+            }).catch(async err => {
+                session = "N/A"
+                process_state = "FAILED"
+                process_embed.setColor(Colors.Red)
+
+                await UpdateProcessField("obfuscation failed!\n- ↳ unexpected error occurred while obfuscating!", false, true)
+                console.error(err)
             })
-        } else {
+
+            if (result?.code) {
+                result_attachment = Utils.CreateFileAttachment(Buffer.from(result.code), `${session}.lua`)
+                process_state = "FINISHED"
+                process_embed.setColor(Colors.Green)
+
+                setTimeout(async () => {
+                    UpdateProcessField("file attachment created!")
+                    await command.user.send({ files: [result_attachment] })
+
+                    console.log(`Script by ${command.user.username} successfully obfuscated: ${result.sessionId} (process: ${process_id})`)
+
+                    Database.Increment("bot_statistics", "obfuscations")
+                }, 1000);
+            }
+        }).catch(error => {
+            console.error(error)
             return ErrorHandler.new({
                 type: "syntax",
                 message: command.message,
-                error: "Please provide a valid Lua script as a codeblock or a file.",
+                error,
                 syntax: `${config.prefix}${command.name} <codeblock> | <file>`
             })
-        }
-
-        // Obfuscation Process
-        const obfuscation_process: ObfuscationProcess = {
-            processes: [],
-            embed: null,
-            error: null,
-            results: null
-        }
-
-        obfuscation_process.processes.push(`${Utils.GetEmoji("yes")} Buffer completed! (${inlineCode(chunksAmount.toString())} chunks)`)
-        obfuscation_process.embed = Embed({
-            color: Colors.Yellow,
-            timestamp: true,
-            fields: [
-                { name: `Obfuscation Process:`, value: obfuscation_process.processes[0], inline: false }
-            ],
-            footer: {
-                text: "LuaObfuscator Bot • made by mopsfl",
-                iconURL: config.icon_url
-            }
-        })
-
-        await command.message.reply({ embeds: [obfuscation_process.embed] }).then(async msg => {
-            async function updateProcess() {
-                let process_string = ""
-                obfuscation_process.processes.forEach(p => process_string += `${p}\n`)
-                obfuscation_process.embed.data.fields[0].value = process_string
-                return await msg.edit({ embeds: [obfuscation_process.embed] })
-            }
-
-            async function createProcess(process_text: string, process_text_finished: string, callback: Function) {
-                if (obfuscation_process.error) return
-                let process_id = obfuscation_process.processes.push(process_text); process_id -= 1
-                await updateProcess(); const callback_result: ObfuscationResult | Error = await callback(process_id)
-                if (callback_result instanceof Error || callback_result?.message) return callback_result
-                obfuscation_process.processes[process_id] = process_text_finished
-            }
-            await createProcess(`${Utils.GetEmoji("loading")} Obfuscating script...`, `${Utils.GetEmoji("yes")} Script obfuscated!`, async (process_id: number) => {
-                obfuscation_process.results = await LuaObfuscator.v1.Obfuscate(script_content, command.message)
-                if (!obfuscation_process.results?.code) {
-                    obfuscation_process.embed.setColor("Red")
-                    obfuscation_process.processes[process_id] = `${Utils.GetEmoji("no")} Obfuscation failed!`
-                    obfuscation_process.error = obfuscation_process.results.message
-                    ErrorHandler.new({ error: obfuscation_process.error, message: command.message, title: "Obfuscation Error" })
-                    return await updateProcess()
-                }
-                obfuscation_process.processes[process_id] = `${Utils.GetEmoji("yes")} Script obfuscated!`
-                await updateProcess()
-                return obfuscation_process.results
-            })
-            await createProcess(`${Utils.GetEmoji("loading")} Creating file attachment...`, `${Utils.GetEmoji("yes")} File attachment created!`, async (process_id: number) => {
-                if (!process_id) return
-                file_attachment = Utils.CreateFileAttachment(Buffer.from(obfuscation_process.results.code))
-                if (typeof file_attachment != "object") {
-                    obfuscation_process.embed.setColor("Red")
-                    obfuscation_process.processes[process_id] = `${Utils.GetEmoji("no")} Creating file attachment failed!`
-                    return await updateProcess()
-                }
-                obfuscation_process.processes[process_id] = `${Utils.GetEmoji("yes")} File attachment created!`
-                obfuscation_process.processes["note"] = `-# To customize your obfuscation result, use the ${bold(inlineCode("!customobfuscate"))} command!`
-                await updateProcess()
-                return obfuscation_process.results
-            })
-
-            if (!obfuscation_process.error) {
-                console.log(`> script by ${command.message.author.username} successfully obfuscated: ${obfuscation_process.results.sessionId}`)
-                Database.Increment("bot_statistics", "obfuscations")
-
-                const discord_buttons = [
-                    new ButtonBuilder()
-                        .setStyle(ButtonStyle.Link)
-                        .setLabel("Open on Website")
-                        .setURL(`${config.session_url}${obfuscation_process.results.sessionId}`)
-                ],
-                    row: any = new ActionRowBuilder().addComponents(...[discord_buttons])
-
-                await command.message.reply({
-                    content: `-# sessionId: \`${obfuscation_process.results.sessionId}\`\n-# took: \`${Date.now() - start_time}ms\``,
-                    files: [file_attachment],
-                    components: [row]
-                })
-            }
         })
     }
 }
