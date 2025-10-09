@@ -99,14 +99,15 @@ class CommandConstructor {
                     process_embed.setColor(Colors.Red)
 
                     await UpdateProcessField("obfuscation failed!\n- ↳ unexpected error occurred while obfuscating!", false, true)
+                    console.error(`> error while obfuscating script by ${command.user.username} (process: ${process_id})`)
                 }
-            }).catch(async err => {
+            }).catch(async () => {
                 session = "N/A"
                 process_state = "FAILED"
                 process_embed.setColor(Colors.Red)
 
                 await UpdateProcessField("obfuscation failed!\n- ↳ unexpected error occurred while obfuscating!", false, true)
-                console.error(err)
+                console.error(`> error while obfuscating script by ${command.user.username} (process: ${process_id})`)
             })
 
             if (result?.code) {
@@ -118,13 +119,12 @@ class CommandConstructor {
                     UpdateProcessField("file attachment created!")
                     await command.user.send({ files: [result_attachment] })
 
-                    console.log(`Script by ${command.user.username} successfully obfuscated: ${result.sessionId} (process: ${process_id})`)
+                    console.log(`> script by ${command.user.username} successfully obfuscated: ${result.sessionId} (process: ${process_id})`)
 
                     Database.Increment("bot_statistics", "obfuscations")
                 }, 1000);
             }
         }).catch(error => {
-            console.error(error)
             return ErrorHandler.new({
                 type: "syntax",
                 message: command.message,
