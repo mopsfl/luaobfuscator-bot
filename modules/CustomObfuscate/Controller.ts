@@ -34,6 +34,7 @@ import LuaObfuscator from "../LuaObfuscator/API";
 import { ObfuscationResult } from "../LuaObfuscator/Types";
 import { ObfuscationPlugins, CustomObfuscateComponents, UserConfigSave } from "./Types";
 import Utils from "../Utils";
+import config from "../../config";
 
 export class CustomObfuscateController {
     constructor(
@@ -237,6 +238,7 @@ export class CustomObfuscateController {
                 await this.UpdateProcessField("obfuscating script...")
                 await LuaObfuscator.v1.Obfuscate(this.script_content).then(async result => {
                     this.result = result
+
                     if (result.code) {
                         this.session = result.sessionId
                         await this.UpdateProcessField("obfuscation completed!\n+ creating file attachment...")
@@ -295,7 +297,7 @@ export class CustomObfuscateController {
                 this.process_embed.setColor(Colors.Green)
 
                 setTimeout(async () => {
-                    this.UpdateProcessField("file attachment created!")
+                    this.UpdateProcessField(`file attachment created! (${Utils.FormatBytes(new TextEncoder().encode(this.result.code).length)})`)
                     await this.user.send({ files: [this.result_attachment] })
 
                     console.log(`Script by ${this.user.username} successfully obfuscated: ${this.result.sessionId} (process: ${this.process_id})`)
@@ -325,14 +327,18 @@ export class CustomObfuscateController {
 
             process_value = `\`\`\`diff\n${process_content}\n\`\`\``
 
+            const inputBytes = this.script_content ? new TextEncoder().encode(this.script_content).length : 0,
+                outputBytes = this.result?.code ? new TextEncoder().encode(this.result.code).length : null,
+                byteDifference = outputBytes && inputBytes ? Utils.FormatBytes(outputBytes - inputBytes) : 0
+
             this.process_embed.setFields([
-                { name: "Script:", value: `-# ${Utils.FormatBytes(new TextEncoder().encode(this.script_content).length)}`, inline: true },
+                { name: "Input:", value: `-# ${Utils.FormatBytes(inputBytes)}`, inline: true },
+                { name: "Output:", value: `-# ${outputBytes ? Utils.FormatBytes(outputBytes) + ` (+ ${byteDifference})` : failed ? "N/A" : Utils.GetEmoji("loading")}`, inline: true },
                 { name: "Obfuscation Type:", value: `-# ${!this.plugins ? "Default" : "Custom"}`, inline: true },
                 { name: "Process ID:", value: `-# ${this.process_id}`, inline: true },
                 { name: "Process State:", value: `-# ${this.process_state}`, inline: true },
                 { name: "Process Time:", value: `-# ${process_time}`, inline: true },
-                { name: "\u200B", value: "\u200B", inline: true },
-                { name: "Session:", value: `-# ${this.session ? inlineCode(this.session) : Utils.GetEmoji("loading")}`, inline: false },
+                { name: "Session:", value: `-# ${this.session ? inlineCode(this.session) + ` [[↗]](${config.session_url + this.session})` : Utils.GetEmoji("loading")}`, inline: false },
                 { name: `Process:`, value: process_value },
             ])
 

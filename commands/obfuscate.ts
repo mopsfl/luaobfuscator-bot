@@ -51,14 +51,18 @@ class CommandConstructor {
 
                 process_value = `\`\`\`diff\n${process_content}\n\`\`\``
 
+                const inputBytes = script_content ? new TextEncoder().encode(script_content).length : 0,
+                    outputBytes = result?.code ? new TextEncoder().encode(result.code).length : null,
+                    byteDifference = outputBytes && inputBytes ? Utils.FormatBytes(outputBytes - inputBytes) : 0
+
                 process_embed.setFields([
-                    { name: "Script:", value: `-# ${Utils.FormatBytes(new TextEncoder().encode(script_content).length)}`, inline: true },
+                    { name: "Input:", value: `-# ${Utils.FormatBytes(inputBytes)}`, inline: true },
+                    { name: "Output:", value: `-# ${outputBytes ? Utils.FormatBytes(outputBytes) + ` (+ ${byteDifference})` : failed ? "N/A" : Utils.GetEmoji("loading")}`, inline: true },
                     { name: "Obfuscation Type:", value: `-# Default`, inline: true },
                     { name: "Process ID:", value: `-# ${process_id}`, inline: true },
                     { name: "Process State:", value: `-# ${process_state}`, inline: true },
                     { name: "Process Time:", value: `-# ${process_time}`, inline: true },
-                    { name: "\u200B", value: "\u200B", inline: true },
-                    { name: "Session:", value: `-# ${session ? inlineCode(session) : Utils.GetEmoji("loading")}`, inline: false },
+                    { name: "Session:", value: `-# ${session ? inlineCode(session) + ` [[↗]](${config.session_url + session})` : Utils.GetEmoji("loading")}`, inline: false },
                     { name: `Process:`, value: process_value },
                 ])
 

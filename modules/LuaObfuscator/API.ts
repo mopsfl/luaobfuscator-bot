@@ -36,9 +36,10 @@ export default {
                     }
                 }).catch(error => { throw error })
 
-                return await response.json()
+                return response.ok ? await response.json() : { status: "FAILED", message: `${response.statusText} (${response.status})` }
             } catch (error) {
                 console.error(error)
+                return error
             }
         },
 
