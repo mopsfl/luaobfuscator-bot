@@ -14,16 +14,17 @@ class CommandConstructor {
 
     callback = async (cmd: Command) => {
         const embed = Embed({
-            description: "Updating status display... Please wait!",
+            description: `${Utils.GetEmoji("loading")} Updating status display... Please wait!`,
             color: Colors.Yellow,
         })
+
         await cmd.message.reply({ embeds: [embed] }).then(async msg => {
             await statusDisplayController.Update()
             embed.setDescription(`${Utils.GetEmoji("yes")} Status display updated! (took ${inlineCode(`${Math.round(Date.now() - cmd.timestamp)}ms`)})`)
                 .setColor(Colors.Green)
                 .setTimestamp()
-                .setFooter({ text: `${cmd.id}` })
-            msg.edit({ embeds: [embed] })
+
+            await msg.edit({ embeds: [embed] })
         })
     }
 }
