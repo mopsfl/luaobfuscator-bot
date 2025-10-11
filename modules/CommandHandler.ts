@@ -3,7 +3,7 @@
 import path from "path";
 import config from "../config"
 import fs from "fs"
-import { ChatInputCommandInteraction, GuildMember, InteractionType, Message, MessageType, OmitPartialGroupDMChannel, PermissionFlagsBits, Routes, SlashCommandBuilder, User } from "discord.js";
+import { APIInteractionGuildMember, ChatInputCommandInteraction, GuildMember, InteractionType, Message, MessageType, OmitPartialGroupDMChannel, PermissionFlagsBits, Routes, SlashCommandBuilder, User } from "discord.js";
 import { discordREST, ENV, statusDisplayController } from "../index";
 import Database from "./Database/Database";
 import ErrorHandler from "./ErrorHandler/ErrorHandler";
@@ -109,7 +109,8 @@ export default class CommandHandler {
 
         return this.BuildCommand(this.commands.get(name) || this.commands.get(this.aliases.get(name)), {
             id: "",
-            user: message.author,
+            user: message.member.user,
+            member: message.member,
             name,
             arguments: parts,
             raw_arguments: parts.join(" "),
@@ -122,7 +123,7 @@ export default class CommandHandler {
 
         return this.BuildCommand(this.slash_commands.get(interaction.commandName.toLowerCase()), {
             id: "",
-            user: interaction.user,
+            member: interaction.member,
             name: interaction.commandName.toLowerCase(),
             arguments: args,
             raw_arguments: args.join(" "),
@@ -238,6 +239,7 @@ export default class CommandHandler {
 
 export type Command = {
     user?: User,
+    member?: GuildMember | APIInteractionGuildMember,
     name?: string,
     id?: string,
     arguments?: Array<any>,
