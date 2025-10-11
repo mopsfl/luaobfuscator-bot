@@ -109,7 +109,7 @@ export default class CommandHandler {
 
         return this.BuildCommand(this.commands.get(name) || this.commands.get(this.aliases.get(name)), {
             id: "",
-            user: message.member.user,
+            user: message.member?.user || message.author,
             member: message.member,
             name,
             arguments: parts,
@@ -124,6 +124,7 @@ export default class CommandHandler {
         return this.BuildCommand(this.slash_commands.get(interaction.commandName.toLowerCase()), {
             id: "",
             member: interaction.member,
+            user: interaction.user,
             name: interaction.commandName.toLowerCase(),
             arguments: args,
             raw_arguments: args.join(" "),
