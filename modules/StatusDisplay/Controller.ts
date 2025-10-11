@@ -1,3 +1,8 @@
+// TODO: improved logic to filter duplicated outage reports
+//       e.g:   first report: api, 503
+//             second report: api. homepage, 503 
+//             (replace first report with second report since they are the same, if the time is similar, like 5-10 mins)
+
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, MessageFlags, TextChannel } from "discord.js";
 import { client, ENV } from "../../index"
 import config from "../../config";
@@ -136,12 +141,14 @@ export default class StatusDisplayController {
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? Utils.FormatNumber(serverStatistics.total_obfuscations) : "N/A")
         Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.recentObfuscations, "N/A")
 
-        ObfuscatorStats.Update({
-            total_uploads: serverStatistics.total_file,
-            total_obfuscations: serverStatistics.total_obfuscations,
-            time: Date.now(),
-            date: Utils.ToLocalizedDateString(new Date(), true)
-        }).catch(console.error)
+        if (ENV === "prod") {
+            ObfuscatorStats.Update({
+                total_uploads: serverStatistics.total_file,
+                total_obfuscations: serverStatistics.total_obfuscations,
+                time: Date.now(),
+                date: Utils.ToLocalizedDateString(new Date(), true)
+            }).catch(console.error)
+        }
 
         await this.statusMessage.edit({
             embeds: [mainEmbed, statisticsEmbed],
@@ -164,8 +171,9 @@ export default class StatusDisplayController {
     }
 
     async SaveOutage(services: Map<string, ServiceStatus>, outageId: string) {
-        const time = Date.now()
+        if (ENV === "dev" || this.lastOutage?.id == outageId) return
 
+        const time = Date.now()
         await Database.Insert("outage_log", {
             time: time.toString(),
             services: JSON.stringify(Object.fromEntries(services)),
