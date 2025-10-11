@@ -144,11 +144,9 @@ app.get("/api/commands", async (req, res) => {
         const commands = JSON.parse(JSON.stringify({
             chat_commands: Object.fromEntries(commandHandler.commands),
             slash_commands: Object.fromEntries(commandHandler.slash_commands),
-        }, (_, value) =>
-            typeof value === "bigint" ? value.toString() : value
-        ));
+        }, (_, value) => typeof value === "bigint" ? value.toString() : value))
 
-        res.json(commands);
+        res.json(commands)
     } catch (error) {
         console.error(error)
         res.sendStatus(500)

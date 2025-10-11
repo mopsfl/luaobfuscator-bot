@@ -2,11 +2,11 @@ import ChartJSImage from "chart.js-image"
 import Utils from "../Utils"
 
 export default {
-    Create(data: number[]) {
+    Create(data: number[], length?: number) {
         return new ChartJSImage().chart(<ChartOptions>{
             type: "bar",
             data: {
-                labels: Utils.GetLocalizedDateStrings(),
+                labels: Utils.GetLocalizedDateStrings(length),
                 datasets: [
                     {
                         label: "Daily Obfuscated Files",
