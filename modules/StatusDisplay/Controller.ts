@@ -111,7 +111,7 @@ export default class StatusDisplayController {
 
                 this.lastOutage.count += 1
 
-                if (failedServices.keys().toArray().length > Object.keys(this.lastOutage.services).length) {
+                if (new Array(failedServices.keys()).length > Object.keys(this.lastOutage.services).length) {
                     this.SaveOutage(failedServices, outageId, true).catch(err => console.error("[Status Display Error]:", err))
                 }
             } else {
