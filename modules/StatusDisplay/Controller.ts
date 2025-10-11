@@ -1,8 +1,3 @@
-// TODO: improved logic to filter duplicated outage reports
-//       e.g:   first report: api, 503
-//             second report: api. homepage, 503 
-//             (replace first report with second report since they are the same, if the time is similar, like 5-10 mins)
-
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, MessageFlags, TextChannel } from "discord.js";
 import { client, ENV } from "../../index"
 import config from "../../config";
@@ -109,20 +104,17 @@ export default class StatusDisplayController {
         if (failedServices.size > 0) {
             const outageId = this.CreateOutageIdentifier(failedServices)
 
-            if (this.lastOutage?.id == outageId && (Date.now() - this.lastOutage.time) < 300_000) {
+            if (this.lastOutage?.id === outageId && (Date.now() - this.lastOutage.time) < 1800000) {
                 if (this.lastOutage.count === 3) {
                     this.SendAlertMessage(failedServices, outageId)
                 }
 
                 this.lastOutage.count += 1
-            } else {
-                this.lastOutage = {
-                    time: Date.now(),
-                    services: Object.fromEntries(failedServices),
-                    id: outageId,
-                    count: 0,
-                }
 
+                if (failedServices.keys().toArray().length > Object.keys(this.lastOutage.services).length) {
+                    this.SaveOutage(failedServices, outageId, true).catch(err => console.error("[Status Display Error]:", err))
+                }
+            } else {
                 this.SaveOutage(failedServices, outageId).catch(err => console.error("[Status Display Error]:", err))
             }
         } else {
@@ -163,22 +155,34 @@ export default class StatusDisplayController {
     }
 
     CreateOutageIdentifier(services: Map<string, ServiceStatus>, length = 12) {
-        const relevantData = Array.from(services.entries())
-            .map(([name, status]) => ({ name, statusCode: status.statusCode }))
-            .sort((a, b) => a.name.localeCompare(b.name));
-
-        return createHash('sha256').update(JSON.stringify(relevantData)).digest('hex').slice(0, length);
+        return createHash('sha256').update(
+            JSON.stringify(Array.from(new Set(Array.from(services.values()).map(s => s.statusText))).sort())
+        ).digest('hex').slice(0, length)
     }
 
-    async SaveOutage(services: Map<string, ServiceStatus>, outageId: string) {
-        if (ENV === "dev" || this.lastOutage?.id == outageId) return
+    async SaveOutage(services: Map<string, ServiceStatus>, outageId: string, replaceLast = false) {
+        if (ENV === "dev" || (this.lastOutage?.id == outageId && !replaceLast)) return
 
-        const time = Date.now()
-        await Database.Insert("outage_log", {
-            time: time.toString(),
-            services: JSON.stringify(Object.fromEntries(services)),
+        this.lastOutage = {
+            time: replaceLast ? this.lastOutage.time : Date.now(),
+            services: Object.fromEntries(services),
             id: outageId,
-        })
+            count: 0,
+        }
+
+        if (replaceLast) {
+            await Database.Update("outage_log", {
+                time: this.lastOutage.time,
+                services: JSON.stringify(Object.fromEntries(services)),
+                id: outageId,
+            }, { id: outageId })
+        } else {
+            await Database.Insert("outage_log", {
+                time: this.lastOutage.time,
+                services: JSON.stringify(Object.fromEntries(services)),
+                id: outageId,
+            })
+        }
     }
 
     async GetLastOutage(): Promise<ServiceOutage> {
@@ -191,7 +195,7 @@ export default class StatusDisplayController {
 
         return {
             time: result.data.time,
-            services: JSON.parse(<string>result.data.services) ?? {},
+            services: JSON.parse(result.data.services.toString()) ?? {},
             id: result.data.id,
             count: 0
         }
