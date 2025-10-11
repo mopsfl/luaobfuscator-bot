@@ -9,7 +9,7 @@ import { ServiceOutage, ServiceStatus } from "./Types";
 import Database from "../Database/Database";
 import Stats from "./Embeds/Stats";
 import Alert from "./Embeds/Alert";
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import Chart from "./Chart";
 import ObfuscatorStats from "../ObfuscatorStats";
 import History from "./Embeds/History";
@@ -102,20 +102,20 @@ export default class StatusDisplayController {
         })
 
         if (failedServices.size > 0) {
-            const outageId = this.CreateOutageIdentifier(failedServices)
+            const outageIdentifier = this.CreateOutageIdentifier(failedServices)
 
-            if (this.lastOutage?.id === outageId && (Date.now() - this.lastOutage.time) < 1800000) {
+            if (this.lastOutage?.identifier === outageIdentifier && (Date.now() - this.lastOutage.time) < 1800000) {
                 if (this.lastOutage.count === 3) {
-                    this.SendAlertMessage(failedServices, outageId)
+                    this.SendAlertMessage(failedServices, outageIdentifier)
                 }
 
                 this.lastOutage.count += 1
 
-                if (new Array(failedServices.keys()).length > Object.keys(this.lastOutage.services).length) {
-                    this.SaveOutage(failedServices, outageId, true).catch(err => console.error("[Status Display Error]:", err))
+                if ([...failedServices.keys()].length > Object.keys(this.lastOutage.services).length) {
+                    this.SaveOutage(failedServices, outageIdentifier, true).catch(err => console.error("[Status Display Error]:", err))
                 }
             } else {
-                this.SaveOutage(failedServices, outageId).catch(err => console.error("[Status Display Error]:", err))
+                this.SaveOutage(failedServices, outageIdentifier).catch(err => console.error("[Status Display Error]:", err))
             }
         } else {
             this.lastOutage = await this.GetLastOutage()
@@ -160,13 +160,14 @@ export default class StatusDisplayController {
         ).digest('hex').slice(0, length)
     }
 
-    async SaveOutage(services: Map<string, ServiceStatus>, outageId: string, replaceLast = false) {
-        if (ENV === "dev" || (this.lastOutage?.id == outageId && !replaceLast)) return
+    async SaveOutage(services: Map<string, ServiceStatus>, outageIdentifier: string, replaceLast = false) {
+        if (ENV === "dev" || (this.lastOutage?.identifier == outageIdentifier && !replaceLast)) return
 
         this.lastOutage = {
             time: replaceLast ? this.lastOutage.time : Date.now(),
             services: Object.fromEntries(services),
-            id: outageId,
+            identifier: outageIdentifier,
+            oid: randomUUID(),
             count: 0,
         }
 
@@ -174,13 +175,15 @@ export default class StatusDisplayController {
             await Database.Update("outage_log", {
                 time: this.lastOutage.time,
                 services: JSON.stringify(Object.fromEntries(services)),
-                id: outageId,
-            }, { id: outageId })
+                identifier: outageIdentifier,
+                oid: this.lastOutage.oid
+            }, { identifier: outageIdentifier })
         } else {
             await Database.Insert("outage_log", {
                 time: this.lastOutage.time,
                 services: JSON.stringify(Object.fromEntries(services)),
-                id: outageId,
+                identifier: outageIdentifier,
+                oid: this.lastOutage.oid,
             })
         }
     }
@@ -196,7 +199,8 @@ export default class StatusDisplayController {
         return {
             time: result.data.time,
             services: JSON.parse(result.data.services.toString()) ?? {},
-            id: result.data.id,
+            identifier: result.data.identifier,
+            oid: result.data.oid,
             count: 0
         }
     }

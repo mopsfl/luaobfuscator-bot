@@ -8,7 +8,8 @@ export type ServiceStatus = {
 export type ServiceOutage = {
     time: number,
     services: { [name: string]: ServiceStatus },
-    id: string,
+    identifier: string,
+    oid: string,
     count?: number,
 }
 

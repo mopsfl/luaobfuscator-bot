@@ -90,7 +90,7 @@ app.get("/api/outagehistory/logs", async (req, res) => {
                     return JSON.parse(outage.services?.toString() ?? "[]");
                 } catch { return [] }
             })(),
-            id: outage.id
+            identifier: outage.identifier
         }));
 
         res.json(outages);

@@ -22,9 +22,7 @@
 
         function ToTime(ms) {
             const d = new Date(parseInt(ms));
-            return [d.getHours(), d.getMinutes(), d.getSeconds()]
-                .map(v => String(v).padStart(2, '0'))
-                .join(':');
+            return [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
         }
 
         async function FetchOutageLog() {
@@ -77,7 +75,8 @@
                     if (!statusText) statusText = statusCode == 522 && "Connection Timed Out" || statusCode == 524 && "A Timeout Occurred" || "Unknown Error"
 
                     element.classList.add("outage")
-                    element.setAttribute("id", btoa(
+                    element.setAttribute("_iden", outage.identifier)
+                    element.setAttribute("_shid", btoa(
                         Array.from(services.values()).map(o => o.name).join("")
                         + statusText?.toLowerCase().replace(/(\s|\,)/gm, "")
                         + statusCode
@@ -87,7 +86,10 @@
                     element.innerHTML = `
                             <span class="services">${Array.from(services.keys()).join(", ")}</span>
                             <span class="time">${GetRelativeTime(outage.time)} - ${ToTime(outage.time)}</span>
-                            <span class="status">${statusText || "Unknown Error"} <span class="status_code ${statusCode >= 500 ? "red" : "orange"}">${statusCode}</span></span>
+                            <span class="status">${statusText || "Unknown Error"} 
+                                <span class="status_code ${statusCode >= 500 ? "red" : "orange"}">${statusCode}</span><br>
+                            </span>
+                            <span class="outage_identifier">${outage.identifier}</span>
                         `
 
                     list.appendChild(element)
@@ -273,7 +275,7 @@
             position: relative;
             order: 1;
             background: rgb(39, 39, 39);
-            padding: 10px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             border-radius: 3px;
@@ -301,6 +303,16 @@
 
         .status>.status_code.orange {
             background-color: #a73d00;
+        }
+
+        .outage_identifier {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            font-size: 10px;
+            color: gray;
+            float: right;
+            padding: 3px;
         }
 
         .outage>.services {
