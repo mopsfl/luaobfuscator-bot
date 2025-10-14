@@ -12,7 +12,7 @@ class CommandConstructor {
     description = "Shows some statistics about the bot."
 
     callback = async (cmd: Command) => {
-        const result = await Database.GetTable<BotStats>("bot_statistics")
+        const result = await Database.GetTable<BotStats[]>("bot_statistics")
 
         if (!result.success) {
             return ErrorHandler.new({
@@ -32,9 +32,9 @@ class CommandConstructor {
                 iconURL: config.icon_url,
             },
             fields: [
-                { name: "Obfuscations:", value: `-# ${result.data?.obfuscations || "N/A"}`, inline: true },
-                { name: "Executed Commands:", value: `-# ${result.data?.total_commands_executed || "N/A"}`, inline: true },
-                { name: "Retards that tried deobf:", value: `-# ${result.data?.deobf_tries || "N/A"}`, inline: true }
+                { name: "Obfuscations:", value: `-# ${result.data[0]?.obfuscations || "N/A"}`, inline: true },
+                { name: "Executed Commands:", value: `-# ${result.data[0]?.total_commands_executed || "N/A"}`, inline: true },
+                { name: "Retards that tried deobf:", value: `-# ${result.data[0]?.deobf_tries || "N/A"}`, inline: true }
             ]
         })
 
