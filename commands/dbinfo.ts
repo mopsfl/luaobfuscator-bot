@@ -6,6 +6,7 @@ import { PoolConnection } from "mariadb";
 import Utils from "../modules/Utils";
 import { pool } from "../modules/Database/Database";
 import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
+import config from "../config";
 
 const statusFlags = {
     2: "SERVER_STATUS_AUTOCOMMIT",
@@ -38,25 +39,27 @@ class CommandConstructor {
         let connection: PoolConnection
 
         try {
-            const _t1 = Date.now()
             connection = await pool.getConnection()
 
-            const _t2 = Date.now()
+            const _time = Date.now()
             await connection.ping()
 
             const embed = Embed({
-                title: `:information: LuaObfuscator Database Information`,
+                title: `${Utils.GetEmoji("info")} Lua Obfuscator - Database Information`,
                 color: Colors.Green,
+                timestamp: true,
                 footer: {
-                    text: `threadId: ${connection.info.threadId.toString()} | took ${(Date.now() - _t1).toString()}ms`
+                    iconURL: config.icon_url,
+                    text: `${connection.serverVersion()} (${connection.info.threadId.toString()})`
                 },
-                fields: [
-                    { name: "Server Version", value: `-# ${connection.serverVersion()}`, inline: true },
+                fields: [ // @ts-ignore
+                    { name: "Name:", value: `-# ${connection.info.database}`, inline: true },
                     { name: "\u200B", value: "\u200B", inline: true },
-                    { name: "Status", value: `-# ${statusFlags[connection.info.status] || connection.info.status.toString()}`, inline: true },
-                    { name: "Active Connections", value: `-# ${pool.activeConnections()}`, inline: true },
-                    { name: "Total Connections", value: `-# ${pool.totalConnections()}`, inline: true },
-                    { name: "Ping", value: `-# ${(Date.now() - _t2).toString()}ms`, inline: true },
+                    { name: "Status:", value: `-# ${statusFlags[connection.info.status] || connection.info.status.toString()}`, inline: true },
+                    { name: "Connections:", value: `-# active: ${pool.activeConnections()}\n-# total: ${pool.totalConnections()}`, inline: true },
+                    { name: "\u200B", value: "\u200B", inline: true },
+                    { name: "Ping:", value: `-# ${(Date.now() - _time).toString()}ms`, inline: true },
+                    { name: "Capabilities:", value: `-# ${Utils.FormatBytes(parseInt(connection.info.serverCapabilities.toString()))}`, inline: true },
                 ]
             })
 
