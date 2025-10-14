@@ -102,7 +102,7 @@
             search_bar.addEventListener("input", (input) => {
                 let matches = 0
                 list.querySelectorAll(".outage").forEach(el => {
-                    const id = atob(el.getAttribute("id")),
+                    const id = atob(el.getAttribute("_shid")),
                         value = input.target.value.replace(/(\s|\,)/gm, "").toLowerCase().trim()
 
                     if (id.includes(value)) {
@@ -141,12 +141,6 @@
             refresh.addEventListener("click", () => {
                 RenderOutages(currentRenderLimit, false, true)
             })
-
-            /*const load_all = document.querySelector("#load_all")
-            load_all.addEventListener("click", () => {
-                currentRenderLimit = outageHistory.length
-                RenderOutages(currentRenderLimit, false)
-            })*/
 
             RenderOutages(currentRenderLimit, false)
 
