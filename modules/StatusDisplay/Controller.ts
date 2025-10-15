@@ -1,3 +1,5 @@
+// TODO: record the end time of an outage to estimate its duration
+
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, MessageFlags, TextChannel } from "discord.js";
 import { client, ENV } from "../../index"
 import config from "../../config";
@@ -112,10 +114,10 @@ export default class StatusDisplayController {
                 this.lastOutage.count += 1
 
                 if ([...failedServices.keys()].length > Object.keys(this.lastOutage.services).length) {
-                    this.SaveOutage(failedServices, outageIdentifier, true).catch(err => console.error("[Status Display Error]:", err))
+                    this.SaveOutage(serviceStatuses, outageIdentifier, true).catch(err => console.error("[Status Display Error]:", err))
                 }
             } else {
-                this.SaveOutage(failedServices, outageIdentifier).catch(err => console.error("[Status Display Error]:", err))
+                this.SaveOutage(serviceStatuses, outageIdentifier).catch(err => console.error("[Status Display Error]:", err))
             }
         } else {
             this.lastOutage = await this.GetLastOutage()
@@ -198,6 +200,7 @@ export default class StatusDisplayController {
 
         return {
             time: result.data.time,
+            end: result.data.end,
             services: JSON.parse(result.data.services.toString()) ?? {},
             identifier: result.data.identifier,
             oid: result.data.oid,
