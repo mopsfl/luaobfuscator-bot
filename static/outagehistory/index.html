@@ -25,6 +25,24 @@
             return [d.getHours(), d.getMinutes(), d.getSeconds()].map(v => String(v).padStart(2, '0')).join(':');
         }
 
+        function FormatTime(timestamp) {
+            const date = new Date(parseInt(timestamp));
+
+            const formatted = date.toLocaleString(undefined, {
+                weekday: 'long',
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            });
+
+            const isDST = date.getTimezoneOffset() < new Date(date.getFullYear(), 0, 1).getTimezoneOffset();
+            return `${formatted.replaceAll(',', '')}`.trim();
+        }
+
         async function FetchOutageLog() {
             const response = await fetch(`api/outagehistory/logs${location.search}`)
 
@@ -43,9 +61,36 @@
             return await response.json()
         }
 
+        async function ShowOutageReport(outage) {
+            let outageReport = document.querySelector("#outage-report")
+            outageReport.classList.remove("hide")
+
+            outageReport.querySelectorAll("#outage-report-oid").forEach(el => el.textContent = outage.oid)
+            outageReport.querySelector("#outage-report-start-time").textContent = FormatTime(outage.time)
+            outageReport.querySelector("#outage-report-identifier").textContent = outage.identifier
+
+            outageReport.querySelectorAll(".service-status").forEach(e => {
+                e.textContent = "200 - OK"
+                e.parentElement.classList.remove("failed")
+            })
+
+            Object.values(outage.services).forEach((info, index) => {
+                const serviceName = Object.keys(outage.services)[index]
+                const serviceElement = outageReport.querySelector(`#service-${serviceName}`)
+                if (!serviceElement) return
+
+                serviceElement.textContent = `${info.statusCode} - ${info.statusText}`
+
+                if (info.statusCode !== 200) {
+                    serviceElement.parentElement.classList.add("failed")
+                } else serviceElement.classList.remove("failed")
+            })
+        }
+
         window.onload = async () => {
             let list = document.querySelector(".list>.content"),
-                currentRenderLimit = 100
+                outageReport = document.querySelector("#outage-report")
+            currentRenderLimit = 100
 
             let outageHistory = await FetchOutageLog()
             if (!outageHistory) return console.error("unable to fetch outage logs")
@@ -76,6 +121,7 @@
 
                     element.classList.add("outage")
                     element.setAttribute("_iden", outage.identifier)
+                    element.setAttribute("_oid", outage.oid)
                     element.setAttribute("_shid", btoa(
                         Array.from(services.values()).map(o => o.name).join("")
                         + statusText?.toLowerCase().replace(/(\s|\,)/gm, "")
@@ -83,20 +129,24 @@
                         + Array.from(services.keys()).join(""))
                     )
                     element.setAttribute("time", outage.time)
+
                     element.innerHTML = `
                             <span class="services">${Array.from(services.keys()).join(", ")}</span>
                             <span class="time">${GetRelativeTime(outage.time)} - ${ToTime(outage.time)}</span>
                             <span class="status">${statusText || "Unknown Error"} 
                                 <span class="status_code ${statusCode >= 500 ? "red" : "orange"}">${statusCode}</span><br>
                             </span>
-                            <span class="outage_identifier">${outage.identifier}</span>
+                            <!--<span class="outage_identifier">${outage.identifier}</span>-->
                         `
+
+                    element.addEventListener("click", () => ShowOutageReport(outage))
 
                     list.appendChild(element)
                 })
 
                 if (currentRenderLimit >= outageHistory.length) load_more.classList.add("hide")
             }
+
 
             const search_bar = document.querySelector(".outage_search")
             search_bar.addEventListener("input", (input) => {
@@ -142,11 +192,16 @@
                 RenderOutages(currentRenderLimit, false, true)
             })
 
+            const outageReport_close = document.querySelector("#modal_close")
+            outageReport_close.addEventListener("click", () => outageReport.classList.add("hide"))
+
             RenderOutages(currentRenderLimit, false)
 
             tippy("#refresh", { content: 'Refresh' });
             tippy("#load_all", { content: 'Load All' });
             tippy("#sort_time", { content: 'Sort Time' })
+            tippy("#sort_time", { content: 'Sort Time' })
+            tippy("#modal_close", { content: 'Close' })
         }
 
     </script>
@@ -341,6 +396,131 @@
             background-color: #3b3b3b;
         }
 
+
+        .outage-modal-container {
+            position: absolute;
+            display: flex;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(3px);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .outage-modal {
+            position: absolute;
+            padding: 15px;
+            background: rgb(39, 39, 39);
+            box-shadow: #0f0f0f 0 0 5px 3px;
+            border-radius: 3px;
+            width: 750px;
+            height: 450px;
+        }
+
+        .modal-header {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            border-bottom: solid 1px gray;
+            padding-bottom: 5px;
+            margin-bottom: 1em;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 0;
+            right: 0;
+            cursor: pointer;
+            color: rgb(207, 207, 207);
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 20px;
+            user-select: none;
+        }
+
+        .modal-title {
+            user-select: none;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .modal-header>.outage-id {
+            font-size: 10px;
+            color: gray;
+        }
+
+        .modal-group {
+            padding: 5px;
+        }
+
+        .modal-group-name {
+            user-select: none;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: .5em;
+            text-decoration: underline;
+        }
+
+        .modal-data-value {
+            font-size: 14px;
+            justify-content: space-between;
+            display: flex;
+        }
+
+        .modal-data-value {
+            color: gray;
+        }
+
+        .outage-report-services {
+            display: flex;
+            justify-content: space-evenly;
+            gap: 1rem;
+        }
+
+        .outage-report-services>.service {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #161616;
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+            height: auto;
+            border-radius: 3px;
+            outline: solid 2px green;
+        }
+
+        .outage-report-services>.service.failed {
+            outline: solid 2px #830000 !important;
+        }
+
+        .outage-report-services>.service>.service-name {
+            font-size: 16px;
+            font-weight: bold;
+            padding-bottom: 2px;
+        }
+
+        .outage-report-services>.service>.service-status {
+            font-size: 16px;
+            font-weight: bold;
+            background-color: green;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .service.failed>.service-status {
+            background-color: #830000 !important;
+        }
+
+        .outage-info {
+            display: grid;
+            gap: 5px;
+        }
+
         @media only screen and (max-width: 550px) {
             header {
                 flex-direction: column;
@@ -383,6 +563,53 @@
     <div class="list">
         <div class="content"></div>
         <button class="load_more">Load More</button>
+    </div>
+
+    <div class="outage-modal-container hide" id="outage-report">
+        <div class="outage-modal">
+            <div class="modal-close" id="modal_close">X</div>
+            <div class="modal-header">
+                <span class="modal-title">Outage Report</span>
+                <span class="outage-id" id="outage-report-oid">N/A</span>
+            </div>
+            <div class="modal-group">
+                <div class="modal-group-name">Services:</div>
+
+                <div class="outage-report-services">
+                    <div class="service">
+                        <div class="service-name">Homepage</div>
+                        <div class="service-status" id="service-homepage">N/A - N/A</div>
+                    </div>
+                    <div class="service">
+                        <div class="service-name">Forum</div>
+                        <div class="service-status" id="service-forum">N/A - N/A</div>
+                    </div>
+                    <div class="service">
+                        <div class="service-name">API</div>
+                        <div class="service-status" id="service-api">N/A - N/A</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-group outage-info">
+                <div class="modal-group-name">Outage Information:</div>
+                <div class="modal-data-value">
+                    <span class="data-name">Start Time</span>
+                    <span class="data-value" id="outage-report-start-time">N/A</span>
+                </div>
+                <div class="modal-data-value">
+                    <span class="data-name">End Time</span>
+                    <span class="data-value" id="outage-report-end-time">N/A</span>
+                </div>
+                <div class="modal-data-value">
+                    <span class="data-name">Outage Id</span>
+                    <span class="data-value" id="outage-report-oid">N/A</span>
+                </div>
+                <div class="modal-data-value">
+                    <span class="data-name">Identifier</span>
+                    <span class="data-value" id="outage-report-identifier">N/A</span>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 

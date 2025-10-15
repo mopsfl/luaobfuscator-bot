@@ -7,6 +7,7 @@ export type ServiceStatus = {
 
 export type ServiceOutage = {
     time: number,
+    end?: number,
     services: { [name: string]: ServiceStatus },
     identifier: string,
     oid: string,
