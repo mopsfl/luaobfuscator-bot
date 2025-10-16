@@ -120,7 +120,7 @@ export default class StatusDisplayController {
         } else {
             this.lastOutage = await this.GetLastOutage()
 
-            if ((Date.now() - this.lastOutage.time) < 180000 && !this.lastOutage.end) {
+            if (!this.lastOutage.end) {
                 this.SaveOutage(new Map(Object.entries(this.lastOutage.services)), this.lastOutage.identifier, true, true).catch(err => console.error("[Status Display Error]:", err))
             }
         }
