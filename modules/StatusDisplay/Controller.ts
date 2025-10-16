@@ -1,5 +1,3 @@
-// TODO: record the end time of an outage to estimate its duration
-
 import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, CacheType, ChannelType, Colors, ComponentType, EmbedBuilder, InteractionCollector, Message, MessageFlags, TextChannel } from "discord.js";
 import { client, ENV } from "../../index"
 import config from "../../config";
@@ -121,6 +119,10 @@ export default class StatusDisplayController {
             }
         } else {
             this.lastOutage = await this.GetLastOutage()
+
+            if ((Date.now() - this.lastOutage.time) < 180000 && !this.lastOutage.end) {
+                this.SaveOutage(new Map(Object.entries(this.lastOutage.services)), this.lastOutage.identifier, true, true).catch(err => console.error("[Status Display Error]:", err))
+            }
         }
 
         this.lastUpdate = Date.now()
@@ -162,15 +164,19 @@ export default class StatusDisplayController {
         ).digest('hex').slice(0, length)
     }
 
-    async SaveOutage(services: Map<string, ServiceStatus>, outageIdentifier: string, replaceLast = false) {
+    async SaveOutage(services: Map<string, ServiceStatus>, outageIdentifier: string, replaceLast = false, ended = false) {
         if (ENV === "dev" || (this.lastOutage?.identifier == outageIdentifier && !replaceLast)) return
 
-        this.lastOutage = {
-            time: replaceLast ? this.lastOutage.time : Date.now(),
-            services: Object.fromEntries(services),
-            identifier: outageIdentifier,
-            oid: randomUUID(),
-            count: 0,
+        if (ended) {
+            this.lastOutage.end = Date.now()
+        } else {
+            this.lastOutage = {
+                time: replaceLast ? this.lastOutage.time : Date.now(),
+                services: Object.fromEntries(services),
+                identifier: outageIdentifier,
+                oid: randomUUID(),
+                count: 0,
+            }
         }
 
         if (replaceLast) {
@@ -178,7 +184,8 @@ export default class StatusDisplayController {
                 time: this.lastOutage.time,
                 services: JSON.stringify(Object.fromEntries(services)),
                 identifier: outageIdentifier,
-                oid: this.lastOutage.oid
+                oid: this.lastOutage.oid,
+                end: this.lastOutage.end,
             }, { identifier: outageIdentifier })
         } else {
             await Database.Insert("outage_log", {
@@ -186,6 +193,7 @@ export default class StatusDisplayController {
                 services: JSON.stringify(Object.fromEntries(services)),
                 identifier: outageIdentifier,
                 oid: this.lastOutage.oid,
+                end: this.lastOutage.end,
             })
         }
     }
@@ -249,9 +257,12 @@ export default class StatusDisplayController {
             })
 
         outage_log.forEach(outage => {
-            const firstService = Object.values(outage.services)[0]
+            const firstService = Object.values(outage.services)[0],
+                affectedServices = Object.entries(outage.services)
+                    .filter(([_, service]) => !service.ok)
+                    .map(([key]) => key);
 
-            fieldValues.services += `-# ${Object.keys(outage.services).join(", ")}\n`;
+            fieldValues.services += `-# ${affectedServices.join(", ")}\n`;
             fieldValues.status += `-# ${firstService?.statusText || "N/A"} (_${firstService?.statusCode || "N/A"}_)\n`;
             fieldValues.time += `-# <t:${Math.floor(outage.time / 1000)}:R>\n`;
         });
@@ -259,7 +270,7 @@ export default class StatusDisplayController {
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.services, fieldValues.services, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.status, fieldValues.status, true)
         Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.time, fieldValues.time, true)
-        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history on the [website](${ENV == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session.session}).`)
+        Fields.SetValue(historyEmbed.data.fields, Fields.Indexes.OutageHistory.website, `You can see the full outage history with more informations on the [website](${ENV == "prod" ? process.env.SERVER : "http://localhost:6969"}/outagehistory?s=${session.session}).`)
 
         await interaction.reply({ flags: [MessageFlags.Ephemeral], embeds: [historyEmbed] })
 

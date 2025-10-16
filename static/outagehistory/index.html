@@ -68,10 +68,13 @@
             outageReport.querySelectorAll("#outage-report-oid").forEach(el => el.textContent = outage.oid)
             outageReport.querySelector("#outage-report-start-time").textContent = FormatTime(outage.time)
             outageReport.querySelector("#outage-report-identifier").textContent = outage.identifier
+            outageReport.querySelector("#outage-report-end-time").textContent = outage.end ? FormatTime(outage.end) : "N/A"
+            outageReport.querySelector("#outage-report-end-time").textContent = outage.end ? FormatTime(outage.end) : "N/A"
 
             outageReport.querySelectorAll(".service-status").forEach(e => {
                 e.textContent = "200 - OK"
                 e.parentElement.classList.remove("failed")
+                e.parentElement.querySelector("#service-ping").textContent = ""
             })
 
             Object.values(outage.services).forEach((info, index) => {
@@ -80,6 +83,7 @@
                 if (!serviceElement) return
 
                 serviceElement.textContent = `${info.statusCode} - ${info.statusText}`
+                serviceElement.parentElement.querySelector("#service-ping").textContent = info.ping ? `${info.ping}ms` : "0"
 
                 if (info.statusCode !== 200) {
                     serviceElement.parentElement.classList.add("failed")
@@ -147,7 +151,6 @@
                 if (currentRenderLimit >= outageHistory.length) load_more.classList.add("hide")
             }
 
-
             const search_bar = document.querySelector(".outage_search")
             search_bar.addEventListener("input", (input) => {
                 let matches = 0
@@ -202,6 +205,11 @@
             tippy("#sort_time", { content: 'Sort Time' })
             tippy("#sort_time", { content: 'Sort Time' })
             tippy("#modal_close", { content: 'Close' })
+            tippy("#service-ping", { content: 'Ping' })
+
+            outageReport.addEventListener("click", (e) => {
+                if (e.target === outageReport) outageReport.classList.add("hide")
+            })
         }
 
     </script>
@@ -438,7 +446,8 @@
             font-family: sans-serif;
             font-weight: bold;
             font-size: 14px;
-            margin: 20px;
+            margin: 10px;
+            padding: 10px;
             user-select: none;
         }
 
@@ -479,6 +488,7 @@
             display: flex;
             justify-content: space-evenly;
             gap: 1rem;
+            margin-top: .75em;
         }
 
         .outage-report-services>.service {
@@ -519,6 +529,12 @@
         .outage-info {
             display: grid;
             gap: 5px;
+        }
+
+        .service-ping {
+            color: gray;
+            font-weight: normal !important;
+            font-size: 12px;
         }
 
         @media only screen and (max-width: 550px) {
@@ -577,15 +593,15 @@
 
                 <div class="outage-report-services">
                     <div class="service">
-                        <div class="service-name">Homepage</div>
+                        <div class="service-name">Homepage <span class="service-ping" id="service-ping">0ms</span></div>
                         <div class="service-status" id="service-homepage">N/A - N/A</div>
                     </div>
                     <div class="service">
-                        <div class="service-name">Forum</div>
+                        <div class="service-name">Forum <span class="service-ping" id="service-ping">0ms</span></div>
                         <div class="service-status" id="service-forum">N/A - N/A</div>
                     </div>
                     <div class="service">
-                        <div class="service-name">API</div>
+                        <div class="service-name">API <span class="service-ping" id="service-ping">0ms</span></div>
                         <div class="service-status" id="service-api">N/A - N/A</div>
                     </div>
                 </div>
@@ -607,6 +623,12 @@
                 <div class="modal-data-value">
                     <span class="data-name">Identifier</span>
                     <span class="data-value" id="outage-report-identifier">N/A</span>
+                </div>
+            </div>
+            <div class="modal-group">
+                <div class="modal-group-name">Outage Description:</div>
+                <div class="modal-data-value">
+                    <span class="data-name">No description.</span>
                 </div>
             </div>
         </div>
