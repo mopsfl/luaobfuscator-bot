@@ -189,11 +189,10 @@ export default class StatusDisplayController {
             }, { identifier: outageIdentifier })
         } else {
             await Database.Insert("outage_log", {
-                time: this.lastOutage.time,
+                time: Date.now(),
                 services: JSON.stringify(Object.fromEntries(services)),
                 identifier: outageIdentifier,
-                oid: this.lastOutage.oid,
-                end: this.lastOutage.end,
+                oid: randomUUID()
             })
         }
     }
