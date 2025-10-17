@@ -116,7 +116,10 @@
                 outages.slice(0, limit).forEach(outage => {
                     const element = document.createElement("div"),
                         services = new Map(Object.entries(outage.services)),
-                        firstOutage = services.entries().next().value[1]
+                        affectedServices = Object.entries(outage.services)
+                            .filter(([_, service]) => !service.ok)
+                            .map(([key]) => key)
+                    firstOutage = outage.services[affectedServices[0]]
 
                     let statusCode = firstOutage.statusCode,
                         statusText = firstOutage.statusText
@@ -404,7 +407,6 @@
             background-color: #3b3b3b;
         }
 
-
         .outage-modal-container {
             position: absolute;
             display: flex;
@@ -520,6 +522,7 @@
             background-color: green;
             padding: 5px;
             border-radius: 3px;
+            text-wrap: nowrap;
         }
 
         .service.failed>.service-status {

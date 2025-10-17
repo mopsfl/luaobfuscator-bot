@@ -260,10 +260,10 @@ export default class StatusDisplayController {
             const affectedServices = Object.entries(outage.services)
                 .filter(([_, service]) => !service.ok)
                 .map(([key]) => key),
-                firstService = Object.values(affectedServices)[0]
+                firstService = outage.services[Object.values(affectedServices)[0]]
 
             fieldValues.services += `-# ${affectedServices.join(", ")}\n`;
-            fieldValues.status += `-# ${outage.services[firstService]?.statusText || "N/A"} (_${outage.services[firstService]?.statusCode || "N/A"}_)\n`;
+            fieldValues.status += `-# ${firstService?.statusText || "N/A"} (_${firstService?.statusCode || "N/A"}_)\n`;
             fieldValues.time += `-# <t:${Math.floor(outage.time / 1000)}:R>\n`;
         });
 
