@@ -138,7 +138,7 @@
                     element.setAttribute("time", outage.time)
 
                     element.innerHTML = `
-                            <span class="services">${Array.from(services.keys()).join(", ")}</span>
+                            <span class="services">${affectedServices.join(", ")}</span>
                             <span class="time">${GetRelativeTime(outage.time)} - ${ToTime(outage.time)}</span>
                             <span class="status">${statusText || "Unknown Error"} 
                                 <span class="status_code ${statusCode >= 500 ? "red" : "orange"}">${statusCode}</span><br>
