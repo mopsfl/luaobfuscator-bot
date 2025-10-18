@@ -177,6 +177,7 @@ export default class StatusDisplayController {
                 oid: randomUUID(),
                 count: 0,
             }
+            return
         }
 
         if (replaceLast) {
