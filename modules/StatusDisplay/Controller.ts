@@ -177,10 +177,9 @@ export default class StatusDisplayController {
                 oid: randomUUID(),
                 count: 0,
             }
-            return
         }
 
-        if (replaceLast) {
+        if (replaceLast || ended) {
             await Database.Update("outage_log", {
                 time: this.lastOutage.time,
                 services: JSON.stringify(Object.fromEntries(services)),
