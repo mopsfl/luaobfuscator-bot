@@ -104,14 +104,13 @@ export default class StatusDisplayController {
         if (failedServices.size > 0) {
             const outageIdentifier = this.CreateOutageIdentifier(failedServices)
 
-            if (this.lastOutage?.identifier === outageIdentifier && (Date.now() - this.lastOutage.time) < 1800000) {
+            if (this.lastOutage?.identifier === outageIdentifier && !this.lastOutage.end) {
                 if (this.lastOutage.count === 3) {
                     this.SendAlertMessage(failedServices, outageIdentifier)
                 }
 
                 this.lastOutage.count += 1
-
-                if ([...failedServices.keys()].length > Object.keys(this.lastOutage.services).length) {
+                if ([...failedServices.keys()].length > Object.values(this.lastOutage.services).filter(o => !o.ok).length) {
                     this.SaveOutage(serviceStatuses, outageIdentifier, true).catch(err => console.error("[Status Display Error]:", err))
                 }
             } else {
@@ -165,34 +164,40 @@ export default class StatusDisplayController {
     }
 
     async SaveOutage(services: Map<string, ServiceStatus>, outageIdentifier: string, replaceLast = false, ended = false) {
-        if (ENV === "dev" || (this.lastOutage?.identifier == outageIdentifier && !replaceLast)) return
+        if (ENV === "dev" || (this.lastOutage?.identifier === outageIdentifier && !replaceLast && !ended)) return
 
         if (ended) {
             this.lastOutage.end = Date.now()
+
+            await Database.Update("outage_log", {
+                end: this.lastOutage.end
+            }, { identifier: outageIdentifier })
+            return
+        }
+
+        if (replaceLast) {
+            this.lastOutage.services = Object.fromEntries(services)
+
+            await Database.Update("outage_log", {
+                services: JSON.stringify(this.lastOutage.services),
+                time: this.lastOutage.time,
+                identifier: outageIdentifier,
+                oid: this.lastOutage.oid,
+            }, { identifier: outageIdentifier })
         } else {
             this.lastOutage = {
-                time: replaceLast ? this.lastOutage.time : Date.now(),
+                time: Date.now(),
                 services: Object.fromEntries(services),
                 identifier: outageIdentifier,
                 oid: randomUUID(),
                 count: 0,
             }
-        }
 
-        if (replaceLast || ended) {
-            await Database.Update("outage_log", {
-                time: this.lastOutage.time,
-                services: JSON.stringify(Object.fromEntries(services)),
-                identifier: outageIdentifier,
-                oid: this.lastOutage.oid,
-                end: this.lastOutage.end,
-            }, { identifier: outageIdentifier })
-        } else {
             await Database.Insert("outage_log", {
-                time: Date.now(),
-                services: JSON.stringify(Object.fromEntries(services)),
+                time: this.lastOutage.time,
+                services: JSON.stringify(this.lastOutage.services),
                 identifier: outageIdentifier,
-                oid: randomUUID()
+                oid: this.lastOutage.oid
             })
         }
     }
