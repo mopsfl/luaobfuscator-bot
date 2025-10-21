@@ -11,10 +11,11 @@ export type ServiceOutage = {
     services: { [name: string]: ServiceStatus },
     identifier: string,
     oid: string,
-    count?: number,
+    _alertSentOrExpired?: boolean,
 }
 
 export type ServerStatistics = {
+    error?: string,
     start_time: string,
     memory_usage: number,
     queue_waiting: number,

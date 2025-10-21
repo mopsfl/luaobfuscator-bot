@@ -19,18 +19,19 @@ export default {
 
     prod: {
         SERVER_ID: "1112349916744917054",
-        STATUS_CHANNEL_ID: "1128995128745402468"
+        STATUS_CHANNEL_ID: "1128995128745402468",
+        ALERT_CHANNEL: "1112384996259414110"
     },
 
     dev: {
         SERVER_ID: "1129884318634877032",
-        STATUS_CHANNEL_ID: "1129885114038489188"
+        STATUS_CHANNEL_ID: "1129885114038489188",
+        ALERT_CHANNEL: "1129884319645712497"
     },
 
     STATUS_DISPLAY: {
         status_update_interval: 60_000,
-        alert_channel: "1112384996259414110",
-        ids_to_alert: ["792875215243575306"],
+        ids_to_alert: ["792875215243575306", "1111257318961709117"],
         endpoints: {
             homepage: "https://luaobfuscator.com",
             forum: "https://luaobfuscator.com/forum",

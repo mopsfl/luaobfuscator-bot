@@ -23,9 +23,19 @@ export default {
             recentObfuscations: 2
         },
         Alert: {
-            affectedServices: 0,
-            outageTime: 2,
-            outageId: 3
+            Services: {
+                homepage: 1,
+                forum: 2,
+                api: 3
+            },
+
+            Other: {
+                outageStartTime: 5,
+                outageEndTime: 6,
+                outageDuration: 7,
+                outageId: 8,
+                fingerprint: 9,
+            }
         },
         OutageHistory: {
             services: 0,
@@ -36,6 +46,7 @@ export default {
     },
 
     SetValue(fields: APIEmbedField[], index: number, value: string, notSmall = false) {
+        if (!fields[index]) return
         fields[index].value = `${notSmall ? "" : "-# "}${value}`
     }
 }
