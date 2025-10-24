@@ -43,8 +43,9 @@
             return `${formatted.replaceAll(',', '')}`.trim();
         }
 
-        async function FetchOutageLog() {
-            const response = await fetch(`api/outagehistory/logs${location.search}`)
+        async function FetchOutageLog(limit = 50) {
+            const params = new URLSearchParams(location.search)
+            const response = await fetch(`api/outagehistory/logs${params.get("s") ? `?s=${params.get("s")}&limit=${limit}` : `?limit=${limit}`}`)
 
             if (!response.ok) {
                 const list = document.querySelector(".list>.content"),
@@ -93,27 +94,31 @@
 
         window.onload = async () => {
             let list = document.querySelector(".list>.content"),
-                outageReport = document.querySelector("#outage-report")
-            currentRenderLimit = 100
+                outageReport = document.querySelector("#outage-report"),
+                filters = document.querySelector(".filters"),
+                loading_spinner = document.querySelector(".loading-spinner"),
+                currentRenderLimit = 50,
+                lastOutageLogLength = 0
 
-            let outageHistory = await FetchOutageLog()
+            loading_spinner.classList.remove("hide")
+            let outageHistory = await FetchOutageLog(currentRenderLimit)
             if (!outageHistory) return console.error("unable to fetch outage logs")
             list.innerHTML = ""
 
-            async function RenderOutages(limit = 100, ascending = true, refresh = false) {
+            async function RenderOutages(ascending = true, refresh = false) {
+                const scrollPosition = document.documentElement.scrollTop || 0
                 list.innerHTML = ""
+                loading_spinner.classList.remove("hide")
 
                 let outages
                 if (refresh) {
-                    outageHistory = await FetchOutageLog()
+                    outageHistory = await FetchOutageLog(currentRenderLimit)
                     if (!outageHistory) return console.error("unable to fetch outage logs")
                     outages = [...outageHistory]
                 } else outages = [...outageHistory]
 
                 outages.sort((a, b) => ascending ? a.time - b.time : b.time - a.time)
-
-
-                outages.slice(0, limit).forEach(outage => {
+                outages.forEach(outage => {
                     const element = document.createElement("div"),
                         services = new Map(Object.entries(outage.services)),
                         affectedServices = Object.entries(outage.services)
@@ -151,7 +156,15 @@
                     list.appendChild(element)
                 })
 
-                if (currentRenderLimit >= outageHistory.length) load_more.classList.add("hide")
+                document.documentElement.scrollTo(0, scrollPosition)
+
+                if (outages.length > lastOutageLogLength) {
+                    lastOutageLogLength = outages.length
+                } else {
+                    load_more.classList.add("hide")
+                }
+
+                loading_spinner.classList.add("hide")
             }
 
             const search_bar = document.querySelector(".outage_search")
@@ -184,35 +197,41 @@
             const sort_time = document.querySelector("#sort_time")
             sort_time.addEventListener("click", () => {
                 sort_time.innerText = sort_time.innerText === "clock_arrow_up" ? "clock_arrow_down" : "clock_arrow_up"
-                RenderOutages(currentRenderLimit, sort_time.innerText === "clock_arrow_up")
+                RenderOutages(sort_time.innerText === "clock_arrow_up")
             })
 
             const load_more = document.querySelector(".load_more")
             load_more.addEventListener("click", () => {
-                currentRenderLimit += 100
-                RenderOutages(currentRenderLimit, false)
+                currentRenderLimit += 50
+                RenderOutages(false, true)
             })
 
             const refresh = document.querySelector("#refresh")
             refresh.addEventListener("click", () => {
-                RenderOutages(currentRenderLimit, false, true)
+                RenderOutages(false, true)
+            })
+
+            const filter = document.querySelector("#filter")
+            filter.addEventListener("click", () => {
+                filters.classList.toggle("hide")
             })
 
             const outageReport_close = document.querySelector("#modal_close")
             outageReport_close.addEventListener("click", () => outageReport.classList.add("hide"))
 
-            RenderOutages(currentRenderLimit, false)
+            outageReport.addEventListener("click", (e) => {
+                if (e.target === outageReport) outageReport.classList.add("hide")
+            })
 
             tippy("#refresh", { content: 'Refresh' });
             tippy("#load_all", { content: 'Load All' });
+            tippy("#filter", { content: 'Filters' });
             tippy("#sort_time", { content: 'Sort Time' })
             tippy("#sort_time", { content: 'Sort Time' })
             tippy("#modal_close", { content: 'Close' })
             tippy("#service-ping", { content: 'Ping' })
 
-            outageReport.addEventListener("click", (e) => {
-                if (e.target === outageReport) outageReport.classList.add("hide")
-            })
+            RenderOutages(false).catch(console.error)
         }
 
     </script>
@@ -222,6 +241,7 @@
         html {
             margin: 0;
             padding: 0;
+            scrollbar-width: thin;
         }
 
         body {
@@ -229,12 +249,16 @@
             color: white;
             font-family: Arial, Helvetica, sans-serif;
             padding: 15px;
-            overflow: hidden;
-
+            padding-top: 0;
+            overflow: auto;
         }
 
         .hide {
             display: none !important;
+        }
+
+        .gray {
+            color: gray;
         }
 
         .noresult {
@@ -245,12 +269,14 @@
 
         header {
             position: sticky;
+            z-index: 2;
             top: 0;
             background: rgb(27, 27, 27);
             border-bottom: 1px solid rgb(87, 87, 87);
             display: flex;
-            padding-bottom: 5px;
+            padding-bottom: 10px;
             align-items: center;
+            padding-top: 15px;
         }
 
         .buttons {
@@ -298,10 +324,7 @@
             overflow: auto;
             scrollbar-width: thin;
             margin-top: 10px;
-            max-height: calc(100vh - 75px);
             display: grid;
-            padding-right: 5px;
-            padding-left: 5px;
         }
 
         .list>.content {
@@ -418,6 +441,7 @@
             backdrop-filter: blur(3px);
             justify-content: center;
             align-items: center;
+            z-index: 3;
         }
 
         .outage-modal {
@@ -540,7 +564,7 @@
             font-size: 12px;
         }
 
-        @media only screen and (max-width: 550px) {
+        @media only screen and (max-width: 600px) {
             header {
                 flex-direction: column;
             }
@@ -558,6 +582,143 @@
                 margin-right: 5px;
             }
         }
+
+        .filters {
+            user-select: none;
+            position: absolute;
+            right: 140px;
+            top: 35px;
+            background: rgb(39, 39, 39);
+            box-shadow: #0f0f0f 1px 1px 3px 2px;
+            border-radius: 3px;
+            z-index: 2;
+            width: 150px;
+            height: auto;
+            max-height: 250px;
+            padding: 8px 10px;
+            margin: 10px;
+            display: grid;
+            gap: 10px;
+            overflow: hidden auto;
+            scrollbar-width: thin;
+        }
+
+        .filter {
+            height: min-content;
+            display: grid;
+            gap: 3px;
+        }
+
+        .filter-name {
+            display: inline-block;
+            width: 100%;
+            border-bottom: solid 1px rgb(70, 70, 70);
+            padding-bottom: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .service-filter {
+            display: flex;
+            font-size: 13px;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checkbox-wrapper-2 .checkbox {
+            appearance: none;
+            background-color: #dfe1e4;
+            border-radius: 72px;
+            border-style: none;
+            flex-shrink: 0;
+            height: 20px;
+            margin: 0;
+            position: relative;
+            width: 30px;
+        }
+
+        .checkbox-wrapper-2 .checkbox::before {
+            bottom: -6px;
+            content: "";
+            left: -6px;
+            position: absolute;
+            right: -6px;
+            top: -6px;
+        }
+
+        .checkbox-wrapper-2 .checkbox,
+        .checkbox-wrapper-2 .checkbox::after {
+            transition: all 100ms ease-out;
+        }
+
+        .checkbox-wrapper-2 .checkbox::after {
+            background-color: #fff;
+            border-radius: 50%;
+            content: "";
+            height: 14px;
+            left: 3px;
+            position: absolute;
+            top: 3px;
+            width: 14px;
+        }
+
+        .checkbox-wrapper-2 input[type=checkbox] {
+            cursor: default;
+        }
+
+        .checkbox-wrapper-2 .checkbox:hover {
+            background-color: #c9cbcd;
+            transition-duration: 0s;
+        }
+
+        .checkbox-wrapper-2 .checkbox:checked {
+            background-color: #175ab3;
+        }
+
+        .checkbox-wrapper-2 .checkbox:checked::after {
+            background-color: #fff;
+            left: 13px;
+        }
+
+        .checkbox-wrapper-2 :focus:not(.focus-visible) {
+            outline: 0;
+        }
+
+        .checkbox-wrapper-2 .checkbox:checked:hover {
+            background-color: #175ab3;
+        }
+
+        .loading-spinner {
+            opacity: 50%;
+            width: 42px;
+            user-select: none;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .loading-spinner:before {
+            z-index: 999;
+            content: '';
+            box-sizing: border-box;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin-top: -10px;
+            margin-left: -10px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            border-top-color: #000;
+            animation: spinner .6s linear infinite;
+        }
+
+        @keyframes spinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 
     <script src="https://unpkg.com/@popperjs/core@2"></script>
@@ -571,15 +732,38 @@
         <div class="header-inputs">
             <div class="buttons">
                 <span class="material-symbols-outlined button" id="sort_time">clock_arrow_down</span>
+                <span class="material-symbols-outlined button" id="filter">filter_alt</span>
                 <span class="material-symbols-outlined button" id="refresh">refresh</span>
-                <!--<span class="material-symbols-outlined button" id="load_all">expand_all</span>-->
             </div>
 
             <input type="text" placeholder="Search" class="outage_search" autocomplete="off">
         </div>
     </header>
 
+    <div class="filters hide">
+        <div class="filter">
+            <span class="filter-name">Service</span>
+            <div class="service-filter checkbox-wrapper-2">
+                <input type="checkbox" class="checkbox" id="service-homepage" name="homepage" checked autocomplete="off" />
+                <label for="service-homepage">Homepage</label>
+            </div>
+            <div class="service-filter checkbox-wrapper-2">
+                <input type="checkbox" class="checkbox" id="service-api" name="api" checked autocomplete="off" />
+                <label for="service-api">API</label>
+            </div>
+            <div class="service-filter checkbox-wrapper-2">
+                <input type="checkbox" class="checkbox" id="service-forum" name="forum" checked autocomplete="off" />
+                <label for="service-forum">Forum</label>
+            </div>
+        </div>
+        <div class="filter">
+            <div class="filter-name">Status Code</div>
+            <small class="gray">soon</small>
+        </div>
+    </div>
+
     <div class="list">
+        <div class="loading-spinner hide"></div>
         <div class="content"></div>
         <button class="load_more">Load More</button>
     </div>
