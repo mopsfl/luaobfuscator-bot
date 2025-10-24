@@ -1,5 +1,3 @@
-// TODO: new session manager (id based)
-
 import express from "express"
 import dotenv from "dotenv"
 import cors from "cors"
@@ -18,9 +16,9 @@ import StatusDisplayController from "./modules/StatusDisplay/Controller"
 import Database from "./modules/Database/Database";
 import { ServiceOutage } from "./modules/StatusDisplay/Types";
 import CommandHandler from "./modules/CommandHandler";
-import config from "./config";
 import Session from "./modules/Misc/Session"
 import ObfuscatorStats from "./modules/ObfuscatorStats"
+import Chart from "./modules/StatusDisplay/Chart"
 
 const DISABLE_DISCORDLOGIN = false
 const START_TIME = Date.now()
@@ -45,8 +43,8 @@ const discordREST = new REST({ version: "10" }).setToken(process.env[ENV === "pr
         presence: {
             status: "online",
             activities: [{
-                name: "Lua Obfuscator",
-                type: ActivityType.Watching,
+                name: "DM me !obfuscate",
+                type: ActivityType.Playing,
             }],
         },
     });
@@ -77,12 +75,13 @@ app.use(cors())
 app.get("/", async (req, res) => res.sendStatus(200));
 app.get("/outagehistory", (req, res) => res.sendFile(PROCESS_PATH + "/static/outagehistory/index.html"))
 app.get("/api/outagehistory/logs", async (req, res) => {
-    if (!req.query.s) return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
+    if (!req.query.s && ENV !== "dev") return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 
-    Session.Get(req.query.s.toString()).then(async session => {
-        if (!session) return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
+    Session.Get(req.query.s?.toString()).then(async session => {
+        if (!session && ENV !== "dev" && ENV !== "dev") return res.status(401).json({ code: 401, message: "Unauthorized", error: "Invalid session id" })
 
-        const result = await Database.GetTable("outage_log")
+        const limit = req.query.limit ? parseInt(req.query.limit.toString()) : null
+        const result = await Database.GetTable("outage_log", null, null, limit, true)
         const outages = result.data?.map((outage: ServiceOutage) => ({
             time: outage.time,
             services: (() => {
@@ -135,6 +134,16 @@ app.get("/api/statistics/raw", async (req, res) => {
     try {
         const limit = req.query.limit ? parseInt(req.query.limit.toString()) : 7
         return res.json((await ObfuscatorStats.Get()).slice(-limit))
+    } catch (error) {
+        console.error(error)
+        res.sendStatus(500)
+    }
+})
+
+app.get("/api/statistics/chart", async (req, res) => {
+    try {
+        const limit = req.query.limit ? parseInt(req.query.limit.toString()) : 7
+        return res.redirect(Chart.Create(await ObfuscatorStats.Parse(limit), limit).toString())
     } catch (error) {
         console.error(error)
         res.sendStatus(500)
