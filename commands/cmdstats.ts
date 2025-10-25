@@ -45,6 +45,12 @@ class CommandConstructor {
                 })
             );
 
+        if (embed.data.fields.length % 3 !== 0) {
+            const placeholdersToAdd = 3 - (embed.data.fields.length % 3);
+            for (let i = 0; i < placeholdersToAdd; i++) {
+                embed.addFields({ name: '\u200B', value: '\u200B', inline: true });
+            }
+        }
 
         cmd.message.reply({ embeds: [embed] })
     }
