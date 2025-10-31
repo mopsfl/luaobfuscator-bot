@@ -65,6 +65,7 @@
         async function ShowOutageReport(outage) {
             let outageReport = document.querySelector("#outage-report")
             outageReport.classList.remove("hide")
+            document.body.classList.add("noscroll")
 
             outageReport.querySelectorAll("#outage-report-oid").forEach(el => el.textContent = outage.oid)
             outageReport.querySelector("#outage-report-start-time").textContent = FormatTime(outage.time)
@@ -217,10 +218,16 @@
             })
 
             const outageReport_close = document.querySelector("#modal_close")
-            outageReport_close.addEventListener("click", () => outageReport.classList.add("hide"))
+            outageReport_close.addEventListener("click", () => {
+                outageReport.classList.add("hide")
+                document.body.classList.remove("noscroll")
+            })
 
             outageReport.addEventListener("click", (e) => {
-                if (e.target === outageReport) outageReport.classList.add("hide")
+                if (e.target === outageReport) {
+                    outageReport.classList.add("hide")
+                    document.body.classList.remove("noscroll")
+                }
             })
 
             tippy("#refresh", { content: 'Refresh' });
@@ -251,6 +258,10 @@
             padding: 15px;
             padding-top: 0;
             overflow: auto;
+        }
+
+        body.noscroll {
+            overflow: hidden;
         }
 
         .hide {
@@ -450,8 +461,11 @@
             background: rgb(39, 39, 39);
             box-shadow: #0f0f0f 0 0 5px 3px;
             border-radius: 3px;
-            width: 750px;
+            width: 80%;
+            max-width: 1000px;
             height: 450px;
+            overflow: auto;
+            scrollbar-width: thin;
         }
 
         .modal-header {
@@ -504,17 +518,20 @@
             font-size: 14px;
             justify-content: space-between;
             display: flex;
-        }
-
-        .modal-data-value {
             color: gray;
         }
 
+        .modal-data-value>.data-value {
+            text-align: right;
+        }
+
         .outage-report-services {
-            display: flex;
-            justify-content: space-evenly;
-            gap: 1rem;
-            margin-top: .75em;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2em;
+            margin-top: 0.75em;
+            width: 100%;
+            justify-items: center;
         }
 
         .outage-report-services>.service {
@@ -562,25 +579,6 @@
             color: gray;
             font-weight: normal !important;
             font-size: 12px;
-        }
-
-        @media only screen and (max-width: 600px) {
-            header {
-                flex-direction: column;
-            }
-
-            .header-inputs {
-                margin-left: 0;
-                margin-top: 15px;
-                width: 100%;
-                flex-direction: row-reverse;
-            }
-
-            .outage_search {
-                width: 100%;
-                margin-left: 0;
-                margin-right: 5px;
-            }
         }
 
         .filters {
@@ -717,6 +715,35 @@
         @keyframes spinner {
             to {
                 transform: rotate(360deg);
+            }
+        }
+
+        @media only screen and (max-width: 600px) {
+            header {
+                flex-direction: column;
+            }
+
+            .header-inputs {
+                margin-left: 0;
+                margin-top: 15px;
+                width: 100%;
+                flex-direction: row-reverse;
+            }
+
+            .outage_search {
+                width: 100%;
+                margin-left: 0;
+                margin-right: 5px;
+            }
+
+            .filters {
+                top: 75px;
+                right: 5px;
+            }
+
+            .outage-modal {
+                height: 90%;
+                width: 90%;
             }
         }
     </style>
