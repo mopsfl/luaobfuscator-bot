@@ -91,9 +91,7 @@ export default class StatusDisplayController {
         if (!this.mainEmbed) this.mainEmbed = Embed(Main())
         if (!this.statisticsEmbed) this.statisticsEmbed = Embed(Stats())
 
-        const mainEmbed = this.mainEmbed,
-            statisticsEmbed = this.statisticsEmbed,
-            [serviceStatuses, failedServices] = await Services.GetStatuses(),
+        const [serviceStatuses, failedServices] = await Services.GetStatuses(),
             serverStatistics = await Services.GetStatistics()
 
         this.lastUpdate = Date.now()
@@ -102,7 +100,7 @@ export default class StatusDisplayController {
             if (!Fields.Indexes.Main.Services[serviceName]) return
 
             Fields.SetValue(
-                mainEmbed.data.fields,
+                this.mainEmbed.data.fields,
                 Fields.Indexes.Main.Services[serviceName],
                 `${this.GetStatusEmoji(serviceStatus.statusCode)} ${serviceStatus.statusText} - ${serviceStatus.ping}ms`
             )
@@ -131,16 +129,16 @@ export default class StatusDisplayController {
             this.recentObfuscations.time = Date.now()
         }
 
-        mainEmbed.setColor(failedServices.size > 0 ? Colors.Red : Colors.Green)
-        statisticsEmbed.setImage(Chart.Create(await ObfuscatorStats.Parse()).toString())
+        this.mainEmbed.setColor(failedServices.size > 0 ? Colors.Red : Colors.Green)
+        this.statisticsEmbed.setImage(Chart.Create(await ObfuscatorStats.Parse()).toString())
 
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastUpdated, this.lastUpdate ? `<t:${(this.lastUpdate / 1000).toFixed()}:R>` : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.LastOutage, this.lastOutage ? `<t:${(this.lastOutage.time / 1000).toFixed()}:R>` : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? Utils.FormatUptime(Date.now() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.memoryUsage, serverStatistics ? Utils.FormatBytes(serverStatistics.memory_usage) : "N/A")
-        Fields.SetValue(mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? Utils.FormatUptime(client.uptime, true) : "N/A")
-        Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? Utils.FormatNumber(serverStatistics.total_obfuscations) : "N/A")
-        Fields.SetValue(statisticsEmbed.data.fields, Fields.Indexes.Stats.recentObfuscations, this.recentObfuscations.difference?.toString() || "N/A")
+        Fields.SetValue(this.mainEmbed.data.fields, Fields.Indexes.Main.LastUpdated, this.lastUpdate ? `<t:${(this.lastUpdate / 1000).toFixed()}:R>` : "N/A")
+        Fields.SetValue(this.mainEmbed.data.fields, Fields.Indexes.Main.LastOutage, this.lastOutage ? `<t:${(this.lastOutage.time / 1000).toFixed()}:R>` : "N/A")
+        Fields.SetValue(this.mainEmbed.data.fields, Fields.Indexes.Main.Statistics.serverUptime, serverStatistics ? Utils.FormatUptime(Date.now() - new Date(serverStatistics.start_time).getTime(), true) : "N/A")
+        Fields.SetValue(this.mainEmbed.data.fields, Fields.Indexes.Main.Statistics.memoryUsage, serverStatistics ? Utils.FormatBytes(serverStatistics.memory_usage) : "N/A")
+        Fields.SetValue(this.mainEmbed.data.fields, Fields.Indexes.Main.Statistics.botUptime, client ? Utils.FormatUptime(client.uptime, true) : "N/A")
+        Fields.SetValue(this.statisticsEmbed.data.fields, Fields.Indexes.Stats.totalObfuscations, serverStatistics ? Utils.FormatNumber(serverStatistics.total_obfuscations) : "N/A")
+        Fields.SetValue(this.statisticsEmbed.data.fields, Fields.Indexes.Stats.recentObfuscations, this.recentObfuscations.difference?.toString() || "N/A")
 
         if (ENV === "prod") {
             ObfuscatorStats.Update({
@@ -152,7 +150,7 @@ export default class StatusDisplayController {
         }
 
         await this.statusMessage.edit({
-            embeds: [mainEmbed, statisticsEmbed],
+            embeds: [this.mainEmbed, this.statisticsEmbed],
             components: [new ActionRowBuilder<ButtonBuilder>().addComponents(this.outageHistoryButton).toJSON()],
         });
     }
@@ -175,7 +173,7 @@ export default class StatusDisplayController {
 
             await Database.Update("outage_log", {
                 end: this.lastOutage.end
-            }, { identifier: outageIdentifier })
+            }, { oid: this.lastOutage.oid })
             return
         }
 
@@ -187,7 +185,7 @@ export default class StatusDisplayController {
                 time: this.lastOutage.time,
                 identifier: outageIdentifier,
                 oid: this.lastOutage.oid,
-            }, { identifier: outageIdentifier })
+            }, { identifier: this.lastOutage.oid })
         } else {
             this.lastOutage = {
                 time: Date.now(),
