@@ -120,7 +120,7 @@ export default class StatusDisplayController {
                 }
             } else this.SaveOutage(serviceStatuses, outageIdentifier)
         } else {
-            if (!this.lastOutage.end) this.SaveOutage(new Map(Object.entries(this.lastOutage.services)), this.lastOutage.identifier, true, true)
+            if (!this.lastOutage?.end) this.SaveOutage(new Map(Object.entries(this.lastOutage.services)), this.lastOutage.identifier, true, true)
         }
 
         if (!this.recentObfuscations.time || (Date.now() - this.recentObfuscations.time) > 300000) {
