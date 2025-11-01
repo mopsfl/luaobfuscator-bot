@@ -1,16 +1,9 @@
-import { AttachmentBuilder, BufferResolvable, Colors, EmbedBuilder, EmbedField, Message, PermissionFlagsBits, codeBlock, inlineCode } from "discord.js"
-import { ENV, client } from "../index"
-import config from "../config";
-import { randomUUID } from "crypto"
-import Embed from "./Misc/Embed"
-import { ObfuscationResult } from "./LuaObfuscator/Types"
-import { Command } from "./CommandHandler";
-import ErrorHandler from "./ErrorHandler/ErrorHandler";
+import { AttachmentBuilder, BufferResolvable, Message, PermissionFlagsBits } from "discord.js"
+import { client } from "../index"
 
 export default {
     HasCodeblock: function (string: string) { return /^([`])[`]*\1$|^[`]/mg.test(string) },
     GetPermissionsName: function (bit: bigint) { return Object.keys(PermissionFlagsBits)[Object.values(PermissionFlagsBits).findIndex(n => n === bit)] },
-    ToBase64(str: string) { return Buffer.from(str).toString("base64") },
     CreateFileAttachment: function (content: Buffer | BufferResolvable, name?: string) { return new AttachmentBuilder(content, { name: name || "obfuscated.lua" }) },
     ParseCodeblock(input: string): string {
         const match = input.match(/```(?:\w+)?\n?([\s\S]*?)```/);
@@ -29,97 +22,6 @@ export default {
 
             reject("Please provide a valid Lua script as a codeblock or a file.")
         })
-    },
-
-    ReadAllChunks: async function (stream: ReadableStream) {
-        const reader = stream.getReader();
-        const chunks = [];
-        let done: boolean, value: any;
-        while (!done) {
-            ({ value, done } = await reader.read())
-            if (done) return chunks
-            chunks.push(value)
-        }
-        return chunks
-    },
-
-    async DeleteErrorMessageCallback(msg: Message, deleteMs: number) {
-        if (!deleteMs) return;
-        setTimeout(async () => {
-            if (msg.deletable === true)
-                await msg.delete();
-        }, deleteMs);
-    },
-
-    async SendErrorMessage(type: "error" | "syntax" | "permission" | "ratelimit", cmd: Command, error: Error | string, title?: string, syntaxErrorFields?: Array<EmbedField>, deleteMs?: number) {
-        const errorId = randomUUID()
-        let errorText = error instanceof Error && error.message || typeof (error) == "string" && error || "unknown internal error"
-
-        switch (type) {
-            case "error": {
-                const embed_field = [
-                    { name: "Error:", value: codeBlock(errorText), inline: false },
-                ]
-                if (ENV == "dev") embed_field.push({ name: "Stack:", value: codeBlock(error instanceof Error && `${error.stack || "Unknown stack"}` || "Unknown stack"), inline: false })
-                await cmd.message.reply({
-                    embeds: [Embed({
-                        title: `${this.GetEmoji("no")} ${title || error instanceof Error && `${error.name}` || "Unknown Internal Error"}`,
-                        fields: embed_field,
-                        timestamp: true,
-                        color: Colors.Red,
-                        footer: {
-                            text: `errorId: ${errorId}`
-                        }
-                    })]
-                })
-                break;
-            }
-            case "syntax": {
-                await cmd.message.reply({
-                    embeds: [Embed({
-                        title: `${this.GetEmoji("no")} ${title || "Syntax Error"}`,
-                        description: codeBlock(errorText),
-                        fields: syntaxErrorFields,
-                        timestamp: true,
-                        color: Colors.Red,
-                        footer: {
-                            text: `error_id: ${errorId}`
-                        }
-                    })]
-                })
-                break;
-            }
-            case "permission": {
-                await cmd.message.reply({
-                    embeds: [Embed({
-                        title: `${this.GetEmoji("no")} ${title || "Permissions Error"}`,
-                        description: codeBlock(errorText),
-                        timestamp: true,
-                        color: Colors.Red,
-                        footer: {
-                            text: `error_id: ${errorId}`
-                        }
-                    })]
-                })
-                break;
-            }
-            case "ratelimit": {
-                await cmd.message.reply({
-                    embeds: [Embed({
-                        title: `${this.GetEmoji("no")} Ratelimit`,
-                        fields: [
-                            { inline: false, name: "Message:", value: codeBlock("You are using commands too fast! Calm down...") }
-                        ],
-                        timestamp: true,
-                        color: Colors.Red,
-                        footer: {
-                            text: `error_id: ${errorId}`
-                        }
-                    })]
-                }).then((msg) => this.DeleteErrorMessageCallback(msg, deleteMs));
-                break;
-            }
-        }
     },
 
     ObjectKeysToString(obj: Object, toArray = false, hideFalseValues = true): any {
@@ -181,55 +83,44 @@ export default {
             { value: 1e12, symbol: "T" },
             { value: 1e15, symbol: "P" },
             { value: 1e18, symbol: "E" }
-        ];
-        const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+        ]
         var item = lookup.slice().reverse().find(function (item) {
             return num >= item.value;
-        });
-        return (item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0") || "N/A";
+        })
+        return (item ? (num / item.value).toFixed(digits).replace(/\.0+$|(\.[0-9]*[1-9])0+$/, "$1") + item.symbol : "0") || "N/A";
     },
 
     FormatUptime(ms: number, relative = false): string {
         if (!relative) {
-            let totalSeconds = (ms / 1000);
-            let days = Math.floor(totalSeconds / 86400);
-            totalSeconds %= 86400;
-            let hours = Math.floor(totalSeconds / 3600);
-            totalSeconds %= 3600;
-            let minutes = Math.floor(totalSeconds / 60);
-            let seconds = Math.floor(totalSeconds % 60);
-
-            const formatUnit = (value: number, singular: string, plural: string) => {
-                return value > 0 ? `${value} ${value > 1 ? plural : singular}, ` : "";
-            }
-
-            return `${formatUnit(days, "day", "days")}${formatUnit(hours, "hr", "hrs")}${formatUnit(minutes, "min", "mins")}${seconds} ${seconds > 1 ? "secs" : "sec"}`;
-        } else {
-            const units = [
-                { label: 'year', ms: 31536000000 },
-                { label: 'month', ms: 2592000000 },
-                { label: 'week', ms: 604800000 },
-                { label: 'day', ms: 86400000 },
-                { label: 'hour', ms: 3600000 },
-                { label: 'minute', ms: 60000 },
-                { label: 'second', ms: 1000 },
-            ];
-
-            let remaining = ms;
-            const result: string[] = [];
-
-            for (const unit of units) {
-                const count = Math.floor(remaining / unit.ms);
-                if (count > 0) {
-                    result.push(`${count} ${unit.label}${count > 1 ? 's' : ''}`);
-                    remaining -= count * unit.ms;
-                }
-                if (result.length === 2) break;
-            }
-
-            if (result.length === 0) return '0 seconds';
-            return result.join(' ');
+            const s = Math.floor(ms / 1000)
+            return [
+                Math.floor(s / 86400) && `${Math.floor(s / 86400)} day${s / 86400 >= 2 ? "s" : ""}`,
+                Math.floor((s % 86400) / 3600) && `${Math.floor((s % 86400) / 3600)} hr${(s % 86400) / 3600 >= 2 ? "s" : ""}`,
+                Math.floor((s % 3600) / 60) && `${Math.floor((s % 3600) / 60)} min${(s % 3600) / 60 >= 2 ? "s" : ""}`,
+                `${s % 60} sec${s % 60 !== 1 ? "s" : ""}`
+            ].filter(Boolean).join(", ")
         }
+
+        const units = [
+            ["year", 31536000000],
+            ["month", 2592000000],
+            ["week", 604800000],
+            ["day", 86400000],
+            ["hour", 3600000],
+            ["minute", 60000],
+            ["second", 1000],
+        ] as const
+
+        const r = units.reduce((a, [l, v]) => {
+            if (a.length < 2 && ms >= v) {
+                const c = Math.floor(ms / v)
+                a.push(`${c} ${l}${c > 1 ? "s" : ""}`)
+                ms -= c * v
+            }
+            return a
+        }, [] as string[])
+
+        return r.length ? r.join(" ") : "0 seconds"
     },
 
     FormatBytes(b: number, d: number = 2) {
@@ -240,13 +131,7 @@ export default {
     },
 
     GetEmoji(name: "loading" | "yes" | "no" | string) {
-        if (!client) return console.error("Unable to get emoji! App not successfully initialized.")
-        return client.emojis.cache.find(emoji => emoji.name === name)
-    },
-
-    DateToTimeStamp(date: string) {
-        const [d, m, y] = date.split(".").map(n => parseInt(n, 10));
-        return new Date(y, m - 1, d);
+        return client?.emojis.cache.find(emoji => emoji.name === name)
     },
 
     ToLocalizedDateString(date: Date, includeYear = false) {
@@ -267,12 +152,20 @@ export default {
                 year: includeYear ? "numeric" : undefined
             }).replace(/\.$/, '');
         }).reverse();
+    },
+
+    ToAnsiColor(text: string, color: AnsiColors = "white", style = 2) {
+        const colors = {
+            black: 30, red: 31, green: 32, yellow: 33,
+            blue: 34, magenta: 35, cyan: 36, white: 37,
+        }
+
+        return `[${style};${colors[color.toLowerCase()] || 37}m${text}[0m`
+    },
+
+    ToAnsiCodeBlock(content: string) {
+        return `\`\`\`ansi\n${content}\`\`\``
     }
 }
 
-export interface ObfuscationProcess {
-    embed?: EmbedBuilder,
-    error?: Error | string,
-    processes: Array<string>,
-    results: ObfuscationResult,
-}
+export type AnsiColors = "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white"
