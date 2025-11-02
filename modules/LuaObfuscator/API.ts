@@ -4,7 +4,7 @@ import { ObfuscationResult } from "./Types"
 
 export default {
     v1: {
-        CreateSession: async function (script: string) {
+        CreateSession: async function (script: string): Promise<ObfuscationResult> {
             try {
                 const response = await fetch(`${config.api_url}newscript`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } })
                 return response.ok && response.json()
@@ -13,14 +13,27 @@ export default {
             }
         },
 
-        Obfuscate: async function (script: string, message?: Message) {
-            const response = await fetch(`${config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
-                if (message) this.SendErrorMessage(error, message)
-                throw error
-            })
-            return await response.json().catch(async err => {
-                return { message: `An unexpected error occurred while obfuscating your script! This is most likely due to a syntax error in your script.\n> ${response.statusText} | ${response.status}` }
-            })
+        Obfuscate: async function (script?: string, session?: string, obfconfig?: any): Promise<ObfuscationResult> {
+            let response = null
+            if (typeof obfconfig === "object") {
+                response = await fetch(`https://api.luaobfuscator.com/v1/obfuscator/obfuscate`, {
+                    method: "POST",
+                    body: JSON.stringify(obfconfig),
+                    headers: {
+                        "Content-Type": "application/json",
+                        apiKey: process.env.LUAOBF_APIKEY,
+                        sessionId: session
+                    }
+                }).catch(error => {
+                    throw error
+                })
+            } else {
+                response = await fetch(`${config.api_url}one-click/hard`, { method: "POST", body: script, headers: { apiKey: process.env.LUAOBF_APIKEY } }).catch(error => {
+                    throw error
+                })
+            }
+
+            return await response.json().catch()
         },
     },
 
