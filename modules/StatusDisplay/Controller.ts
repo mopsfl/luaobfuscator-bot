@@ -66,7 +66,7 @@ export default class StatusDisplayController {
 
         this.outageHistoryButton = new ButtonBuilder().setLabel("Outage History").setCustomId("outage_history").setStyle(ButtonStyle.Secondary).setEmoji(`<:history:1419671276875939981>`)
         this.interactionCollector = this.statusMessage.createMessageComponentCollector({ componentType: ComponentType.Button })
-        this.lastOutage = await this.GetOutage();
+        this.lastOutage = await this.GetOutage()
 
         this.interactionCollector.on("collect", this.CreateOutageHistory.bind(this));
 
@@ -106,10 +106,10 @@ export default class StatusDisplayController {
             )
         })
 
+        if (!this.lastOutage) this.lastOutage = await this.GetOutage()
         if (failedServices.size > 0) {
             const outageIdentifier = this.CreateOutageIdentifier(failedServices)
 
-            if (!this.lastOutage) this.lastOutage = await this.GetOutage()
             if (this.lastOutage?.identifier === outageIdentifier && !this.lastOutage.end) {
                 if ([...failedServices.keys()].length > Object.values(this.lastOutage.services).filter(o => !o.ok).length) {
                     this.SaveOutage(serviceStatuses, outageIdentifier, true)
@@ -120,7 +120,7 @@ export default class StatusDisplayController {
                 }
             } else this.SaveOutage(serviceStatuses, outageIdentifier)
         } else {
-            if (!this.lastOutage?.end) this.SaveOutage(new Map(Object.entries(this.lastOutage.services)), this.lastOutage.identifier, true, true)
+            if (this.lastOutage && !this.lastOutage?.end) this.SaveOutage(new Map(Object.entries(this.lastOutage.services)), this.lastOutage.identifier, true, true)
         }
 
         if (!this.recentObfuscations.time || (Date.now() - this.recentObfuscations.time) > 300000) {
