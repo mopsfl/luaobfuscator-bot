@@ -4,7 +4,7 @@ import config from "../config";
 import { Command } from "../modules/CommandHandler"
 import Embed from "../modules/Misc/Embed";
 import Database from "../modules/Database/Database";
-import Utils from "../modules/Utils";
+import ErrorHandler from "../modules/ErrorHandler/ErrorHandler";
 
 class CommandConstructor {
     name = ["nohello", "nh", "nhs"]
@@ -16,7 +16,11 @@ class CommandConstructor {
 
         if (!result.success) {
             console.error(result.error.message)
-            return Utils.SendErrorMessage("error", cmd, result.error.code)
+            return ErrorHandler.new({
+                message: cmd.message,
+                error: `${result.error.code}\n > ${result.error.sqlMessage}`,
+                title: "Database Error"
+            })
         }
 
         const noHelloStats: NoHelloStats = result.data[0]

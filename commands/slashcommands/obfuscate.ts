@@ -111,7 +111,7 @@ class CommandConstructor implements CommandNode {
                             await UpdateProcessField("obfuscation failed!\n- ↳ unexpected error occurred while obfuscating!", false, true)
                             console.error(`> error while obfuscating script by ${command.user.username} (process: ${process_id}) (slash)`)
                         }
-                    }).catch(async err => {
+                    }).catch(async () => {
                         session = "N/A"
                         process_state = "FAILED"
                         process_embed.setColor(Colors.Red)
