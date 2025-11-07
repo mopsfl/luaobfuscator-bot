@@ -28,7 +28,7 @@ export default class CommandHandler {
     ) { }
 
     public async OnMessageCreate(message: OmitPartialGroupDMChannel<Message<boolean>>) {
-        if (message.channelId === statusDisplayController.statusChannel.id && message.type === MessageType.Default) {
+        if (message.channelId === statusDisplayController.statusChannel?.id && message.type === MessageType.Default) {
             return message.delete().catch(console.error)
         }
 
