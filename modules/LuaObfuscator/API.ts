@@ -1,6 +1,8 @@
-import { Message } from "discord.js"
 import config from "../../config";
 import { ObfuscationResult } from "./Types"
+import http_status from "http-status"
+
+const HTTP_STATUS_TEXTS = { ...http_status, ...http_status.extra.cloudflare, ...http_status.extra.nginx }
 
 export default {
     v1: {
@@ -49,7 +51,7 @@ export default {
                     }
                 }).catch(error => { throw error })
 
-                return response.ok ? await response.json() : { status: "FAILED", message: `${response.statusText} (${response.status})` }
+                return response.ok ? await response.json() : { status: "FAILED", message: `${response.statusText !== "<none>" ? response.statusText : HTTP_STATUS_TEXTS[response.status]} (${response.status})` }
             } catch (error) {
                 console.error(error)
                 return error
