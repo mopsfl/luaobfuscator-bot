@@ -20,7 +20,7 @@ class CommandConstructor {
     callback = async (command: Command) => {
         if (!command.message.channel.isDMBased()) {
             const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
-            return await command.message.reply(`no, use website: ${bold(config.STATUS_DISPLAY.endpoints.homepage)} or just slide in my dms ${Utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
+            return await command.message.reply(`This command is only available in my DM's! ${Utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`)
         }
 
         let script_content = "",

@@ -1,6 +1,6 @@
 import { Command, CommandNode } from "../../modules/CommandHandler"
 import { commandHandler } from "../../index"
-import { ComponentType, MessageFlags, SlashCommandBuilder } from "discord.js"
+import { bold, ComponentType, MessageFlags, SlashCommandBuilder } from "discord.js"
 import Utils from "../../modules/Utils"
 import { CustomObfuscateController } from "../../modules/CustomObfuscate/Controller"
 import ErrorHandler from "../../modules/ErrorHandler/ErrorHandler"
@@ -17,6 +17,15 @@ class CommandConstructor implements CommandNode {
         .setDescription(this.description)
 
     callback = async (command: Command) => {
+        if (!command.interaction.channel.isDMBased()) {
+            const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
+            await command.interaction.reply({
+                content: `This command is only available in my DM's! ${Utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`,
+                flags: MessageFlags.Ephemeral
+            })
+            return true
+        }
+
         await command.interaction.reply({
             content: `Please upload a valid Lua script as a file, or paste it here inside a code block.`,
             flags: [MessageFlags.Ephemeral]

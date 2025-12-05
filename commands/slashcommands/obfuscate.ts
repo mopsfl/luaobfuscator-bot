@@ -22,6 +22,15 @@ class CommandConstructor implements CommandNode {
         .setDescription(this.description)
 
     callback = async (command: Command) => {
+        if (!command.interaction.channel.isDMBased()) {
+            const peepoemojis = ["peepositnerd", "peepositchair", "peepositbusiness", "peepositsleep", "peepositmaid", "peepositsuit", "monkaS"]
+            await command.interaction.reply({
+                content: `This command is only available in my DM's! ${Utils.GetEmoji(peepoemojis[Math.floor(Math.random() * peepoemojis.length)])}`,
+                flags: MessageFlags.Ephemeral
+            })
+            return true
+        }
+
         let script_content = "",
             result: ObfuscationResult = null,
             result_attachment: AttachmentBuilder = null,
